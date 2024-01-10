@@ -4,6 +4,12 @@ import { AuthService } from './services/auth.service';
 import { UsersModule } from '../users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './constants';
+import { ForgotPasswordController } from './controllers/forgot-password.controller';
+import { ForgotPasswordService } from './services/forgot-password.service';
+import { MailModule } from 'src/mail/mail.module';
+import { PasswordResetTokens } from 'src/db/model/password-reset-tokens.model';
+import { Users } from 'src/db/model/users.model';
+import { SequelizeModule } from '@nestjs/sequelize';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -16,8 +22,10 @@ dotenv.config();
       signOptions: { expiresIn: process.env.JWT_EXPIRATION },
     }),
     UsersModule,
+    MailModule,
+    SequelizeModule.forFeature([PasswordResetTokens, Users]),
   ],
-  controllers: [AuthController],
-  providers: [AuthService],
+  controllers: [AuthController, ForgotPasswordController],
+  providers: [AuthService, ForgotPasswordService],
 })
 export class AuthModule {}
