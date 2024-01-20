@@ -7,6 +7,8 @@ import * as dotenv from 'dotenv';
 import { AuthController } from './auth/controllers/auth.controller';
 import { AuthService } from './auth/services/auth.service';
 import { AuthModule } from './auth/auth.module';
+import { MailService } from './mail/mail.service';
+import { MailModule } from './mail/mail.module';
 
 dotenv.config();
 
@@ -26,9 +28,10 @@ dotenv.config();
 			},
 		}),
 		AuthModule,
-		UsersModule
+		UsersModule,
+		MailModule
 	],
 	controllers: [AppController, AuthController],
-	providers: [AppService, AuthService],
+	providers: [AppService, AuthService, MailService],
 })
 export class AppModule {}
