@@ -11,6 +11,8 @@ import { MailService } from './mail/mail.service';
 import { MailModule } from './mail/mail.module';
 import { UsersCommand } from './users/users.command';
 import { CommandModule } from 'nestjs-command';
+import { ApplicationsCommand } from './applications/applications.command';
+import { ApplicationsModule } from './applications/applications.module';
 
 dotenv.config();
 
@@ -32,10 +34,11 @@ dotenv.config();
     }),
     AuthModule,
     UsersModule,
+    ApplicationsModule,
     MailModule,
     CommandModule,
   ],
   controllers: [AppController, AuthController],
-  providers: [UsersCommand, AppService, AuthService, MailService],
+  providers: [UsersCommand,ApplicationsCommand, AppService, AuthService, MailService],
 })
 export class AppModule {}

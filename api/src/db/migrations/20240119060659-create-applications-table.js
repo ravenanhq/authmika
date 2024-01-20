@@ -7,10 +7,9 @@ module.exports = {
      * Add altering commands here.
      *
      * Example:
-     * await queryInterface.createTable('websites', { id: Sequelize.INTEGER });
+     * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-
-    return queryInterface.createTable('websites', {
+    return queryInterface.createTable('applications', {
       id: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -20,18 +19,18 @@ module.exports = {
       },
       name: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       application: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true
+        unique: true,
       },
       base_url: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
-      client_id: {
+      client_secret_id: {
         type: Sequelize.STRING,
         allowNull: false,
       },
@@ -40,36 +39,34 @@ module.exports = {
         allowNull: false,
       },
       created_by: {
-        type: Sequelize.STRING,
+        type: Sequelize.INTEGER,
         allowNull: true,
       },
       updated_by: {
-        type: Sequelize.STRING,
+        type: Sequelize.INTEGER,
         allowNull: true,
       },
       created_at: {
         type: Sequelize.DATE,
-        allowNull: true,
       },
       updated_at: {
         type: Sequelize.DATE,
-        allowNull: true,
       },
       is_active: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: true,
-      }
+      },
     });
   },
 
-  async down(queryInterface, Sequelize) {
+  async down(queryInterface) {
     /**
      * Add reverting commands here.
      *
      * Example:
-     * await queryInterface.dropTable('websites');
+     * await queryInterface.dropTable('users');
      */
-    return queryInterface.dropTable('websites');
+    return queryInterface.dropTable('applications');
   },
 };
