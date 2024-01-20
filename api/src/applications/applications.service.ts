@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Applications } from 'src/db/model/applications.model';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class ApplicationsService {
@@ -8,18 +9,6 @@ export class ApplicationsService {
     @InjectModel(Applications)
     private applicationsModel: typeof Applications,
   ) {}
-
-  generateRandomString(length: number): string {
-    const characters =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      result += characters.charAt(
-        Math.floor(Math.random() * characters.length),
-      );
-    }
-    return result;
-  }
 
   async getApplications(): Promise<Applications[]> {
     return this.applicationsModel.findAll({});
@@ -38,8 +27,8 @@ export class ApplicationsService {
           HttpStatus.CONFLICT,
         );
       }
-      const clientSecretKey = this.generateRandomString(32);
-      const clientSecretId = this.generateRandomString(16);
+      const clientSecretKey = randomBytes(32).toString('hex');
+      const clientSecretId = randomBytes(16).toString('hex');
       applicationData.clientSecretKey = clientSecretKey;
       applicationData.clientSecretId = clientSecretId;
 

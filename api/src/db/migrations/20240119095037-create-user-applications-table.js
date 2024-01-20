@@ -2,15 +2,14 @@
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up (queryInterface, Sequelize) {
+  async up(queryInterface, Sequelize) {
     /**
      * Add altering commands here.
      *
      * Example:
-     * await queryInterface.createTable('user_website', { id: Sequelize.INTEGER });
+     * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-
-    return queryInterface.createTable('user_website', {
+    return queryInterface.createTable('user_applications', {
       id: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -20,11 +19,11 @@ module.exports = {
       },
       user_id: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: false,
       },
-      website_id: {
+      application_id: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: false,
       },
       created_by: {
         type: Sequelize.STRING,
@@ -41,17 +40,17 @@ module.exports = {
       updated_at: {
         type: Sequelize.DATE,
         allowNull: true,
-      }
+      },
     });
   },
 
-  async down (queryInterface, Sequelize) {
+  async down(queryInterface, Sequelize) {
     /**
      * Add reverting commands here.
      *
      * Example:
-     * await queryInterface.dropTable('user_website');
+     * await queryInterface.dropTable('users');
      */
-    return queryInterface.dropTable('user_website');
-  }
+    return queryInterface.dropTable('user_applications');
+  },
 };
