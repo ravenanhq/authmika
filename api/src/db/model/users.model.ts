@@ -10,6 +10,9 @@ import {
 
 @Table({
   tableName: 'users',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
 })
 export class Users extends Model {
   @AutoIncrement
@@ -44,17 +47,11 @@ export class Users extends Model {
   @Column({ field: 'two_factor_recovery_codes', type: DataType.STRING })
   twoFactorRecoveryCodes: string;
 
-  @Column({ field: 'created_by', type: DataType.STRING })
+  @Column({ field: 'created_by', type: DataType.INTEGER })
   createdBy: string;
 
-  @Column({ field: 'updated_by', type: DataType.STRING })
+  @Column({ field: 'updated_by', type: DataType.INTEGER })
   updatedBy: string;
-
-  @Column({ field: 'created_at', type: DataType.STRING })
-  createdAt: Date;
-
-  @Column({ field: 'updated_at', type: DataType.STRING })
-  updatedAt: Date;
 
   @Column({ field: 'email_verification_token', type: DataType.STRING })
   emailVerificationToken: string;

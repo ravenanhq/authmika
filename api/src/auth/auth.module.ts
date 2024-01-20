@@ -10,6 +10,8 @@ import { MailModule } from 'src/mail/mail.module';
 import { PasswordResetTokens } from 'src/db/model/password-reset-tokens.model';
 import { Users } from 'src/db/model/users.model';
 import { SequelizeModule } from '@nestjs/sequelize';
+import { ResetPasswordController } from './controllers/reset-password.controller';
+import { ResetPasswordService } from './services/reset-password.service';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -25,7 +27,7 @@ dotenv.config();
     MailModule,
     SequelizeModule.forFeature([PasswordResetTokens, Users]),
   ],
-  controllers: [AuthController, ForgotPasswordController],
-  providers: [AuthService, ForgotPasswordService],
+  controllers: [AuthController, ForgotPasswordController, ResetPasswordController],
+  providers: [AuthService, ForgotPasswordService, ResetPasswordService],
 })
 export class AuthModule {}
