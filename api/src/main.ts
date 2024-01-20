@@ -8,13 +8,19 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       exceptionFactory: (validationErrors: ValidationError[] = []) => {
-        return new UnprocessableEntityException(
-          validationErrors.map((error) => ({
-            field: error.property,
+        const formattedErrors = {};
 
-            error: Object.values(error.constraints).join(', '),
-          })),
-        );
+        validationErrors.forEach((error) => {
+          formattedErrors[error.property] = Object.values(
+            error.constraints,
+          ).join(', ');
+        });
+
+        return new UnprocessableEntityException({
+          message: formattedErrors,
+          error: 'Unprocessable Entity',
+          statusCode: 422,
+        });
       },
     }),
   );
@@ -26,6 +32,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  await app.listen(3001);
+  await app.listen(process.env.APP_PORT || 3001);
 }
 bootstrap();
