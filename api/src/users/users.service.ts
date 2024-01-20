@@ -53,20 +53,30 @@ export class UsersService {
   }
 
   async deleteUser(id): Promise<{ message: string; statusCode: number }> {
-    try {
-      await this.userModel.destroy({
-        where: {
-          id: id,
-        },
-      });
+    const isUserAvailable = await Users.findOne({
+      where: { id: id },
+    });
+    if (isUserAvailable) {
+      try {
+        await this.userModel.destroy({
+          where: {
+            id: id,
+          },
+        });
+        return {
+          message: 'User deleted successfully',
+          statusCode: HttpStatus.OK,
+        };
+      } catch (error) {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
+    } else {
       return {
-        message: 'User deleted successfully',
-        statusCode: HttpStatus.OK,
-      };
-    } catch (error) {
-      return {
-        message: error.message,
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'User not found',
+        statusCode: HttpStatus.NOT_FOUND,
       };
     }
   }
