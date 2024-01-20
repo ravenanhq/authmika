@@ -13,6 +13,8 @@ import { UsersCommand } from './users/users.command';
 import { CommandModule } from 'nestjs-command';
 import { ApplicationsCommand } from './applications/applications.command';
 import { ApplicationsModule } from './applications/applications.module';
+import { UserApplicationsModule } from './user-application/user-applications.module';
+import { UserApplicationCommand } from './user-application/user-applications.command';
 
 dotenv.config();
 
@@ -35,10 +37,18 @@ dotenv.config();
     AuthModule,
     UsersModule,
     ApplicationsModule,
+    UserApplicationsModule,
     MailModule,
     CommandModule,
   ],
   controllers: [AppController, AuthController],
-  providers: [UsersCommand,ApplicationsCommand, AppService, AuthService, MailService],
+  providers: [
+    UsersCommand,
+    ApplicationsCommand,
+    UserApplicationCommand,
+    AppService,
+    AuthService,
+    MailService,
+  ],
 })
 export class AppModule {}
