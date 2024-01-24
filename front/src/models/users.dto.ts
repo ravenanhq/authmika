@@ -25,7 +25,7 @@ export class SignInDto {
     password?: string;
 }
 
-export class ForgotPasswordDataDto {
+export class ApiResponseDto {
     statusCode?: number;
     message?: string;
 }
