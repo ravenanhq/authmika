@@ -72,7 +72,9 @@ const ForgotPassword = () => {
                     sx={{ mt: 1 }}
                 >
                     {isMailSent ? (
-                        `We sent a password reset link to ${submittedEmail}`
+                        <Typography component="p" align="center">
+                            We sent a password reset link to {submittedEmail}
+                        </Typography>
                     ) : (
                         <>
                             <TextField
