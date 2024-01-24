@@ -10,18 +10,22 @@ export class UserDto {
     isActive?: boolean;
     createdAt?: string;
     updatedAt?: string;
-  }
-  
-  export class UsersDto {
+}
+
+export class UsersDto {
     accessToken?: string;
     tokenType?: string;
     user?: UserDto;
     error?: string;
     message?: string;
-  }
-  
-  export class SignInDto {
+}
+
+export class SignInDto {
     username?: string;
     password?: string;
-  }
-  
+}
+
+export class ForgotPasswordDataDto {
+    statusCode?: number;
+    message?: string;
+}
