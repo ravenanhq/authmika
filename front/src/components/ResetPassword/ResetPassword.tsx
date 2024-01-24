@@ -91,7 +91,7 @@ const ResetPassword = () => {
             <Card sx={{ px: 3, py: 5 }}>
                 {!isLinkExpired && !isPasswordReset && (
                     <Typography component="h1" variant="h5" align="center">
-                        Set new password
+                        Reset Password
                     </Typography>
                 )}
                 {isLinkExpired ? (
