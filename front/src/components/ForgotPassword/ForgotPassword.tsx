@@ -29,7 +29,6 @@ const ForgotPassword = () => {
     const [error, setError] = useState<string>("");
 
     const onSubmit = async (data: IForgotPasswordProps) => {
-        setError("");
         const emailData = { email: data.email };
         if (data.email) setSubmittedEmail(data.email);
         try {
@@ -117,6 +116,9 @@ const ForgotPassword = () => {
                                 fullWidth
                                 sx={{ mt: 2, mb: 1 }}
                                 variant="contained"
+                                onClick={() => {
+                                    setError("");
+                                }}
                             >
                                 Send Link
                             </Button>

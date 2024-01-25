@@ -59,7 +59,6 @@ const ResetPassword = () => {
     }, [expires]);
 
     const onSubmit = async (formData: IResetPasswordProps) => {
-        setError("");
         const password = formData.password;
         const confirmPassword = formData.confirmPassword;
         const data = {
@@ -240,11 +239,14 @@ const ResetPassword = () => {
                             fullWidth
                             sx={{ mt: 2, mb: 1 }}
                             variant="contained"
+                            onClick={() => {
+                                setError("");
+                            }}
                         >
                             Reset
                         </Button>
                         <Typography component="p" variant="h5" align="center">
-                            <Link href="/signin" variant="body2">
+                            <Link href="/login" variant="body2">
                                 {"Return to Sign In"}
                             </Link>
                         </Typography>

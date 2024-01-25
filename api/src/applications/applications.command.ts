@@ -25,7 +25,15 @@ export class ApplicationsCommand {
       if (applicaitons.length > 0) {
         var Table = require('cli-table3');
         let table = new Table({
-          head: ['id', 'name', 'application', 'base_url', 'is_active'],
+          head: [
+            'id',
+            'name',
+            'application',
+            'base_url',
+            'client_secret_id',
+            'client_secret_key',
+            'is_active',
+          ],
           style: {
             head: [],
           },
@@ -37,6 +45,8 @@ export class ApplicationsCommand {
             application.dataValues.name,
             application.dataValues.application,
             application.dataValues.baseUrl,
+            application.dataValues.clientSecretId,
+            application.dataValues.clientSecretKey,
             application.dataValues.isActive ? 'Yes' : 'No',
           ]);
         });
