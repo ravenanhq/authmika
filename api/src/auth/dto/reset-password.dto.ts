@@ -6,10 +6,13 @@ export class ResetPasswordDto {
 
   @IsString()
   @IsNotEmpty({ message: 'Password is required' })
-  @Matches(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s)(?=.*[!@#$*])/, {
-    message:
-      'Must contain: 8 or more characters, 1 uppercase, 1 lowercase, 1 number, 1 special character.',
-  })
+  @Matches(
+    /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~`!@#$%^&*()-_+={}[\]|\\:;"'<>,.?/]).{8,}$/,
+    {
+      message:
+        'Must contain: 8 or more characters, 1 uppercase, 1 lowercase, 1 number, 1 special character.',
+    },
+  )
   password: string;
 
   @IsNotEmpty({ message: 'Confirm password is required' })

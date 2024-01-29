@@ -41,6 +41,7 @@ const ResetPassword = () => {
         formState: { errors },
         watch,
         clearErrors,
+        setValue,
     } = useForm<IResetPasswordProps>();
 
     const handlePasswordVisibility = (field: keyof IResetPasswordProps) => {
@@ -48,6 +49,14 @@ const ResetPassword = () => {
             ...prevIsVisible,
             [field]: !prevIsVisible[field],
         }));
+    };
+
+    const handlePasswordChange = (e: string) => {
+        setValue("password", e);
+    };
+
+    const handleConfirmPasswordChange = (e: string) => {
+        setValue("confirmPassword", e);
     };
 
     useEffect(() => {
@@ -59,7 +68,6 @@ const ResetPassword = () => {
     }, [expires]);
 
     const onSubmit = async (formData: IResetPasswordProps) => {
-        setError("");
         const password = formData.password;
         const confirmPassword = formData.confirmPassword;
         const data = {
@@ -144,6 +152,7 @@ const ResetPassword = () => {
                             value={isVisible.password}
                             onChange={(e) => {
                                 clearErrors("password");
+                                handlePasswordChange(e.target.value);
                             }}
                             margin="normal"
                             variant="outlined"
@@ -198,6 +207,7 @@ const ResetPassword = () => {
                             value={isVisible.confirmPassword}
                             onChange={(e) => {
                                 clearErrors("confirmPassword");
+                                handleConfirmPasswordChange(e.target.value);
                             }}
                             margin="normal"
                             variant="outlined"
@@ -240,11 +250,14 @@ const ResetPassword = () => {
                             fullWidth
                             sx={{ mt: 2, mb: 1 }}
                             variant="contained"
+                            onClick={() => {
+                                setError("");
+                            }}
                         >
                             Reset
                         </Button>
                         <Typography component="p" variant="h5" align="center">
-                            <Link href="/signin" variant="body2">
+                            <Link href="/login" variant="body2">
                                 {"Return to Sign In"}
                             </Link>
                         </Typography>
