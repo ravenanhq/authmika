@@ -41,6 +41,7 @@ const ResetPassword = () => {
         formState: { errors },
         watch,
         clearErrors,
+        setValue,
     } = useForm<IResetPasswordProps>();
 
     const handlePasswordVisibility = (field: keyof IResetPasswordProps) => {
@@ -48,6 +49,14 @@ const ResetPassword = () => {
             ...prevIsVisible,
             [field]: !prevIsVisible[field],
         }));
+    };
+
+    const handlePasswordChange = (e: string) => {
+        setValue("password", e);
+    };
+
+    const handleConfirmPasswordChange = (e: string) => {
+        setValue("confirmPassword", e);
     };
 
     useEffect(() => {
@@ -143,6 +152,7 @@ const ResetPassword = () => {
                             value={isVisible.password}
                             onChange={(e) => {
                                 clearErrors("password");
+                                handlePasswordChange(e.target.value);
                             }}
                             margin="normal"
                             variant="outlined"
@@ -197,6 +207,7 @@ const ResetPassword = () => {
                             value={isVisible.confirmPassword}
                             onChange={(e) => {
                                 clearErrors("confirmPassword");
+                                handleConfirmPasswordChange(e.target.value);
                             }}
                             margin="normal"
                             variant="outlined"
