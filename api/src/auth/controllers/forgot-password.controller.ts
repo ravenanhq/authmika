@@ -1,4 +1,4 @@
-import { Body, Controller, Post, HttpCode, HttpStatus, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { ForgotPasswordService } from '../services/forgot-password.service';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 
