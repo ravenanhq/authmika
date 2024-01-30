@@ -2,10 +2,11 @@
 import styles from "../page.module.css";
 import { signOut } from "next-auth/react";
 import { Button } from "@mui/material";
+import { config } from "../../../config";
 
 export default function Home() {
   const logOut = () => {
-    signOut({ redirect: true, callbackUrl: "http://localhost:3000/login" });
+    signOut({ redirect: true, callbackUrl: config.signoutCallback });
   };
   return (
     <main className={styles.main}>
