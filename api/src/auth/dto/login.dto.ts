@@ -6,4 +6,6 @@ export class LoginDto {
 
   @IsNotEmpty({ message: 'Password cannot be blank.' })
   password: string;
+
+  clientId: string;
 }

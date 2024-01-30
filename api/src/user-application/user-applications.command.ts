@@ -48,7 +48,6 @@ export class UserApplicationCommand {
             applicationData.dataValues.name,
           ]);
         }
-        console.log(table.toString());
       } else {
         this.spinner.fail('No mapping found.');
       }

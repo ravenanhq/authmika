@@ -39,7 +39,6 @@ export class UsersCommand {
             user.dataValues.isActive ? 'Yes' : 'No',
           ]);
         });
-        console.log(table.toString());
       } else {
         this.spinner.fail('No users found.');
       }

@@ -15,6 +15,9 @@ import { ApplicationsCommand } from './applications/applications.command';
 import { ApplicationsModule } from './applications/applications.module';
 import { UserApplicationsModule } from './user-application/user-applications.module';
 import { UserApplicationCommand } from './user-application/user-applications.command';
+import { AuthClientsModule } from './auth-clients/auth-clients.module';
+import { AuthClientsService } from './auth-clients/auth-clients.service';
+import { AuthClientsController } from './auth-clients/auth-clients.controller';
 
 dotenv.config();
 
@@ -40,6 +43,7 @@ dotenv.config();
     UserApplicationsModule,
     MailModule,
     CommandModule,
+    AuthClientsModule
   ],
   controllers: [AppController, AuthController],
   providers: [
@@ -48,7 +52,7 @@ dotenv.config();
     UserApplicationCommand,
     AppService,
     AuthService,
-    MailService,
+    MailService
   ],
 })
 export class AppModule {}
