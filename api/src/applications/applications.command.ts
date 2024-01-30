@@ -50,7 +50,6 @@ export class ApplicationsCommand {
             application.dataValues.isActive ? 'Yes' : 'No',
           ]);
         });
-        console.log(table.toString());
       } else {
         this.spinner.fail('No applications found.');
       }

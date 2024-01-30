@@ -12,11 +12,12 @@ export const authOptions: NextAuthOptions = {
       type: "credentials",
       credentials: {},
       async authorize(credentials) {
-        const { username, password } = credentials as {
+        const { username, password, clientId } = credentials as {
           username: string;
           password: string;
+          clientId: string;
         };
-        const user = { username, password };
+        const user = { username, password, clientId };
         try {
           const data = await UserApi.login(user);
           return Promise.resolve(data as User);
@@ -31,7 +32,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   pages: {
-    signIn: "/signin",
+    signIn: "/login",
   },
   jwt: {
     secret: process.env.NEXTAUTH_SECRET,
@@ -41,12 +42,14 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.accessToken = user.accessToken;
         token.user = user.user;
+        token.apiToken = user.apiToken;
       }
       return token;
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken;
       session.user = token.user;
+      session.apiToken = token.apiToken;
       return session;
     },
   },

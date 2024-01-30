@@ -1,4 +1,4 @@
-import { Command, Positional, Option } from 'nestjs-command';
+import { Command, Positional } from 'nestjs-command';
 import { Injectable } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { hash } from 'bcrypt';
@@ -39,7 +39,6 @@ export class UsersCommand {
             user.dataValues.isActive ? 'Yes' : 'No',
           ]);
         });
-        console.log(table.toString());
       } else {
         this.spinner.fail('No users found.');
       }
