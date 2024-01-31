@@ -1,26 +1,26 @@
 import { Command, Positional, Option } from 'nestjs-command';
 import { Injectable } from '@nestjs/common';
-import { prompt } from 'inquirer';
-import * as ora from 'ora';
+import { prompt } from 'enquirer';
 import { ApplicationsService } from './applications.service';
 import { Applications } from 'src/db/model/applications.model';
+
+interface IUserInput {
+  name: string;
+  application: string;
+  baseUrl: string;
+}
 
 @Injectable()
 export class ApplicationsCommand {
   constructor(private readonly applicationService: ApplicationsService) {}
-  spinner = ora();
+
   @Command({
     command: 'application:list',
     describe: 'Lists all applications',
   })
   async listApplications() {
-    this.spinner.start();
     try {
-      const applicaitons = await this.applicationService
-        .getApplications()
-        .finally(() => {
-          this.spinner.stop();
-        });
+      const applicaitons = await this.applicationService.getApplications();
 
       if (applicaitons.length > 0) {
         var Table = require('cli-table3');
@@ -50,11 +50,12 @@ export class ApplicationsCommand {
             application.dataValues.isActive ? 'Yes' : 'No',
           ]);
         });
+        console.log(table.toString());
       } else {
-        this.spinner.fail('No applications found.');
+        console.log('No applications found.');
       }
     } catch (error) {
-      this.spinner.fail(error.message);
+      console.error(error.message);
     }
   }
 
@@ -105,22 +106,21 @@ export class ApplicationsCommand {
           return true;
         },
       },
-    ]);
-    this.spinner.start();
+    ]).then(async (userInput: IUserInput) => {
+      const applicationData = {
+        name: userInput.name,
+        application: userInput.application,
+        baseUrl: userInput.baseUrl,
+      };
+      const result =
+        await this.applicationService.createNewApplication(applicationData);
 
-    const applicationData = {
-      name: userInput.name,
-      application: userInput.application,
-      baseUrl: userInput.baseUrl,
-    };
-    const result =
-      await this.applicationService.createNewApplication(applicationData);
-
-    if (result.statusCode == 200) {
-      this.spinner.succeed(result.message);
-    } else {
-      this.spinner.fail(result.message);
-    }
+      if (result.statusCode == 200) {
+        console.log(result.message);
+      } else {
+        console.log(result.message);
+      }
+    });
   }
 
   @Command({
@@ -135,7 +135,6 @@ export class ApplicationsCommand {
     })
     applicationId: Number,
   ) {
-    this.spinner.start();
     const isApplicationAvailable = await Applications.findOne({
       where: {
         id: applicationId,
@@ -146,12 +145,12 @@ export class ApplicationsCommand {
         await this.applicationService.deleteApplication(applicationId);
 
       if (result.statusCode == 200) {
-        this.spinner.succeed(result.message);
+        console.log(result.message);
       } else {
-        this.spinner.fail(result.message);
+        console.log(result.message);
       }
     } else {
-      this.spinner.fail('Application not found');
+      console.error('Application not found');
     }
   }
 }
