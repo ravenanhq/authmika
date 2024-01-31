@@ -1,30 +1,28 @@
 import { UserApplicationService } from './user-applications.service';
 import { Command, Positional } from 'nestjs-command';
 import { Injectable } from '@nestjs/common';
-import { prompt } from 'inquirer';
-import * as ora from 'ora';
+import { prompt } from 'enquirer';
 import { Users } from 'src/db/model/users.model';
 import { Applications } from 'src/db/model/applications.model';
+
+interface IUserInput {
+  userId: number;
+  applicationId: number;
+}
 
 @Injectable()
 export class UserApplicationCommand {
   constructor(
     private readonly userApplicationService: UserApplicationService,
   ) {}
-  spinner = ora();
   @Command({
     command: 'user-application:list',
     describe: 'Lists all user application mapping',
   })
   async listUserApplicationMapping() {
-    this.spinner.start();
     try {
-      const userApplications = await this.userApplicationService
-        .getAllUserApplications()
-        .finally(() => {
-          this.spinner.stop();
-        });
-
+      const userApplications =
+        await this.userApplicationService.getAllUserApplications();
       if (userApplications.length > 0) {
         var Table = require('cli-table3');
         let table = new Table({
@@ -48,11 +46,12 @@ export class UserApplicationCommand {
             applicationData.dataValues.name,
           ]);
         }
+        console.log(table.toString());
       } else {
-        this.spinner.fail('No mapping found.');
+        console.log('No mapping found.');
       }
     } catch (error) {
-      this.spinner.fail(error.message);
+      console.log(error.message);
     }
   }
 
@@ -84,32 +83,32 @@ export class UserApplicationCommand {
           return true;
         },
       },
-    ]);
-    this.spinner.start();
-    const isUserFound = await Users.findOne({
-      where: {
-        id: userInput.userId,
-      },
-    });
-    const isApplicationFound = await Applications.findOne({
-      where: {
-        id: userInput.applicationId,
-      },
-    });
-    if (!isUserFound || !isApplicationFound) {
-      this.spinner.fail('User or application not found');
-      return;
-    }
-    const result = await this.userApplicationService.linkUserToApplication(
-      userInput.userId,
-      userInput.applicationId,
-    );
+    ]).then(async (userInput: IUserInput) => {
+      const isUserFound = await Users.findOne({
+        where: {
+          id: userInput.userId,
+        },
+      });
+      const isApplicationFound = await Applications.findOne({
+        where: {
+          id: userInput.applicationId,
+        },
+      });
+      if (!isUserFound || !isApplicationFound) {
+        console.log('User or application not found');
+        return;
+      }
+      const result = await this.userApplicationService.linkUserToApplication(
+        userInput.userId,
+        userInput.applicationId,
+      );
 
-    if (result.statusCode == 200) {
-      this.spinner.succeed(result.message);
-    } else {
-      this.spinner.fail(result.message);
-    }
+      if (result.statusCode == 200) {
+        console.log(result.message);
+      } else {
+        console.error(result.message);
+      }
+    });
   }
 
   @Command({
@@ -124,13 +123,12 @@ export class UserApplicationCommand {
     })
     linkId: Number,
   ) {
-    this.spinner.start();
     const result = await this.userApplicationService.deleteMapping(linkId);
 
     if (result.statusCode == 200) {
-      this.spinner.succeed(result.message);
+      console.log(result.message);
     } else {
-      this.spinner.fail(result.message);
+      console.error(result.message);
     }
   }
 }

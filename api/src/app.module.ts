@@ -41,7 +41,7 @@ dotenv.config();
     UserApplicationsModule,
     MailModule,
     CommandModule,
-    AuthClientsModule
+    AuthClientsModule,
   ],
   controllers: [AppController, AuthController],
   providers: [
@@ -50,7 +50,7 @@ dotenv.config();
     UserApplicationCommand,
     AppService,
     AuthService,
-    MailService
+    MailService,
   ],
 })
 export class AppModule {}

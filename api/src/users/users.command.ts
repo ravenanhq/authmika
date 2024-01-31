@@ -2,23 +2,28 @@ import { Command, Positional } from 'nestjs-command';
 import { Injectable } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { hash } from 'bcrypt';
-import { prompt } from 'inquirer';
-import * as ora from 'ora';
+import { prompt } from 'enquirer';
+
+interface IUserInput {
+  userName: string;
+  displayName: string;
+  email: string;
+  mobile: string;
+  password: string;
+  role: string;
+}
 
 @Injectable()
 export class UsersCommand {
   constructor(private readonly userService: UsersService) {}
-  spinner = ora();
+
   @Command({
     command: 'user:list',
     describe: 'Lists all users',
   })
   async listUsers() {
-    this.spinner.start();
     try {
-      const users = await this.userService.getUsers().finally(() => {
-        this.spinner.stop();
-      });
+      const users = await this.userService.getUsers();
 
       if (users.length > 0) {
         var Table = require('cli-table3');
@@ -39,11 +44,12 @@ export class UsersCommand {
             user.dataValues.isActive ? 'Yes' : 'No',
           ]);
         });
+        console.log(table.toString());
       } else {
-        this.spinner.fail('No users found.');
+        console.log('No users found.');
       }
     } catch (error) {
-      this.spinner.fail(error.message);
+      console.log(error.message);
     }
   }
 
@@ -52,6 +58,7 @@ export class UsersCommand {
     describe: 'Create a new user',
   })
   async createUser() {
+    let userData;
     const userInput = await prompt([
       {
         type: 'input',
@@ -106,28 +113,28 @@ export class UsersCommand {
             : 'Password must have at least 8 characters, including at least one uppercase letter, one lowercase letter, one digit, and one special character.',
       },
       {
-        type: 'list',
+        type: 'select',
         name: 'role',
         message: 'Select the user role:',
         choices: ['admin', 'user'],
       },
-    ]);
-    this.spinner.start();
+    ]).then(async (userInput: IUserInput) => {
+      userData = {
+        userName: userInput.userName,
+        displayName: userInput.displayName,
+        email: userInput.email,
+        password: await hash(userInput.password, 10),
+        mobile: userInput.mobile,
+        role: userInput.role,
+      };
+    });
 
-    const userData = {
-      userName: userInput.userName,
-      displayName: userInput.displayName,
-      email: userInput.email,
-      password: await hash(userInput.password, 10),
-      mobile: userInput.mobile,
-      role: userInput.role,
-    };
     const result = await this.userService.createNewUser(userData);
 
     if (result.statusCode == 200) {
-      this.spinner.succeed(result.message);
+      console.log(result.message);
     } else {
-      this.spinner.fail(result.message);
+      console.error(result.message);
     }
   }
 
@@ -143,13 +150,12 @@ export class UsersCommand {
     })
     userId: Number,
   ) {
-    this.spinner.start();
     const result = await this.userService.deleteUser(userId);
 
     if (result.statusCode == 200) {
-      this.spinner.succeed(result.message);
+      console.log(result.message);
     } else {
-      this.spinner.fail(result.message);
+      console.error(result.message);
     }
   }
 }
