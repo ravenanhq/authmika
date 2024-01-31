@@ -17,10 +17,6 @@ export class AuthClientsController {
   @Post('create')
   @UsePipes(new ValidationPipe())
   saveClientDetails(@Request() req) {
-    return this.authClientService.saveClientDetails(
-      req.body.clientSecretId,
-      req.body.clientSecretKey,
-      req.body.redirectUrl,
-    );
+    return this.authClientService.saveClientDetails(req.body.key);
   }
 }

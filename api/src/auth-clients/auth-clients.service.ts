@@ -1,52 +1,54 @@
-import {
-  Injectable,
-  HttpStatus,
-  HttpException,
-} from '@nestjs/common';
+import { Injectable, HttpStatus, HttpException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { AuthClients } from 'src/db/model/auth-clients.model';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthClientsService {
+  private clientDetails: any;
+
   constructor(
     @InjectModel(AuthClients)
     private clientDetailsModel: typeof AuthClients,
   ) {}
 
-  async saveClientDetails(
-    clientSecretId: string,
-    clientSecretKey: string,
-    redirectUrl: string,
-  ) {
+  async saveClientDetails(key: string) {
     try {
-      const clientModel = await this.clientDetailsModel.findOne({
-        where: { clientSecretKey: clientSecretKey },
-      });
-      if (!clientModel) {
-        const newClient = await this.clientDetailsModel.create({
-          clientSecretId,
-          clientSecretKey,
-          redirectUrl,
+      this.clientDetails = jwt.verify(key, 'authmika');
+      const clientSecretId = this.clientDetails.clientSecretId;
+      const clientSecretKey = this.clientDetails.clientSecretKey;
+      const redirectUrl = this.clientDetails.redirectUrl;
+
+      if (this.clientDetails) {
+        const clientModel = await this.clientDetailsModel.findOne({
+          where: { clientSecretKey: clientSecretKey },
         });
-        if (newClient) {
+        if (!clientModel) {
+          const newClient = await this.clientDetailsModel.create({
+            clientSecretId,
+            clientSecretKey,
+            redirectUrl,
+          });
+          if (newClient) {
+            return {
+              message: 'Client details added.',
+              statusCode: HttpStatus.OK,
+              clientId: newClient.id,
+            };
+          }
+        } else {
+          const client = await this.clientDetailsModel.update(
+            { redirectUrl: redirectUrl },
+            { where: { clientSecretKey } },
+          );
+
           return {
             message: 'Client details added.',
             statusCode: HttpStatus.OK,
-            clientId: newClient.id,
+            clientId: clientModel.id,
+            redirectUrl: redirectUrl,
           };
         }
-      }
-      {
-        const client = await this.clientDetailsModel.update(
-          { redirectUrl: redirectUrl },
-          { where: { clientSecretKey } },
-        );
-
-        return {
-          message: 'Client details added.',
-          statusCode: HttpStatus.OK,
-          clientId: clientModel.id,
-        };
       }
     } catch (error) {
       if (error.name === 'SequelizeValidationError') {

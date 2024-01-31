@@ -14,9 +14,7 @@ interface IResetPasswordData {
 }
 
 interface IClientData {
-  clientSecretId?: string;
-  clientSecretKey?: string;
-  redirectUrl?: string;
+  key?: string;
 }
 
 export class UserApi {

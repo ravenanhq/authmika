@@ -30,6 +30,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "dotenv": "^16.3.1",
+    "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.6.5",
     "nestjs-command": "^3.1.4",
     "pg": "^8.11.3",
