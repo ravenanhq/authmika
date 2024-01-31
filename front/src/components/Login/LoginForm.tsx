@@ -28,9 +28,7 @@ interface ISignInFormProp {
 
 const Login = () => {
   const searchParams = useSearchParams();
-  const clientSecretId = searchParams.get("clientSecretId");
-  const clientSecretKey = searchParams.get("clientSecretKey");
-  const redirectUrl = searchParams.get("redirectUrl");
+  const key = searchParams.get("key");
 
   const {
     register,
@@ -44,10 +42,11 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState<Boolean>(false);
   const [error, setError] = useState<string>("");
   const [clientId, setClientId] = useState<string>("");
+  const [redirectUrl, setRedirectUrl] = useState<string>("");
 
   useEffect(() => {
     setClientDetails();
-  }, [clientSecretId, clientSecretKey, redirectUrl]);
+  }, []);
 
   const setClientDetails = async () => {
     const session = await getSession();
@@ -55,16 +54,15 @@ const Login = () => {
       window.location.href = "/dashboard";
     }
 
-    if (clientSecretId && clientSecretKey && redirectUrl) {
+    if (key) {
       try {
-        const clientDetails = {
-          clientSecretId: clientSecretId,
-          clientSecretKey: clientSecretKey,
-          redirectUrl: redirectUrl,
+        const param = {
+          key: key,
         };
-        const response = await UserApi.setClientDetails(clientDetails);
+        const response = await UserApi.setClientDetails(param);
         if (response.statusCode == 200) {
           if (response.clientId) setClientId(response.clientId);
+          if (response.redirectUrl) setRedirectUrl(response.redirectUrl);
         } else {
           if (response.message) setError(response.message);
         }

@@ -1,13 +1,11 @@
-import {
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AuthClients } from 'src/db/model/auth-clients.model';
 import { Applications } from 'src/db/model/applications.model';
 import { UserApplications } from 'src/db/model/user-applications.model';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
@@ -23,11 +21,11 @@ export class AuthService {
       throw new UnauthorizedException('Incorrect username or password.');
     }
 
-    const clientModel = await AuthClients.findOne({
-      where: { id: clientId },
-    });
+    if (clientId) {
+      const clientModel = await AuthClients.findOne({
+        where: { id: clientId },
+      });
 
-    if (clientModel) {
       const application = await Applications.findOne({
         where: {
           clientSecretId: clientModel.clientSecretId,
@@ -45,11 +43,9 @@ export class AuthService {
 
       if (!userApplication) {
         throw new UnauthorizedException(
-          "For this application don't have access.",
+          "Access denied.",
         );
       }
-
-      const jwt = require('jsonwebtoken');
 
       const userdetails = {
         id: user.id,
@@ -59,16 +55,11 @@ export class AuthService {
         role: user.role,
       };
 
-      // Secret key used to sign the JWT token
-      const secretKey = application.clientSecretKey;
-
-      const signOptions = {
+      // Create the JWT token with user details as payload
+      apiToken = jwt.sign(userdetails, application.clientSecretKey, {
         expiresIn: process.env.JWT_EXPIRATION,
         algorithm: 'HS256',
-      };
-
-      // Create the JWT token with user details as payload
-      apiToken = jwt.sign(userdetails, secretKey, signOptions);
+      });
     }
 
     const payload = { sub: user.id, username: user.userName };
