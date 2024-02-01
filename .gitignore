@@ -1,36 +1,76 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
+front/node_modules
+front/.pnp
+front/.pnp.js
+front/.yarn/install-state.gz
 
 # testing
-/coverage
+front/coverage
 
 # next.js
-/.next/
-/out/
+front/.next/
+front/out/
 
 # production
-/build
+front/build
 
 # misc
-.DS_Store
-*.pem
+front/.DS_Store
+front/*.pem
 
 # debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+front/npm-debug.log*
+front/yarn-debug.log*
+front/yarn-error.log*
 
 # local env files
-.env*.local
+front/.env*.local
 
 # vercel
-.vercel
+front/.vercel
 
 # typescript
-*.tsbuildinfo
-next-env.d.ts
+front/*.tsbuildinfo
+front/next-env.d.ts
+
+# compiled output
+api/dist
+api/node_modules
+
+# Logs
+api/logs
+api/*.log
+api/npm-debug.log*
+api/pnpm-debug.log*
+api/yarn-debug.log*
+api/yarn-error.log*
+api/lerna-debug.log*
+
+# OS
+api/.DS_Store
+
+# Tests
+api/coverage
+api/.nyc_output
+
+# IDEs and editors
+api/.idea
+api/.project
+api/.classpath
+api/.c9/
+api/*.launch
+api/.settings/
+api/*.sublime-workspace
+
+# IDE - VSCode
+api/.vscode/*
+api/!.vscode/settings.json
+api/!.vscode/tasks.json
+api/!.vscode/launch.json
+api/!.vscode/extensions.json
+
+# local env files
+api/.env*
+api/.env*.local
