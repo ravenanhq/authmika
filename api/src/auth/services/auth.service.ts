@@ -42,9 +42,7 @@ export class AuthService {
       });
 
       if (!userApplication) {
-        throw new UnauthorizedException(
-          "Access denied.",
-        );
+        throw new UnauthorizedException('Access denied.');
       }
 
       const userdetails = {

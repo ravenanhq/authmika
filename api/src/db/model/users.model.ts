@@ -5,14 +5,13 @@ import {
   DataType,
   AutoIncrement,
   PrimaryKey,
-  Unique,
 } from 'sequelize-typescript';
 
 @Table({
   tableName: 'users',
   timestamps: true,
   createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  updatedAt: 'updated_at',
 })
 export class Users extends Model {
   @AutoIncrement

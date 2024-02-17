@@ -1,4 +1,4 @@
-import { Command, Positional, Option } from 'nestjs-command';
+import { Command, Positional } from 'nestjs-command';
 import { Injectable } from '@nestjs/common';
 import { prompt } from 'enquirer';
 import { ApplicationsService } from './applications.service';
@@ -23,34 +23,27 @@ export class ApplicationsCommand {
       const applicaitons = await this.applicationService.getApplications();
 
       if (applicaitons.length > 0) {
-        var Table = require('cli-table3');
-        let table = new Table({
-          head: [
-            'id',
-            'name',
-            'application',
-            'base_url',
-            'client_secret_id',
-            'client_secret_key',
-            'is_active',
-          ],
-          style: {
-            head: [],
-          },
-        });
-
+        const applicationList = [];
         applicaitons.forEach((application) => {
-          table.push([
-            application.dataValues.id,
-            application.dataValues.name,
-            application.dataValues.application,
-            application.dataValues.baseUrl,
-            application.dataValues.clientSecretId,
-            application.dataValues.clientSecretKey,
-            application.dataValues.isActive ? 'Yes' : 'No',
-          ]);
+          applicationList.push({
+            id: application.dataValues.id,
+            name: application.dataValues.name,
+            application: application.dataValues.application,
+            base_url: application.dataValues.baseUrl,
+            client_secret_id: application.dataValues.clientSecretId,
+            client_secret_key: application.dataValues.clientSecretKey,
+            is_active: application.dataValues.isActive ? 'Yes' : 'No',
+          });
         });
-        console.log(table.toString());
+        console.table(applicationList, [
+          'id',
+          'name',
+          'application',
+          'base_url',
+          'client_secret_id',
+          'client_secret_key',
+          'is_active',
+        ]);
       } else {
         console.log('No applications found.');
       }
@@ -64,7 +57,7 @@ export class ApplicationsCommand {
     describe: 'Create a new application',
   })
   async createApplication() {
-    const userInput = await prompt([
+    await prompt([
       {
         type: 'input',
         name: 'name',
@@ -133,7 +126,7 @@ export class ApplicationsCommand {
       describe: 'The application id to delete',
       type: 'number',
     })
-    applicationId: Number,
+    applicationId: number,
   ) {
     const isApplicationAvailable = await Applications.findOne({
       where: {

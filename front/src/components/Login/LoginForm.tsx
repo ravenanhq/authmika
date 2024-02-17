@@ -46,7 +46,7 @@ const Login = () => {
 
   useEffect(() => {
     setClientDetails();
-  }, []);
+  });
 
   const setClientDetails = async () => {
     const session = await getSession();

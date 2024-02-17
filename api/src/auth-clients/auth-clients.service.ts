@@ -37,7 +37,7 @@ export class AuthClientsService {
             };
           }
         } else {
-          const client = await this.clientDetailsModel.update(
+          await this.clientDetailsModel.update(
             { redirectUrl: redirectUrl },
             { where: { clientSecretKey } },
           );
