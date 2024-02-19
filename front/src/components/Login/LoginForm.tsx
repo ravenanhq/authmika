@@ -46,7 +46,8 @@ const Login = () => {
 
   useEffect(() => {
     setClientDetails();
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const setClientDetails = async () => {
     const session = await getSession();
