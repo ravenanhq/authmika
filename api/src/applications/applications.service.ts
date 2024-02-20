@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Applications } from 'src/db/model/applications.model';
 import { randomBytes } from 'crypto';
+import { Optional } from 'sequelize';
 
 @Injectable()
 export class ApplicationsService {
@@ -15,7 +16,7 @@ export class ApplicationsService {
   }
 
   async createNewApplication(
-    applicationData,
+    applicationData: Optional<any, string>,
   ): Promise<{ message: string; statusCode: number }> {
     try {
       const existingApplication = await this.applicationsModel.findOne({
@@ -32,7 +33,7 @@ export class ApplicationsService {
       applicationData.clientSecretKey = clientSecretKey;
       applicationData.clientSecretId = clientSecretId;
 
-      const result = await this.applicationsModel.create(applicationData);
+      await this.applicationsModel.create(applicationData);
       return {
         message: 'Application created successfully',
         statusCode: HttpStatus.OK,
@@ -53,7 +54,7 @@ export class ApplicationsService {
   }
 
   async deleteApplication(
-    id,
+    id: number,
   ): Promise<{ message: string; statusCode: number }> {
     try {
       await this.applicationsModel.destroy({

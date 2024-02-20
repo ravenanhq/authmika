@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { Optional } from 'sequelize';
 import { Users } from 'src/db/model/users.model';
 
 @Injectable()
@@ -22,7 +23,7 @@ export class UsersService {
   }
 
   async createNewUser(
-    userData,
+    userData: Optional<any, string>,
   ): Promise<{ message: string; statusCode: number }> {
     try {
       const existingUser = await this.findUsername(userData.userName);
@@ -32,7 +33,7 @@ export class UsersService {
           HttpStatus.CONFLICT,
         );
       }
-      const result = await this.userModel.create(userData);
+      await this.userModel.create(userData);
       return {
         message: 'User created successfully',
         statusCode: HttpStatus.OK,
@@ -52,7 +53,9 @@ export class UsersService {
     }
   }
 
-  async deleteUser(id): Promise<{ message: string; statusCode: number }> {
+  async deleteUser(
+    id: number,
+  ): Promise<{ message: string; statusCode: number }> {
     const isUserAvailable = await Users.findOne({
       where: { id: id },
     });

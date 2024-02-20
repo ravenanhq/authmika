@@ -14,8 +14,8 @@ export class UserApplicationService {
   }
 
   async linkUserToApplication(
-    userId,
-    applicationId,
+    userId: number,
+    applicationId: number,
   ): Promise<{
     message: string;
     statusCode: number;
@@ -30,7 +30,7 @@ export class UserApplicationService {
           HttpStatus.CONFLICT,
         );
       }
-      const result = await this.userApplictionsModel.create({
+      await this.userApplictionsModel.create({
         userId: userId,
         applicationId: applicationId,
       });
@@ -53,7 +53,9 @@ export class UserApplicationService {
     }
   }
 
-  async deleteMapping(id): Promise<{ message: string; statusCode: number }> {
+  async deleteMapping(
+    id: number,
+  ): Promise<{ message: string; statusCode: number }> {
     const isMapAvailable = await this.userApplictionsModel.findOne({
       where: {
         id: id,
