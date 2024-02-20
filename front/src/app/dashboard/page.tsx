@@ -1,19 +1,40 @@
 "use client";
-import styles from "../page.module.css";
-import { signOut } from "next-auth/react";
-import { Button } from "@mui/material";
-import { config } from "../../../config";
+import CustomCard from "@/components/CustomCard/CustomCard";
+import { Grid } from "@mui/material";
+import Typography from "@mui/material/Typography";
 
 export default function Home() {
-  const logOut = () => {
-    signOut({ redirect: true, callbackUrl: config.signoutCallback });
-  };
+  const applications = [
+    {
+      logo: "/assets/images/nativekrea-logo.png",
+      appName: "Native krea",
+    },
+    {
+      logo: "/assets/images/ravenan-logo.png",
+      appName: "Ravenan",
+    },
+    {
+      logo: "/assets/images/trinity-logo.png",
+      appName: "Trinity",
+    },
+    {
+      logo: "/assets/images/klas-logo.png",
+      appName: "klas",
+    },
+  ];
+
   return (
-    <main className={styles.main}>
-      <h1>Dashboard</h1>
-      <Button variant="contained" onClick={() => logOut()}>
-        Logout
-      </Button>
-    </main>
+    <>
+      <Typography variant="h5" sx={{ marginTop: "25px" }}>
+        My Applications
+      </Typography>
+      <Grid container spacing={3}>
+        {applications.map((app, index) => (
+          <Grid item xs={12} sm={6} md={3} key={index}>
+            <CustomCard {...app} />
+          </Grid>
+        ))}
+      </Grid>
+    </>
   );
 }
