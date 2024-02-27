@@ -21,6 +21,22 @@ export default function Home() {
       logo: "/assets/images/klas-logo.png",
       appName: "klas",
     },
+    {
+      logo: "/assets/images/nativekrea-logo.png",
+      appName: "Native krea",
+    },
+    {
+      logo: "/assets/images/ravenan-logo.png",
+      appName: "Ravenan",
+    },
+    {
+      logo: "/assets/images/trinity-logo.png",
+      appName: "Trinity",
+    },
+    {
+      logo: "/assets/images/klas-logo.png",
+      appName: "klas",
+    },
   ];
 
   return (
@@ -30,7 +46,7 @@ export default function Home() {
       </Typography>
       <Grid container spacing={3}>
         {applications.map((app, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
+          <Grid item xs={12} sm={6} md={2} key={index}>
             <CustomCard {...app} />
           </Grid>
         ))}
