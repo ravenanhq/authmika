@@ -21,14 +21,14 @@ export class ApplicationsController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  getApplications() {
+  async getApplications() {
     return this.applicationService.getApplications();
   }
 
   @Post()
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
-  create(
+  async create(
     @Body() applicationsDto: ApplicationsDto,
     @Request() req,
   ): Promise<{ message: string; statusCode: number }> {
@@ -37,7 +37,7 @@ export class ApplicationsController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  show(
+  async show(
     @Param('id') id: number,
   ): Promise<{ message: string; statusCode: number }> {
     return this.applicationService.show(id);
@@ -46,7 +46,7 @@ export class ApplicationsController {
   @Put(':id')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
-  update(
+  async update(
     @Body() applicationsDto: ApplicationsDto,
     @Request() req,
     @Param('id') id: number,
@@ -55,7 +55,7 @@ export class ApplicationsController {
   }
 
   @Delete(':id')
-  remove(
+  async remove(
     @Param('id') id: number,
   ): Promise<{ message: string; statusCode: number }> {
     return this.applicationService.deleteApplication(id);
