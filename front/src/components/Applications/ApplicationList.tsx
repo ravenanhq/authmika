@@ -20,7 +20,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddApplicationModal from "./AddApplicationModal";
 import EditApplicationModal from "./EditApplicationModal";
 
-interface RowData {
+export interface RowData {
   id: number;
   name?: string;
   application?: string;

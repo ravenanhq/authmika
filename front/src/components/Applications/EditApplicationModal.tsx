@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
-  Modal,
   Button,
   TextField,
-  Box,
   Dialog,
   DialogTitle,
   IconButton,
@@ -12,8 +10,9 @@ import {
   DialogActions,
   styled,
 } from "@mui/material";
-import SaveIcon from '@mui/icons-material/Save';
-import CloseIcon from '@mui/icons-material/Close';
+import SaveIcon from "@mui/icons-material/Save";
+import CloseIcon from "@mui/icons-material/Close";
+import { RowData } from "./ApplicationList";
 
 interface Errors {
   name?: string;
@@ -21,11 +20,13 @@ interface Errors {
   baseUrl?: string;
 }
 
-interface RowData {
-  name?: string;
-  application?: string;
-  baseUrl?: string;
-}
+const InitialRowData = {
+  id: 0,
+  name: "",
+  application: "",
+  baseUrl: "",
+  base_url: "",
+};
 
 interface EditModalProps {
   open: boolean;
@@ -40,12 +41,14 @@ export default function EditApplicationModal({
   rowData,
   onEdit,
 }: EditModalProps) {
-  const [editedData, setEditedData] = useState<RowData>({});
+  const [editedData, setEditedData] = useState<RowData>(InitialRowData);
   const [errors, setErrors] = useState<Errors>({});
   const [successMessageOpen, setSuccessMessageOpen] = useState(false);
 
   useEffect(() => {
-    setEditedData(rowData || {});
+    if (rowData) {
+      setEditedData(rowData);
+    }
   }, [rowData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,11 +78,6 @@ export default function EditApplicationModal({
 
   const handleUpdateApplication = () => {
     if (validateForm()) {
-      // const newApplication = {
-      //   name: name,
-      //   application: application,
-      //   base_url: base_url,
-      // };
       onEdit(editedData);
     }
     setSuccessMessageOpen(true);
@@ -178,7 +176,10 @@ export default function EditApplicationModal({
         sx={{ marginBottom: "2%", marginTop: "2%" }}
       ></Divider>
       <DialogActions style={{ margin: "0 16px 10px 0" }}>
-        <PrimaryButton startIcon={<SaveIcon />} onClick={handleUpdateApplication}>
+        <PrimaryButton
+          startIcon={<SaveIcon />}
+          onClick={handleUpdateApplication}
+        >
           Update
         </PrimaryButton>
         <SecondaryButton startIcon={<CloseIcon />} onClick={handleClose}>
@@ -187,4 +188,4 @@ export default function EditApplicationModal({
       </DialogActions>
     </Dialog>
   );
-};
+}
