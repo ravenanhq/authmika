@@ -80,7 +80,7 @@ export default function DrawerAppBar() {
           position="fixed"
           sx={{
             zIndex: (theme) => theme.zIndex.drawer + 1,
-            backgroundColor: "#434a9f",
+            backgroundColor: "#265073",
           }}
         >
           <Toolbar>
@@ -100,7 +100,7 @@ export default function DrawerAppBar() {
             <Box sx={{ display: { xs: "none", md: "flex" } }}>
               {navItems.map((item) => (
                 <Link key={item.route} href={item.route}>
-                  <Button sx={{ color: "#fff" }}>{item.label}</Button>
+                  <Button sx={{ color: "#fff", textTransform: 'none' }}>{item.label}</Button>
                 </Link>
               ))}
               <Box />

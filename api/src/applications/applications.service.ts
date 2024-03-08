@@ -63,7 +63,7 @@ export class ApplicationsService {
   async create(
     applicationDto: ApplicationsDto,
     user: { id: any },
-  ): Promise<{ message: string; statusCode: number }> {
+  ): Promise<{ message: string; statusCode: number; data: object }> {
     const { name, application, base_url } = applicationDto;
     try {
       const clientSecretKey = randomBytes(32).toString('hex');
@@ -88,20 +88,26 @@ export class ApplicationsService {
           throw new InternalServerErrorException('User creation failed.');
         }
       }
+
+      const applications = await this.applicationsModel.findAll({});
+
       return {
         message: 'Application created successfully.',
         statusCode: HttpStatus.OK,
+        data: applications,
       };
     } catch (error) {
       if (error instanceof HttpException) {
         return {
           message: error.message,
           statusCode: HttpStatus.CONFLICT,
+          data: {},
         };
       } else {
         return {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          data: {},
         };
       }
     }
@@ -143,7 +149,7 @@ export class ApplicationsService {
     applicationDto: ApplicationsDto,
     user: { id: any },
     id: number,
-  ): Promise<{ message: string; statusCode: number }> {
+  ): Promise<{ message: string; statusCode: number; data: object }> {
     const { name, application, base_url } = applicationDto;
     try {
       const existingApplication = await this.applicationsModel.findOne({
@@ -164,14 +170,18 @@ export class ApplicationsService {
         existingApplication.updatedBy = user ? user.id : null;
         await existingApplication.save();
 
+        const applications = await this.applicationsModel.findAll({});
+
         return {
           message: 'Application updated successfully.',
           statusCode: HttpStatus.OK,
+          data: applications,
         };
       } else {
         return {
           message: 'Application not found.',
           statusCode: HttpStatus.NOT_FOUND,
+          data: {},
         };
       }
     } catch (error) {
@@ -179,11 +189,13 @@ export class ApplicationsService {
         return {
           message: error.message,
           statusCode: HttpStatus.CONFLICT,
+          data: {},
         };
       } else {
         return {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          data: {},
         };
       }
     }
