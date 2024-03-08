@@ -35,7 +35,7 @@ export default function RootLayout({
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
         />
       </Head>
-      <body suppressHydrationWarning={true} className={inter.className}>
+      <body suppressHydrationWarning={true} className={inter.className} style={{backgroundColor: "white"}}>
         <NavbarProvider>
           {isMobile ? (
             <Box component="main"
