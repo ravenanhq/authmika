@@ -11,6 +11,7 @@ import {
   Delete,
   Param,
   Put,
+  HttpException,
 } from '@nestjs/common';
 import { UsersDto } from './dto/users.dto';
 import { UsersService } from './users.service';
@@ -22,7 +23,16 @@ export class UsersController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async getUsers() {
-    return this.userService.getUsers();
+    try {
+      const activeUsers = await this.userService.getUsers();
+      return activeUsers;
+    } catch (error) {
+      console.error('Error fetching active users:', error);
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Post()

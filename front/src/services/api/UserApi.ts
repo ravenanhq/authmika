@@ -1,16 +1,22 @@
-import axios, { AxiosResponse } from "axios";
+
 import { config } from "../../../config";
 import { ApiResponseDto, SignInDto, UsersDto } from "@/models/users.dto";
+import axios from 'axios';
 
 interface IForgotPasswordData {
   email?: string;
 }
 
 interface IResetPasswordData {
+  name?: string;
+  application?: string;
   key?: string;
   expires?: string;
   password?: string;
   confirm_password?: string;
+  base_url?: string;
+  userId: number;
+  id: string | number;
 }
 
 interface IClientData {
@@ -23,6 +29,29 @@ export class UserApi {
       `${config.service}/auth/login`,
       user
     );
+    return res.data;
+  }
+
+  static async getUsers() {
+    const res = await axios.get(`${config.service}/users`);
+    return res.data;
+  }
+
+  static async create(newUser: any) {
+    const res = await axios.post(`${config.service}/users`, newUser);
+    return res.data;
+  }
+
+  static async update(Id: string, updatedData: any) {
+    const res = await axios.put(
+      `${config.service}/users/${Id}`,
+      updatedData
+    );
+    return res.data;
+  }
+
+  static async deleteUser(id: number) {
+    const res = await axios.delete(`${config.service}/users/${id}`);
     return res.data;
   }
 

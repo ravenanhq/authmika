@@ -9,6 +9,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Optional } from 'sequelize';
 import { Users } from 'src/db/model/users.model';
 import { UsersDto } from './dto/users.dto';
+import { hash } from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -26,7 +27,17 @@ export class UsersService {
   }
 
   async getUsers(): Promise<Users[]> {
-    return this.userModel.findAll({});
+    try {
+      const users = await this.userModel.findAll({
+        where: { isActive: true },
+      });
+      return users;
+    } catch (error) {
+      throw new HttpException(
+        'Error getting users',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async createNewUser(
@@ -63,7 +74,7 @@ export class UsersService {
   async create(
     userDto: UsersDto,
     user: { id: any },
-  ): Promise<{ message: string; statusCode: number }> {
+  ): Promise<{ message: string; statusCode: number; data: object }> {
     const { user_name, display_name, email, password, mobile, role } = userDto;
     try {
       const existingUser = await this.userModel.findOne({
@@ -76,7 +87,7 @@ export class UsersService {
           userName: user_name,
           displayName: display_name,
           email: email,
-          password: password,
+          password: await hash(password, 10),
           mobile: mobile,
           role: role,
           createdBy: user ? user.id : null,
@@ -86,20 +97,26 @@ export class UsersService {
           throw new InternalServerErrorException('User creation failed');
         }
       }
+      const users = await this.userModel.findAll({
+        where: { isActive: true },
+      });
       return {
         message: 'User created successfully',
         statusCode: HttpStatus.OK,
+        data: users,
       };
     } catch (error) {
       if (error instanceof HttpException) {
         return {
           message: error.message,
           statusCode: HttpStatus.CONFLICT,
+          data: {},
         };
       } else {
         return {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          data: {},
         };
       }
     }
@@ -141,7 +158,7 @@ export class UsersService {
     userDto: UsersDto,
     user: { id: any },
     id: number,
-  ): Promise<{ message: string; statusCode: number }> {
+  ): Promise<{ message: string; statusCode: number; data: object }> {
     const { user_name, display_name, email, password, mobile, role } = userDto;
     try {
       const existingUser = await this.userModel.findOne({
@@ -165,14 +182,21 @@ export class UsersService {
         existingUser.updatedBy = user ? user.id : null;
         await existingUser.save();
 
+        const users = await this.userModel.findAll({
+          where: { isActive: true },
+        });
+
         return {
           message: 'User updated successfully.',
           statusCode: HttpStatus.OK,
+
+          data: users,
         };
       } else {
         return {
           message: 'User not found.',
           statusCode: HttpStatus.NOT_FOUND,
+          data: {},
         };
       }
     } catch (error) {
@@ -180,11 +204,13 @@ export class UsersService {
         return {
           message: error.message,
           statusCode: HttpStatus.CONFLICT,
+          data: {},
         };
       } else {
         return {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          data: {},
         };
       }
     }
@@ -192,31 +218,34 @@ export class UsersService {
 
   async deleteUser(
     id: number,
-  ): Promise<{ message: string; statusCode: number }> {
-    const isUserAvailable = await Users.findOne({
+  ): Promise<{ message: string; statusCode: number; data: object }> {
+    const user = await Users.findOne({
       where: { id: id },
     });
-    if (isUserAvailable) {
+    if (user) {
       try {
-        await this.userModel.destroy({
-          where: {
-            id: id,
-          },
+        user.isActive = false;
+        await user.save();
+        const users = await this.userModel.findAll({
+          where: { isActive: true },
         });
         return {
           message: 'User deleted successfully',
           statusCode: HttpStatus.OK,
+          data: users,
         };
       } catch (error) {
         return {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          data: {},
         };
       }
     } else {
       return {
         message: 'User not found',
         statusCode: HttpStatus.NOT_FOUND,
+        data: {},
       };
     }
   }
