@@ -75,10 +75,10 @@ const UserList = () => {
 
   const handleEditSave = async (editedData: RowData) => {
     if ("id" in editedData) {
-      editedData["user_name"] = editedData["userName"];
-      delete editedData["userName"];
-      editedData["display_name"] = editedData["displayName"];
-      delete editedData["displayName"];
+      editedData.user_name = editedData.userName;
+      delete editedData.userName;
+      editedData.display_name = editedData.displayName;
+      delete editedData.displayName;
 
       await editUser(editedData.id, editedData);
 
