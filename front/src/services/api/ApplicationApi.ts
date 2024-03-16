@@ -14,4 +14,9 @@ export class ApplicationApi {
     const res = await axios.put(`${config.service}/applications/${applicationId}`, updatedData);
     return res.data;
   }
+
+  static async deleteApplication(id: number) {
+    const res = await axios.delete(`${config.service}/applications/${id}`);
+    return res.data;
+  }
 }

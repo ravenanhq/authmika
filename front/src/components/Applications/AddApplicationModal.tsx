@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -23,17 +23,27 @@ interface AddApplicationModalProps {
   open: boolean;
   onClose: () => void;
   onAddApplication: (application: any) => void;
+  uniqueValidation: string;
 }
 
 export default function AddApplicationModal({
   open,
   onClose,
   onAddApplication,
+  uniqueValidation,
 }: AddApplicationModalProps) {
   const [application, setApplication] = useState("");
   const [name, setName] = useState("");
   const [base_url, setBaseUrl] = useState("");
   const [errors, setErrors] = useState<Errors>({});
+
+  useEffect(() => {
+    setErrors({application: uniqueValidation});
+  }, [uniqueValidation]);
+
+  useEffect(() => {
+    setErrors({});
+  }, [open]);
 
   const validateForm = () => {
     let newErrors: Errors = {};
@@ -63,14 +73,19 @@ export default function AddApplicationModal({
         base_url: base_url,
       };
       onAddApplication(newApplication);
-      setName("");
-      setApplication("");
-      setBaseUrl("");
+      if (!errors) {
+        setName("");
+        setApplication("");
+        setBaseUrl("");
+      }
     }
   };
 
   const handleClose = () => {
     setErrors({});
+    setName("");
+    setApplication("");
+    setBaseUrl("");
     onClose();
   };
 
@@ -112,6 +127,7 @@ export default function AddApplicationModal({
       <Divider color="#265073"></Divider>
       <DialogContent>
         <TextField
+          required
           label="Name"
           fullWidth
           margin="normal"
@@ -121,6 +137,7 @@ export default function AddApplicationModal({
           helperText={errors.name}
         />
         <TextField
+          required
           label="Application"
           fullWidth
           margin="normal"
@@ -130,6 +147,7 @@ export default function AddApplicationModal({
           helperText={errors.application}
         />
         <TextField
+          required
           label="Base Url"
           fullWidth
           margin="normal"
