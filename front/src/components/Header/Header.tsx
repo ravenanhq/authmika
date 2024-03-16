@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useEffect, useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -14,19 +14,33 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import Popover from "@mui/material/Popover";
 import { signOut } from "next-auth/react";
 import { config } from "../../../config";
-import { Divider, Link, Typography } from "@mui/material";
+import { Container, Divider, Link, Typography } from "@mui/material";
 import { usePathname } from "next/navigation";
+import { getSession } from "next-auth/react";
 
 const drawerWidth = 240;
-const navItems = [
-  { label: "Dashboard", route: "/dashboard" },
-  { label: "Users", route: "/users" },
-  { label: "Applications", route: "/applications" },
-];
 
 export default function DrawerAppBar() {
   const pathName = usePathname();
   const showHeader = !["/login"].includes(pathName);
+  const [navItems, setNavItems] = useState([
+    { label: "Dashboard", route: "/dashboard" },
+    { label: "Users", route: "/users" },
+    { label: "Applications", route: "/applications" },
+  ]);
+
+  useEffect(() => {
+    getUserSession();
+  }, []);
+
+  const getUserSession = async () => {
+    const session = await getSession();
+    if (session && session.user) {
+      if (session.user.role.toLowerCase() == "client") {
+        setNavItems([{ label: "Dashboard", route: "/dashboard" }]);
+      }
+    }
+  };
 
   const logOut = () => {
     signOut({ redirect: true, callbackUrl: config.signoutCallback });
@@ -83,74 +97,84 @@ export default function DrawerAppBar() {
             backgroundColor: "#265073",
           }}
         >
-          <Toolbar>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              sx={{ mr: 2, display: { sm: "none" } }}
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography variant="h6" noWrap component="div">
-              Authmika
-            </Typography>
-            <Box sx={{ flexGrow: 0.1 }} />
-            <Box sx={{ display: { xs: "none", md: "flex" } }}>
-              {navItems.map((item) => (
-                <Link key={item.route} href={item.route}>
-                  <Button sx={{ color: "#fff", textTransform: 'none' }}>{item.label}</Button>
-                </Link>
-              ))}
-              <Box />
-            </Box>
-            <Box sx={{ marginLeft: "auto" }}>
-              <IconButton color="inherit" onClick={handleClick}>
-                <AccountCircleIcon />
-              </IconButton>
-              <Popover
-                open={open}
-                anchorEl={anchorEl}
-                onClose={handleClose}
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "right",
-                }}
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
-                }}
+          <Container maxWidth="xl">
+            <Toolbar style={{ padding: "0px" }}>
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                edge="start"
+                onClick={handleDrawerToggle}
+                sx={{ mr: 2, display: { sm: "none" } }}
               >
-                <Box sx={{ p: 2 }}>
-                  <Link
-                    href="/profile"
-                    sx={{
-                      textDecoration: "none",
-                      color: "inherit",
-                      "&:hover": { color: "blue" },
-                    }}
-                  >
-                    Profile
+                <MenuIcon />
+              </IconButton>
+              <Typography variant="h6" noWrap component="div">
+                <Link
+                  href="/dashboard"
+                  underline="none"
+                  sx={{ textDecoration: "none", color: "inherit" }}
+                >
+                  Authmika
+                </Link>
+              </Typography>
+              <Box sx={{ flexGrow: 0.1 }} />
+              <Box sx={{ display: { xs: "none", md: "flex" } }}>
+                {navItems.map((item) => (
+                  <Link key={item.route} href={item.route}>
+                    <Button sx={{ color: "#fff", textTransform: "none" }}>
+                      {item.label}
+                    </Button>
                   </Link>
-                </Box>
-                <Divider />
-                <Box sx={{ p: 2 }}>
-                  <Link
-                    onClick={() => logOut()}
-                    sx={{
-                      textDecoration: "none",
-                      color: "inherit",
-                      cursor: "pointer",
-                      "&:hover": { color: "red" },
-                    }}
-                  >
-                    Logout
-                  </Link>
-                </Box>
-              </Popover>
-            </Box>
-          </Toolbar>
+                ))}
+                <Box />
+              </Box>
+              <Box sx={{ marginLeft: "auto" }}>
+                <IconButton color="inherit" onClick={handleClick}>
+                  <AccountCircleIcon />
+                </IconButton>
+                <Popover
+                  open={open}
+                  anchorEl={anchorEl}
+                  onClose={handleClose}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "right",
+                  }}
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                >
+                  <Box sx={{ p: 2 }}>
+                    <Link
+                      href="/profile"
+                      sx={{
+                        textDecoration: "none",
+                        color: "inherit",
+                        "&:hover": { color: "blue" },
+                      }}
+                    >
+                      Profile
+                    </Link>
+                  </Box>
+                  <Divider />
+                  <Box sx={{ p: 2 }}>
+                    <Link
+                      onClick={() => logOut()}
+                      sx={{
+                        textDecoration: "none",
+                        color: "inherit",
+                        cursor: "pointer",
+                        "&:hover": { color: "red" },
+                      }}
+                    >
+                      Logout
+                    </Link>
+                  </Box>
+                </Popover>
+              </Box>
+            </Toolbar>
+          </Container>
         </AppBar>
         <nav>
           <Drawer
