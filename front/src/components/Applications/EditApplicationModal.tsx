@@ -33,6 +33,7 @@ interface EditModalProps {
   onClose: () => void;
   rowData: RowData | null;
   onEdit: (editedData: RowData) => void;
+  uniqueValidation: string;
 }
 
 export default function EditApplicationModal({
@@ -40,16 +41,24 @@ export default function EditApplicationModal({
   onClose,
   rowData,
   onEdit,
+  uniqueValidation,
 }: EditModalProps) {
   const [editedData, setEditedData] = useState<RowData>(InitialRowData);
   const [errors, setErrors] = useState<Errors>({});
-  const [successMessageOpen, setSuccessMessageOpen] = useState(false);
 
   useEffect(() => {
     if (rowData) {
       setEditedData(rowData);
     }
   }, [rowData]);
+
+  useEffect(() => {
+    setErrors({application: uniqueValidation});
+  }, [uniqueValidation]);
+
+  useEffect(() => {
+    setErrors({});
+  }, [open]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -80,7 +89,6 @@ export default function EditApplicationModal({
     if (validateForm()) {
       onEdit(editedData);
     }
-    setSuccessMessageOpen(true);
   };
 
   const handleClose = () => {
@@ -141,6 +149,7 @@ export default function EditApplicationModal({
       <Divider color="#265073"></Divider>
       <DialogContent>
         <TextField
+          required
           label="Name"
           name="name"
           value={editedData.name || ""}
@@ -151,6 +160,7 @@ export default function EditApplicationModal({
           helperText={errors.name}
         />
         <TextField
+          required
           label="Application"
           name="application"
           value={editedData.application || ""}
@@ -161,6 +171,7 @@ export default function EditApplicationModal({
           helperText={errors.application}
         />
         <TextField
+          required
           label="Base Url"
           name="baseUrl"
           value={editedData.baseUrl || ""}

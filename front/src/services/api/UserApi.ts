@@ -8,15 +8,10 @@ interface IForgotPasswordData {
 }
 
 interface IResetPasswordData {
-  name?: string;
-  application?: string;
   key?: string;
   expires?: string;
   password?: string;
   confirm_password?: string;
-  base_url?: string;
-  userId: number;
-  id: string | number;
 }
 
 interface IClientData {

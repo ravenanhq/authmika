@@ -10,6 +10,8 @@ import {
   Divider,
   styled,
   CircularProgress,
+  Stack,
+  Alert,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { SetStateAction, useEffect, useState } from "react";
@@ -19,6 +21,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddApplicationModal from "./AddApplicationModal";
 import EditApplicationModal from "./EditApplicationModal";
+import DeleteApplicationModal from "./DeleteApplicationModal";
 
 export interface RowData {
   id: number;
@@ -33,10 +36,12 @@ const ApplicationList = () => {
   const [rows, setRows] = useState([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
-  const [successMessageOpen, setSuccessMessageOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [isAddApplicationModalOpen, setAddApplicationModalOpen] =
     useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [alertShow, setAlertShow] = useState("");
+  const [uniqueAlert, setUniqueAlert] = useState("");
 
   useEffect(() => {
     getApplications();
@@ -50,9 +55,6 @@ const ApplicationList = () => {
 
   const handleAddApplication = (newApplication: RowData) => {
     addApplication(newApplication);
-    setSuccessMessageOpen(true);
-    setMessage("Application added successfully!");
-    handleCloseAddApplicationModal();
   };
 
   const handleEditModalClose = () => {
@@ -62,15 +64,17 @@ const ApplicationList = () => {
 
   const handleEditSave = (editedData: RowData) => {
     editedData["base_url"] = editedData["baseUrl"];
-    delete editedData["baseUrl"];
     editApplication(editedData.id, editedData);
-    handleEditModalClose();
-    setSuccessMessageOpen(true);
-    setMessage("Application updated successfully!");
   };
 
-  const handleSnackbarClose = () => {
-    setSuccessMessageOpen(false);
+  const handleDelete = (rowData: SetStateAction<null>) => {
+    setSelectedRow(rowData);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteModalClose = () => {
+    setDeleteModalOpen(false);
+    setSelectedRow(null);
   };
 
   const handleAddApplicationClick = () => {
@@ -116,6 +120,7 @@ const ApplicationList = () => {
           </IconButton>
           <IconButton
             aria-label="delete"
+            onClick={() => handleDelete(params.row)}
           >
             <DeleteIcon />
           </IconButton>
@@ -127,10 +132,22 @@ const ApplicationList = () => {
   const addApplication = async (newApplication: RowData) => {
     try {
       const response = await ApplicationApi.addApplication(newApplication);
+      setUniqueAlert("");
       if (response) {
-        setRows(response.data);
+        if (response.statusCode == 409) {
+          setUniqueAlert(response.message);
+        } else if (response.statusCode == 200) {
+          handleCloseAddApplicationModal();
+          setRows(response.data);
+          setAlertShow(response.message);
+        }
       }
     } catch (error: any) {
+      var response = error.response.data;
+      if (response.statusCode == 422 && response.message.application) {
+        setUniqueAlert(response.message.application);
+      }
+
       console.log(error);
     }
   };
@@ -142,22 +159,52 @@ const ApplicationList = () => {
         updatedData
       );
 
+      setUniqueAlert("");
+
       if (response) {
-        setRows(response.data);
+        if (response.statusCode == 409) {
+          setUniqueAlert(response.message);
+        } else if (response.statusCode == 200) {
+          handleEditModalClose();
+          setRows(response.data);
+          setAlertShow(response.message);
+        }
       }
     } catch (error: any) {
+      var response = error.response.data;
+      if (response.statusCode == 422 && response.message.application) {
+        setUniqueAlert(response.message.application);
+      }
+
       console.log(error);
     }
   };
+
+  const handleDeleteConfirm = async (selectedRow: any) => {
+    if (selectedRow !== null) {
+      try {
+        const response = await ApplicationApi.deleteApplication(selectedRow.id);
+
+        if (response && response.data) {
+          setRows(response.data);
+          setAlertShow(response.message);
+        }
+        setDeleteModalOpen(false);
+      } catch (error: any) {
+        console.error(error);
+      }
+    }
+  };
+
   const getApplications = async () => {
     try {
       const response = await ApplicationApi.getApplications();
-      setRows(response);
       if (response) {
         setLoading(false);
+        setRows(response);
       }
     } catch (error: any) {
-      console.log(error)
+      console.log(error);
     }
   };
 
@@ -171,18 +218,19 @@ const ApplicationList = () => {
       color: "#fff",
       backgroundColor: "#265073",
     },
+    marginTop: "5%",
   }));
 
   const StyledDataGrid = styled(DataGrid)((theme) => ({
     "& .MuiDataGrid-sortIcon": {
-    opacity: 1,
-    color: "white",
+      opacity: 1,
+      color: "white",
     },
     "& .MuiDataGrid-menuIconButton": {
-    opacity: 1,
-    color: "white"
+      opacity: 1,
+      color: "white",
     },
-    }));
+  }));
 
   return (
     <Card
@@ -193,15 +241,10 @@ const ApplicationList = () => {
           backgroundColor: "#265073",
           color: "#fff",
         },
-        "gridWidth": "500px",
+        gridWidth: "500px",
       }}
     >
-      <Snackbar
-        open={successMessageOpen}
-        autoHideDuration={3000}
-        onClose={handleSnackbarClose}
-        message={message}
-      />
+      <Snackbar autoHideDuration={3000} message={message} />
       <CardContent style={{ padding: "0" }}>
         <Typography variant="h4">Applications</Typography>
         <Divider
@@ -214,21 +257,27 @@ const ApplicationList = () => {
           </div>
         )}
         {!loading && (
-        <><Grid
-            container
-            justifyContent="flex-end"
-            alignItems="center"
-            style={{ marginBottom: "5px" }}
-          >
-            <Grid item>
-              <PrimaryButton
-                startIcon={<AddIcon />}
-                onClick={handleAddApplicationClick}
-              >
-                Add New Application
-              </PrimaryButton>
+          <>
+            <Stack sx={{ width: "100%" }} spacing={2}>
+              {alertShow && <Alert severity="success" onClose={() => { setAlertShow(""); }}>{alertShow}</Alert>}
+            </Stack>
+
+            <Grid
+              container
+              justifyContent="flex-end"
+              alignItems="center"
+              style={{ marginBottom: "5px" }}
+            >
+              <Grid item>
+                <PrimaryButton
+                  startIcon={<AddIcon />}
+                  onClick={handleAddApplicationClick}
+                >
+                  Add New Application
+                </PrimaryButton>
+              </Grid>
             </Grid>
-          </Grid><StyledDataGrid
+            <StyledDataGrid
               rows={rows}
               columns={columns}
               initialState={{
@@ -241,7 +290,9 @@ const ApplicationList = () => {
                 backgroundColor: "white",
                 marginTop: "2%",
                 width: "100%",
-              }} /></>
+              }}
+            />
+          </>
         )}
       </CardContent>
 
@@ -250,12 +301,21 @@ const ApplicationList = () => {
         onClose={handleEditModalClose}
         rowData={selectedRow}
         onEdit={handleEditSave}
+        uniqueValidation={uniqueAlert}
       />
 
       <AddApplicationModal
         open={isAddApplicationModalOpen}
         onClose={handleCloseAddApplicationModal}
         onAddApplication={handleAddApplication}
+        uniqueValidation={uniqueAlert}
+      />
+
+      <DeleteApplicationModal
+        open={deleteModalOpen}
+        onClose={handleDeleteModalClose}
+        onDeleteConfirm={() => handleDeleteConfirm(selectedRow)}
+        rowData={selectedRow}
       />
     </Card>
   );

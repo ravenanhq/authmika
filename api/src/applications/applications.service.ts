@@ -19,7 +19,9 @@ export class ApplicationsService {
   ) {}
 
   async getApplications() {
-    return this.applicationsModel.findAll({});
+    return this.applicationsModel.findAll({
+      where: { isActive: true },
+    });
   }
 
   async createNewApplication(
@@ -89,7 +91,9 @@ export class ApplicationsService {
         }
       }
 
-      const applications = await this.applicationsModel.findAll({});
+      const applications = await this.applicationsModel.findAll({
+        where: { isActive: true },
+      });
 
       return {
         message: 'Application created successfully.',
@@ -170,7 +174,9 @@ export class ApplicationsService {
         existingApplication.updatedBy = user ? user.id : null;
         await existingApplication.save();
 
-        const applications = await this.applicationsModel.findAll({});
+        const applications = await this.applicationsModel.findAll({
+          where: { isActive: true },
+        });
 
         return {
           message: 'Application updated successfully.',
@@ -203,35 +209,40 @@ export class ApplicationsService {
 
   async deleteApplication(
     id: number,
-  ): Promise<{ message: string; statusCode: number }> {
+  ): Promise<{ message: string; statusCode: number; data: object }> {
     try {
       const application = await this.applicationsModel.findOne({
         where: {
           id,
+          isActive: true,
         },
       });
 
       if (application) {
-        await this.applicationsModel.destroy({
-          where: {
-            id: id,
-          },
+        application.isActive = false;
+        await application.save();
+
+        const applications = await this.applicationsModel.findAll({
+          where: { isActive: true },
         });
 
         return {
           message: 'Application deleted successfully.',
           statusCode: HttpStatus.OK,
+          data: applications,
         };
       } else {
         return {
           message: 'Application not found.',
           statusCode: HttpStatus.NOT_FOUND,
+          data: {},
         };
       }
     } catch (error) {
       return {
         message: error.message,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        data: {},
       };
     }
   }
