@@ -140,9 +140,6 @@ const ApplicationList = () => {
           handleCloseAddApplicationModal();
           setRows(response.data);
           setAlertShow(response.message);
-          setTimeout(() => {
-            setAlertShow("");
-          }, 3000);
         }
       }
     } catch (error: any) {
@@ -171,9 +168,6 @@ const ApplicationList = () => {
           handleEditModalClose();
           setRows(response.data);
           setAlertShow(response.message);
-          setTimeout(() => {
-            setAlertShow("");
-          }, 3000);
         }
       }
     } catch (error: any) {
@@ -194,9 +188,6 @@ const ApplicationList = () => {
         if (response && response.data) {
           setRows(response.data);
           setAlertShow(response.message);
-          setTimeout(() => {
-            setAlertShow("");
-          }, 3000);
         }
         setDeleteModalOpen(false);
       } catch (error: any) {
@@ -268,7 +259,7 @@ const ApplicationList = () => {
         {!loading && (
           <>
             <Stack sx={{ width: "100%" }} spacing={2}>
-              {alertShow && <Alert severity="success">{alertShow}</Alert>}
+              {alertShow && <Alert severity="success" onClose={() => { setAlertShow(""); }}>{alertShow}</Alert>}
             </Stack>
 
             <Grid
