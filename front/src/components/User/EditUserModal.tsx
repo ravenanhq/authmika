@@ -73,7 +73,6 @@ export default function EditUserModal({
   }, [rowData]);
 
   useEffect(() => {
-    console.log("unique", uniqueValidation);
     setErrors({userName: uniqueValidation});
   }, [uniqueValidation]);
 
