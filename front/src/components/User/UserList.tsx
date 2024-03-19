@@ -22,6 +22,7 @@ import DeleteModal from "./DeleteUserModal";
 import AddUserModal from "./AddUserModal";
 import EditUserModal from "./EditUserModal";
 import { UserApi } from "@/services/api/UserApi";
+import { Visibility } from "@mui/icons-material";
 
 export interface RowData {
   id: number;
@@ -60,6 +61,13 @@ const UserList = () => {
     });
 
     setEditModalOpen(true);
+  };
+
+  const handleView = (rowData: RowData) => {
+    const data = JSON.stringify(rowData);
+    localStorage.setItem("user-data", data);
+    const url = `/users/${rowData.id}`;
+    window.location.href = url;
   };
 
   const handleAddUser = (newUser: RowData) => {
@@ -151,6 +159,10 @@ const UserList = () => {
       sortable: false,
       renderCell: (params) => (
         <>
+          <IconButton aria-label="view" onClick={() => handleView(params.row)}>
+            <Visibility />
+          </IconButton>
+
           <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
             <EditIcon />
           </IconButton>

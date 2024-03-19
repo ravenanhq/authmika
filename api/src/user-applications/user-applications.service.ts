@@ -73,6 +73,12 @@ export class UserApplicationService {
       };
     }
 
+    await this.userApplictionsModel.destroy({
+      where: {
+        userId: userId,
+      },
+    });
+
     applicationId.forEach(async (item) => {
       await this.userApplictionsModel.create({
         userId: userId,
