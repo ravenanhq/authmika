@@ -35,15 +35,14 @@ export interface RowData {
 }
 
 const UserList = () => {
-  const [alertshow, setAlertShow] = useState('');
+  const [alertShow, setAlertShow] = useState('');
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<RowData[]>([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
-  const [successMessageOpen, setSuccessMessageOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [message, setMessage] = useState("");
   const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
+  const [uniqueAlert, setUniqueAlert] = useState("");
 
   useEffect(() => {
     getUsers();
@@ -64,8 +63,7 @@ const UserList = () => {
   };
 
   const handleAddUser = (newUser: RowData) => {
-    addUser(newUser);    
-    handleCloseAddUserModal();
+    addUser(newUser);
   };
 
   const handleEditModalClose = () => {
@@ -76,15 +74,9 @@ const UserList = () => {
   const handleEditSave = async (editedData: RowData) => {
     if ("id" in editedData) {
       editedData.user_name = editedData.userName;
-      delete editedData.userName;
       editedData.display_name = editedData.displayName;
-      delete editedData.displayName;
 
       await editUser(editedData.id, editedData);
-
-      handleEditModalClose();
-     
-      
     }
   };
 
@@ -102,10 +94,6 @@ const UserList = () => {
   const handleDeleteModalClose = () => {
     setDeleteModalOpen(false);
     setSelectedRow(null);
-  };
-
-  const handleSnackbarClose = () => {
-    setSuccessMessageOpen(false);
   };
 
   const handleAddUserClick = () => {
@@ -159,6 +147,8 @@ const UserList = () => {
       headerClassName: "user-header",
       flex: 1,
       minWidth: 200,
+      disableColumnMenu: true,
+      sortable: false,
       renderCell: (params) => (
         <>
           <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
@@ -189,17 +179,23 @@ const UserList = () => {
 
   const addUser = async (newUser: RowData) => {
     try {
-      const  alertshow="User added successfully";
       const response = await UserApi.create(newUser);
-
-      if (response && response.data) {
-        setRows(response.data);
-        setAlertShow(alertshow);
-        setTimeout(() => {
-          setAlertShow('');
-        }, 3000);
+      setUniqueAlert("");
+      if (response) {
+        if (response.statusCode == 409) {
+          setUniqueAlert(response.message);
+        } else if (response.statusCode == 200) {
+          setRows(response.data);
+          setAlertShow(response.message);
+          handleCloseAddUserModal();
+        }
       }
     } catch (error: any) {
+      var response = error.response.data;
+      if (response.statusCode == 422 && response.message.application) {
+        setUniqueAlert(response.message.application);
+      }
+
       console.log(error);
     }
   };
@@ -207,16 +203,23 @@ const UserList = () => {
   const editUser = async (id: any, updatedData: any) => {
     try {
       const response = await UserApi.update(id, updatedData);
-      const  alertshow="User updated successfully";
+      setUniqueAlert("");
 
-      if (response && response.data) {
-        setRows(response.data);
-        setAlertShow(alertshow);
-        setTimeout(() => {
-          setAlertShow('');
-        }, 3000);
+      if (response) {
+        if (response.statusCode == 409) {
+          setUniqueAlert(response.message);
+        } else if (response.statusCode == 200) {
+          setRows(response.data);
+          setAlertShow(response.message);
+          handleEditModalClose();
+        }
       }
     } catch (error: any) {
+      var response = error.response.data;
+      if (response.statusCode == 422 && response.message.application) {
+        setUniqueAlert(response.message.application);
+      }
+
       console.error(error);
     }
   };
@@ -225,14 +228,10 @@ const UserList = () => {
     if (selectedRow !== null) {
       try {
         const response = await UserApi.deleteUser(selectedRow.id);
-        const  alertshow="User deleted successfully";
 
         if (response && response.data) {
           setRows(response.data);
-          setAlertShow(alertshow);
-          setTimeout(() => {
-            setAlertShow('');
-          }, 3000);
+          setAlertShow(response.message);
         }
         setDeleteModalOpen(false);
       } catch (error: any) {
@@ -262,6 +261,10 @@ const UserList = () => {
       opacity: 1,
       color: "white",
     },
+    "& .MuiDataGrid-filterIcon": {
+      opacity: 1,
+      color: "white",
+    },
   }));
   
 
@@ -277,12 +280,7 @@ const UserList = () => {
         gridWidth: "500px",
       }}
     >
-      <Snackbar
-        open={successMessageOpen}
-        autoHideDuration={12000}
-        onClose={handleSnackbarClose}
-        message={message}
-      />
+      <Snackbar autoHideDuration={12000} />
       <CardContent style={{ padding: "0" }}>
         <Typography variant="h4">Users</Typography>
         <Divider
@@ -296,10 +294,8 @@ const UserList = () => {
         )}
         {!loading && (
           <>
-            <Stack sx={{ width: '100%' }} spacing={2}>
-            {alertshow && (
-              <Alert severity="success">{alertshow}</Alert>
-              )}
+          <Stack sx={{ width: "100%" }} spacing={2}>
+              {alertShow && <Alert severity="success" onClose={() => { setAlertShow(""); }}>{alertShow}</Alert>}
             </Stack>
 
             <Grid
@@ -327,6 +323,15 @@ const UserList = () => {
                   paginationModel: { page: 0, pageSize: 5 },
                 },
               }}
+              slots={{
+                noResultsOverlay: () => {
+                  return (
+                    <Typography variant="body1" align="center" sx={{ marginTop: 10, justifyContent: "center"}}>
+                      No results found.
+                    </Typography>
+                  );
+                }
+              }}
               pageSizeOptions={[5, 10, 15, 20]}
               style={{
                 backgroundColor: "white",
@@ -343,6 +348,7 @@ const UserList = () => {
         onClose={handleEditModalClose}
         rowData={selectedRow}
         onEdit={handleEditSave}
+        uniqueValidation={uniqueAlert}
       />
 
       <DeleteModal
@@ -356,6 +362,7 @@ const UserList = () => {
         open={isAddUserModalOpen}
         onClose={handleCloseAddUserModal}
         onAddUser={handleAddUser}
+        uniqueValidation={uniqueAlert}
       />
     </Card>
     

@@ -40,6 +40,7 @@ interface EditModalProps {
   onClose: () => void;
   rowData: RowData | null;
   onEdit: (editedData: RowData) => void;
+  uniqueValidation: string;
 }
 
 const Role: { value: string; label: string }[] = [
@@ -58,6 +59,7 @@ export default function EditUserModal({
   onClose,
   rowData,
   onEdit,
+  uniqueValidation,
 }: EditModalProps) {
   const [editedData, setEditedData] = useState<RowData>(InitialRowData);
   const [errors, setErrors] = useState<Errors>({});
@@ -69,6 +71,14 @@ export default function EditUserModal({
       setEditedData(rowData);
     }
   }, [rowData]);
+
+  useEffect(() => {
+    setErrors({userName: uniqueValidation});
+  }, [uniqueValidation]);
+
+  useEffect(() => {
+    setErrors({});
+  }, [open]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

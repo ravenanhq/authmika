@@ -113,6 +113,8 @@ const ApplicationList = () => {
       headerClassName: "application-header",
       flex: 1,
       minWidth: 150,
+      disableColumnMenu: true,
+      sortable: false,
       renderCell: (params) => (
         <>
           <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
@@ -230,6 +232,10 @@ const ApplicationList = () => {
       opacity: 1,
       color: "white",
     },
+    "& .MuiDataGrid-filterIcon": {
+      opacity: 1,
+      color: "white",
+    },
   }));
 
   return (
@@ -284,6 +290,15 @@ const ApplicationList = () => {
                 pagination: {
                   paginationModel: { page: 0, pageSize: 5 },
                 },
+              }}
+              slots={{
+                noResultsOverlay: () => {
+                  return (
+                    <Typography variant="body1" align="center" sx={{ marginTop: 10, justifyContent: "center" }}>
+                      No results found.
+                    </Typography>
+                  );
+                }
               }}
               pageSizeOptions={[5, 10, 15, 20]}
               style={{

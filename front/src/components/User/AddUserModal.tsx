@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -27,12 +27,14 @@ interface AddUserModalProps {
   open: boolean;
   onClose: () => void;
   onAddUser: (application: any) => void;
+  uniqueValidation: string;
 }
 
 export default function AddUserModal({
   open,
   onClose,
   onAddUser,
+  uniqueValidation,
 }: AddUserModalProps) {
   const [user_name, setUserName] = useState("");
   const [display_name, setDisplayName] = useState("");
@@ -41,6 +43,14 @@ export default function AddUserModal({
   const [mobile, setMobile] = useState("");
   const [role, setRole] = useState("");
   const [errors, setErrors] = useState<Errors>({});
+
+  useEffect(() => {
+    setErrors({user_name: uniqueValidation});
+  }, [uniqueValidation]);
+
+  useEffect(() => {
+    setErrors({});
+  }, [open]);
 
   const validateForm = () => {
     let newErrors: Errors = {};
@@ -107,6 +117,12 @@ export default function AddUserModal({
 
   const handleClose = () => {
     setErrors({});
+    setUserName("");
+    setDisplayName("");
+    setEmail("");
+    setMobile("");
+    setPassword("");
+    setRole("");
     onClose();
   };
 
