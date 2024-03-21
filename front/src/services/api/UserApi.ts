@@ -1,4 +1,3 @@
-import { RowData } from '@/components/View/"use client";';
 import { config } from "../../../config";
 import { ApiResponseDto, SignInDto, UsersDto } from "@/models/users.dto";
 import axios from "axios";
@@ -37,7 +36,7 @@ export class UserApi {
     return res.data;
   }
 
-  static async update(id: number, updatedData: RowData) {
+  static async update(id: number, updatedData: any) {
     const res = await axios.put(`${config.service}/users/${id}`, updatedData);
     return res.data;
   }

@@ -19,39 +19,49 @@ export class UserApplicationService {
   }
 
   async getApplicationsByUserId(userId?: number): Promise<{
-    id: number;
-    userId: number;
+    id?: number;
+    userId?: number;
     application: object;
   }> {
     try {
       const whereCondition: any = {};
-      if (userId !== undefined) {
-        whereCondition.userId = userId;
-      }
-
-      const userApplications = await this.userApplictionsModel.findAll({
-        where: whereCondition,
-      });
-      const detailedUserApplications: any = [];
-      for (const userApp of userApplications) {
-        const applicationId = userApp.applicationId;
-        const applicationDetails = await this.applictionsModel.findOne({
-          where: {
-            id: applicationId,
-          },
-        });
-
-        if (applicationDetails) {
-          const detailedUserApp = {
-            id: userApp.id,
-            userId: userApp.userId,
-            application: applicationDetails,
-          };
-
-          detailedUserApplications.push(detailedUserApp);
+      if (userId) {
+        if (userId !== undefined) {
+          whereCondition.userId = userId;
         }
+
+        const userApplications = await this.userApplictionsModel.findAll({
+          where: whereCondition,
+        });
+        const detailedUserApplications: any = [];
+        for (const userApp of userApplications) {
+          const applicationId = userApp.applicationId;
+          const applicationDetails = await this.applictionsModel.findOne({
+            where: {
+              id: applicationId,
+            },
+          });
+
+          if (applicationDetails) {
+            const detailedUserApp = {
+              id: userApp.id,
+              userId: userApp.userId,
+              application: applicationDetails,
+            };
+
+            detailedUserApplications.push(detailedUserApp);
+          }
+        }
+        return detailedUserApplications;
+      } else {
+        const applicationDetails = await this.applictionsModel.findAll({
+          where: { isActive: true },
+        });
+        const detailedUserApp = {
+          application: applicationDetails,
+        };
+        return detailedUserApp;
       }
-      return detailedUserApplications;
     } catch (error) {
       console.error('Error fetching user applications:', error);
       throw error;

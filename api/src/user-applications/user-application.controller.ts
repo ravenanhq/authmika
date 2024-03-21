@@ -34,9 +34,9 @@ export class UserApplicationsController {
   async getApplicationsByUserId(
     @Body() requestBody: { userId: number },
   ): Promise<{
-    id: number;
-    userId: number;
-    application: object;
+    id?: number;
+    userId?: number;
+    application?: object;
   }> {
     try {
       const userApplications =
