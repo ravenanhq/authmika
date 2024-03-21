@@ -1,3 +1,4 @@
+import { RowData } from '@/components/View/"use client";';
 import { config } from "../../../config";
 import { ApiResponseDto, SignInDto, UsersDto } from "@/models/users.dto";
 import axios from "axios";
@@ -36,7 +37,7 @@ export class UserApi {
     return res.data;
   }
 
-  static async update(id: number, updatedData: any) {
+  static async update(id: number, updatedData: RowData) {
     const res = await axios.put(`${config.service}/users/${id}`, updatedData);
     return res.data;
   }
@@ -81,6 +82,7 @@ export class UserApi {
       return error.response.data;
     }
   }
+
   static async userApplicationMapping(
     userId: number,
     applicationId: Array<string>
@@ -93,33 +95,6 @@ export class UserApi {
           applicationId: applicationId,
         }
       );
-      return res.data;
-    } catch (error: any) {
-      return error.response.data;
-    }
-  }
-  static async createlist(data: IResetPasswordData): Promise<ApiResponseDto> {
-    try {
-      const res: any = await axios.get<IResetPasswordData>(
-        `${config.service}/applications`,
-        {
-          params: data,
-        }
-      );
-      return res.data;
-    } catch (error: any) {
-      return error.response.data;
-    }
-  }
-  static async createapplication(
-    data: IResetPasswordData
-  ): Promise<ApiResponseDto> {
-    try {
-      const res: any = await axios.post<IResetPasswordData>(
-        `${config.service}/applications`,
-        data
-      );
-
       return res.data;
     } catch (error: any) {
       return error.response.data;

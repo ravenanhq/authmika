@@ -63,17 +63,24 @@ const UserView = ({ params }: { params: IUserView }) => {
   const [applications, setApplications] = React.useState<Application[]>([]);
   const [open, setOpen] = React.useState(false);
   const [options, setOptions] = useState<ICreateListProps[]>([]);
-  const [selectedCheckboxes, setSelectedCheckboxes] = useState<ICreateListProps[]>([]);
+  const [selectedCheckboxes, setSelectedCheckboxes] = useState<
+    ICreateListProps[]
+  >([]);
   const [searchTerm, setSearchTerm] = React.useState<string>("");
   const users = localStorage.getItem("user-data");
   const userData = users ? JSON.parse(users) : null;
-  const id = params.id;
+  const [id, setId] = useState<number | undefined>(params.id);
 
   useEffect(() => {
     getApplication();
-    getApplicationsByUserId();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (id !== undefined) {
+      getApplicationsByUserId(id);
+    }
+  }, [id]);
 
   useEffect(() => {
     if (applications.length > 0) {
@@ -88,9 +95,17 @@ const UserView = ({ params }: { params: IUserView }) => {
     }
   }, [applications]);
 
-  const getApplicationsByUserId = async () => {
+  const getApplicationsByUserId = async (id: number | undefined) => {
     try {
-      const res = await UserApi.getApplicationsByUserId(1);
+      if (id === undefined) {
+        return;
+      }
+      const res = await UserApi.getApplicationsByUserId(id);
+      if (res.length === 0) {
+        setApplications([]); // Clear applications array
+        setSelectedCheckboxes([]);
+        return;
+      }
       const extractedData: ExtractedDataItem[] = res;
       const mappedData: Application[] = extractedData.map(
         (item: ExtractedDataItem) => ({
@@ -148,8 +163,8 @@ const UserView = ({ params }: { params: IUserView }) => {
       return formDataItem.id.toString();
     });
     try {
-      await UserApi.userApplicationMapping(1, applicationIds);
-      getApplicationsByUserId();
+      await UserApi.userApplicationMapping(id!, applicationIds);
+      getApplicationsByUserId(id);
     } catch (error) {
       console.error("Error submitting data:", error);
     }
@@ -252,31 +267,41 @@ const UserView = ({ params }: { params: IUserView }) => {
                       Assign Applications
                     </PrimaryButton>
                   </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Box display="flex" justifyContent="flex-end">
-                      <TextField
-                        InputProps={{
-                          startAdornment: (
-                            <SearchIcon
-                              sx={{
-                                color: "grey",
-                              }}
-                            />
-                          ),
-                        }}
-                        placeholder="Search applications"
-                        variant="outlined"
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        size="small"
-                      />
-                    </Box>
-                  </Grid>
+                  {applications.length > 0 && (
+                    <Grid item xs={12} sm={6}>
+                      <Box display="flex" justifyContent="flex-end">
+                        <TextField
+                          InputProps={{
+                            startAdornment: (
+                              <SearchIcon
+                                sx={{
+                                  color: "grey",
+                                }}
+                              />
+                            ),
+                          }}
+                          placeholder="Search applications"
+                          variant="outlined"
+                          value={searchTerm}
+                          onChange={handleSearchChange}
+                          size="small"
+                        />
+                      </Box>
+                    </Grid>
+                  )}
                 </Grid>
               </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
+            {applications.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={3}>
+                  <Typography>No results found</Typography>
+                </TableCell>
+              </TableRow>
+            )}
+
             {filteredApplications.map((application) => (
               <TableRow key={application.id}>
                 <TableCell>{application.name}</TableCell>
@@ -334,65 +359,55 @@ const UserView = ({ params }: { params: IUserView }) => {
                   ":hover": {
                     color: "#fff",
                     backgroundColor: "#FE7A36",
-                    padding: "4px",
                   },
                 }}
               >
                 <CloseIcon />
               </IconButton>
             </DialogTitle>
-            <Divider color="#265073"></Divider>
+            <Divider color="#265073" />
             {open && options.length > 0 && (
-              <Typography id="modal-description" sx={{ mt: 2 }}>
-                <div style={{ width: "100%", boxSizing: "border-box" }}></div>
-                <center>
+              <Box id="modal-description" sx={{ mt: 2 }}>
+                <Box style={{ width: "100%", boxSizing: "border-box" }}>
                   <Box sx={{ mt: 2, mx: 2, height: 250, overflowY: "scroll" }}>
                     <FormGroup sx={{ marginLeft: 7 }}>
                       <Grid container spacing={1}>
                         {options.map((option) => (
                           <Grid item xs={6} key={option.id}>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                padding: "1px",
-                              }}
-                            >
-                              <FormControlLabel
-                                key={option.id}
-                                control={
-                                  <Checkbox
-                                    checked={selectedCheckboxes.some(
-                                      (item) => item.id === option.id
-                                    )}
-                                    onChange={() =>
-                                      handleCheckboxChange(option.id)
-                                    }
-                                    style={{ color: "#265073" }}
-                                  />
-                                }
-                                label={
-                                  <div
-                                    style={{
-                                      maxWidth: "150px",
-                                      overflow: "hidden",
-                                    }}
-                                  >
-                                    <span
-                                      style={{ overflowWrap: "break-word" }}
-                                    >
-                                      {option.name}
-                                    </span>
-                                  </div>
-                                }
-                              />
-                            </div>
+                            <FormControlLabel
+                              key={option.id}
+                              control={
+                                <Checkbox
+                                  checked={selectedCheckboxes.some(
+                                    (item) => item.id === option.id
+                                  )}
+                                  onChange={() =>
+                                    handleCheckboxChange(option.id)
+                                  }
+                                  style={{ color: "#265073" }}
+                                />
+                              }
+                              label={
+                                <span
+                                  style={{
+                                    maxWidth: "150px",
+                                    overflow: "hidden",
+                                    display: "inline-block",
+                                    whiteSpace: "nowrap",
+                                    textOverflow: "ellipsis",
+                                  }}
+                                >
+                                  {option.name}
+                                </span>
+                              }
+                            />
                           </Grid>
                         ))}
                       </Grid>
                     </FormGroup>
                   </Box>
-                </center>
+                </Box>
+
                 <Divider
                   color="#265073"
                   sx={{ marginBottom: "2%", marginTop: "10%" }}
@@ -413,7 +428,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                     Cancel
                   </SecondaryButton>
                 </DialogActions>
-              </Typography>
+              </Box>
             )}
           </Box>
         </Modal>
