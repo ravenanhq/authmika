@@ -1,7 +1,7 @@
-
+import { RowData } from '@/components/View/"use client";';
 import { config } from "../../../config";
 import { ApiResponseDto, SignInDto, UsersDto } from "@/models/users.dto";
-import axios from 'axios';
+import axios from "axios";
 
 interface IForgotPasswordData {
   email?: string;
@@ -37,11 +37,8 @@ export class UserApi {
     return res.data;
   }
 
-  static async update(Id: string, updatedData: any) {
-    const res = await axios.put(
-      `${config.service}/users/${Id}`,
-      updatedData
-    );
+  static async update(id: number, updatedData: RowData) {
+    const res = await axios.put(`${config.service}/users/${id}`, updatedData);
     return res.data;
   }
 
@@ -72,6 +69,51 @@ export class UserApi {
     } catch (error: any) {
       return error.response.data;
     }
+  }
+
+  static async createuser(data: IResetPasswordData): Promise<ApiResponseDto> {
+    try {
+      const res: any = await axios.post<IResetPasswordData>(
+        `${config.service}/users`,
+        data
+      );
+      return res.data;
+    } catch (error: any) {
+      return error.response.data;
+    }
+  }
+
+  static async userApplicationMapping(
+    userId: number,
+    applicationId: Array<string>
+  ): Promise<ApiResponseDto> {
+    try {
+      const res: any = await axios.post<IResetPasswordData>(
+        `${config.service}/user-applications`,
+        {
+          userId: userId,
+          applicationId: applicationId,
+        }
+      );
+      return res.data;
+    } catch (error: any) {
+      return error.response.data;
+    }
+  }
+
+  static async getApplication() {
+    const res = await axios.get(`${config.service}/applications`);
+    return res.data;
+  }
+
+  static async getApplicationsByUserId(userId: number) {
+    const res = await axios.post(
+      `${config.service}/user-applications/get-user-applications`,
+      {
+        userId: userId,
+      }
+    );
+    return res.data;
   }
 
   static async setClientDetails(data: IClientData): Promise<ApiResponseDto> {

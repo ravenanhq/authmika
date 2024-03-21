@@ -66,12 +66,11 @@ export class UserApplicationService {
       };
     }
 
-    if (applicationId == undefined || applicationId.length == 0) {
-      return {
-        message: 'Application Id not supplied.',
-        statusCode: HttpStatus.OK,
-      };
-    }
+    await this.userApplictionsModel.destroy({
+      where: {
+        userId: userId,
+      },
+    });
 
     applicationId.forEach(async (item) => {
       await this.userApplictionsModel.create({
