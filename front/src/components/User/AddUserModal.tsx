@@ -13,8 +13,10 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import { MenuItem } from "@mui/material";
+import { RowData } from "./UserList";
 
 interface Errors {
+  userName?: string;
   user_name?: string;
   display_name?: string;
   email?: string;
@@ -28,6 +30,7 @@ interface AddUserModalProps {
   onClose: () => void;
   onAddUser: (application: any) => void;
   uniqueValidation: string;
+  uniqueEmail: string;
 }
 
 export default function AddUserModal({
@@ -35,6 +38,7 @@ export default function AddUserModal({
   onClose,
   onAddUser,
   uniqueValidation,
+  uniqueEmail,
 }: AddUserModalProps) {
   const [user_name, setUserName] = useState("");
   const [display_name, setDisplayName] = useState("");
@@ -45,7 +49,11 @@ export default function AddUserModal({
   const [errors, setErrors] = useState<Errors>({});
 
   useEffect(() => {
-    setErrors({user_name: uniqueValidation});
+    setErrors((prevErrors) => ({ ...prevErrors, email: uniqueEmail }));
+  }, [uniqueEmail]);
+
+  useEffect(() => {
+    setErrors((prevErrors) => ({ ...prevErrors, userName: uniqueValidation }));
   }, [uniqueValidation]);
 
   useEffect(() => {
@@ -106,12 +114,14 @@ export default function AddUserModal({
         role: role,
       };
       onAddUser(newUser);
-      setUserName("");
-      setDisplayName("");
-      setEmail("");
-      setMobile("");
-      setPassword("");
-      setRole("");
+      if (!errors) {
+        setUserName("");
+        setDisplayName("");
+        setEmail("");
+        setMobile("");
+        setPassword("");
+        setRole("");
+      }
     }
   };
 
@@ -159,6 +169,7 @@ export default function AddUserModal({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          width: "100%",
         }}
       >
         Add New User
@@ -182,16 +193,18 @@ export default function AddUserModal({
           label="Username"
           fullWidth
           margin="normal"
+          required
           value={user_name}
           onChange={(e) => setUserName(e.target.value)}
-          error={!!errors.user_name}
-          helperText={errors.user_name}
+          error={!!errors.userName}
+          helperText={errors.userName}
           size="small"
         />
         <TextField
           label="Display Name"
           fullWidth
           margin="normal"
+          required
           value={display_name}
           onChange={(e) => setDisplayName(e.target.value)}
           error={!!errors.display_name}
@@ -202,6 +215,7 @@ export default function AddUserModal({
           label="Email"
           fullWidth
           margin="normal"
+          required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           error={!!errors.email}
@@ -212,6 +226,7 @@ export default function AddUserModal({
           label="Mobile"
           fullWidth
           margin="normal"
+          required
           value={mobile}
           onChange={(e) => setMobile(e.target.value)}
           error={!!errors.mobile}
@@ -222,6 +237,7 @@ export default function AddUserModal({
           label="Password"
           fullWidth
           margin="normal"
+          required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           error={!!errors.password}
@@ -229,13 +245,13 @@ export default function AddUserModal({
           size="small"
           type="password"
         />
-
         <TextField
           label="Role"
           sx={{ marginTop: 1, marginBottom: 2 }}
-          autoComplete="role"
           size="small"
+          required
           fullWidth
+          value={role}
           select
           onChange={(e) => setRole(e.target.value)}
           error={!!errors.role}
