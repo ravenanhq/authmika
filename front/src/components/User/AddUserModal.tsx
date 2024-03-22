@@ -40,7 +40,7 @@ export default function AddUserModal({
   uniqueValidation,
   uniqueEmail,
 }: AddUserModalProps) {
-  const [userName, setUserName] = useState("");
+  const [user_name, setUserName] = useState("");
   const [display_name, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,8 +63,8 @@ export default function AddUserModal({
   const validateForm = () => {
     let newErrors: Errors = {};
 
-    if (!userName.trim()) {
-      newErrors.userName = "Username is required";
+    if (!user_name.trim()) {
+      newErrors.user_name = "Username is required";
     }
 
     if (!display_name.trim()) {
@@ -106,7 +106,7 @@ export default function AddUserModal({
   const handleAddUser = () => {
     if (validateForm()) {
       const newUser = {
-        userName: userName,
+        user_name: user_name,
         display_name: display_name,
         email: email,
         mobile: mobile,
@@ -194,7 +194,7 @@ export default function AddUserModal({
           fullWidth
           margin="normal"
           required
-          value={userName}
+          value={user_name}
           onChange={(e) => setUserName(e.target.value)}
           error={!!errors.userName}
           helperText={errors.userName}
