@@ -26,13 +26,13 @@ export default function Home() {
     setSessionData(session?.user.role);
     try {
       const response = await DashboardApi.getApplicationsByUserId(
-        session?.user.role === "admin" ? "" : session?.user.id
+        session?.user.role.toLowerCase() === "admin" ? "" : session?.user.id
       );
 
       setLoading(false);
       // Asserting the type of response
       setApplications(
-        session?.user.role === "admin" ? response.application : response
+        session?.user.role.toLowerCase() === "admin" ? response.application : response
       );
     } catch (error: any) {
       console.log(error);
@@ -51,7 +51,7 @@ export default function Home() {
             My Applications
           </Typography>
           <Grid container spacing={3}>
-            {sessionData === "admin"
+            {sessionData?.toLowerCase() === "admin"
               ? applications.map((result, index) => (
                   <Grid item xs={12} sm={6} md={2} key={index}>
                     <CustomCard
