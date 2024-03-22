@@ -22,6 +22,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddApplicationModal from "./AddApplicationModal";
 import EditApplicationModal from "./EditApplicationModal";
 import DeleteApplicationModal from "./DeleteApplicationModal";
+import { Visibility } from "@mui/icons-material";
 
 export interface RowData {
   id: number;
@@ -85,6 +86,13 @@ const ApplicationList = () => {
     setAddApplicationModalOpen(false);
   };
 
+  const handleView = (rowData: RowData) => {
+    const data = JSON.stringify(rowData);
+    localStorage.setItem("application-data", data);
+    const url = `/applications/${rowData.id}`;
+    window.location.href = url;
+  };
+
   const columns: GridColDef[] = [
     {
       field: "name",
@@ -117,6 +125,9 @@ const ApplicationList = () => {
       sortable: false,
       renderCell: (params) => (
         <>
+          <IconButton aria-label="view" onClick={() => handleView(params.row)}>
+            <Visibility />
+          </IconButton>
           <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
             <EditIcon />
           </IconButton>
