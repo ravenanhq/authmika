@@ -13,7 +13,6 @@ import {
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import { RowData } from "./UserList";
-
 import { MenuItem } from "@mui/material";
 
 interface Errors {
@@ -41,6 +40,7 @@ interface EditModalProps {
   rowData: RowData | null;
   onEdit: (editedData: RowData) => void;
   uniqueValidation: string;
+  uniqueEmail: string;
 }
 
 const Role: { value: string; label: string }[] = [
@@ -60,11 +60,11 @@ export default function EditUserModal({
   rowData,
   onEdit,
   uniqueValidation,
+  uniqueEmail,
 }: EditModalProps) {
   const [editedData, setEditedData] = useState<RowData>(InitialRowData);
   const [errors, setErrors] = useState<Errors>({});
   const [successMessageOpen, setSuccessMessageOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState('');
 
   useEffect(() => {
     if (rowData) {
@@ -73,12 +73,12 @@ export default function EditUserModal({
   }, [rowData]);
 
   useEffect(() => {
-    setErrors({userName: uniqueValidation});
-  }, [uniqueValidation]);
+    setErrors((prevErrors) => ({ ...prevErrors, email: uniqueEmail }));
+  }, [uniqueEmail]);
 
   useEffect(() => {
-    setErrors({});
-  }, [open]);
+    setErrors((prevErrors) => ({ ...prevErrors, userName: uniqueValidation }));
+  }, [uniqueValidation]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -117,7 +117,6 @@ export default function EditUserModal({
     if (validateForm()) {
       onEdit(editedData);
     }
-
     setSuccessMessageOpen(true);
   };
 
@@ -183,14 +182,17 @@ export default function EditUserModal({
           name="userName"
           value={editedData.userName || ""}
           onChange={handleChange}
+          required
           fullWidth
           margin="normal"
           error={!!errors.userName}
           helperText={errors.userName && <span>{errors.userName}</span>}
         />
+
         <TextField
           label="Display Name"
           name="displayName"
+          required
           value={editedData.displayName || ""}
           onChange={handleChange}
           fullWidth
@@ -202,18 +204,20 @@ export default function EditUserModal({
         <TextField
           label="Email"
           name="email"
+          required
           value={editedData.email || ""}
           onChange={handleChange}
           fullWidth
           margin="normal"
           error={!!errors.email}
-          helperText={errors.email ? <span>{errors.email}</span> : " "}
+          helperText={errors.email ? errors.email : " "}
           sx={{ marginLeft: "0 !important" }}
         />
 
         <TextField
           label="Mobile"
           name="mobile"
+          required
           value={editedData.mobile || ""}
           onChange={handleChange}
           fullWidth
@@ -226,11 +230,11 @@ export default function EditUserModal({
           label="Role"
           sx={{ marginTop: 1, marginBottom: 2 }}
           name="role"
-          autoComplete="role"
           size="small"
+          required
           fullWidth
-          select 
-          value={selectedRole || ''}
+          select
+          value={editedData.role || ""}
           onChange={handleChange}
           error={!!errors.role}
           helperText={errors.role ? errors.role : " "}

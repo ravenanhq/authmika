@@ -8,7 +8,13 @@ export class UsersDto {
   @IsNotEmpty({ message: 'displayname cannot be blank' })
   display_name: string;
 
-  @IsNotEmpty({ message: 'email cannot be blank' })
+  @Matches(
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+
+    {
+      message: ' Invalid email address',
+    },
+  )
   email: string;
 
   @Matches(

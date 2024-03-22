@@ -23,6 +23,7 @@ import AddUserModal from "./AddUserModal";
 import EditUserModal from "./EditUserModal";
 import { UserApi } from "@/services/api/UserApi";
 import { Visibility } from "@mui/icons-material";
+import { GridCellParams } from "@mui/x-data-grid";
 
 export interface RowData {
   id: number;
@@ -36,7 +37,7 @@ export interface RowData {
 }
 
 const UserList = () => {
-  const [alertShow, setAlertShow] = useState('');
+  const [alertShow, setAlertShow] = useState("");
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<RowData[]>([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -44,19 +45,18 @@ const UserList = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
   const [uniqueAlert, setUniqueAlert] = useState("");
+  const [invalidEmail, setInvalidEmail] = useState("");
 
   useEffect(() => {
     getUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  
-  
+
   const handleEdit = (rowData: RowData | null) => {
     setSelectedRow((prevRowData) => {
       if (rowData !== null) {
         return rowData;
       }
-
       return prevRowData;
     });
 
@@ -81,10 +81,16 @@ const UserList = () => {
 
   const handleEditSave = async (editedData: RowData) => {
     if ("id" in editedData) {
-      editedData.user_name = editedData.userName;
-      editedData.display_name = editedData.displayName;
-
-      await editUser(editedData.id, editedData);
+      const updatedData = { ...editedData };
+      updatedData.user_name = updatedData.userName;
+      delete updatedData.userName;
+      updatedData.display_name = updatedData.displayName;
+      delete updatedData.displayName;
+      try {
+        await editUser(updatedData.id, updatedData);
+      } catch (error) {
+        console.error("Error editing user:", error);
+      }
     }
   };
 
@@ -94,7 +100,6 @@ const UserList = () => {
       if (rowData !== null) {
         return rowData;
       }
-
       return prevRowData;
     });
   };
@@ -117,47 +122,46 @@ const UserList = () => {
       field: "userName",
       headerName: "Username",
       headerClassName: "user-header",
-      flex: 1,
-      minWidth: 200,
+      flex: 0.5,
+      minWidth: 100,
     },
     {
       field: "displayName",
       headerName: "Display Name",
       headerClassName: "user-header",
-      flex: 1,
-      minWidth: 200,
+      flex: 0.5,
+      minWidth: 100,
     },
     {
       field: "email",
       headerName: "Email",
       headerClassName: "user-header",
-      flex: 1,
-      minWidth: 200,
+      flex: 0.5,
+      minWidth: 100,
     },
     {
       field: "mobile",
       headerName: "Mobile",
       headerClassName: "user-header",
-      flex: 1,
-      minWidth: 200,
+      flex: 0.5,
+      minWidth: 100,
     },
-
     {
       field: "role",
       headerName: "Role",
       headerClassName: "user-header",
-      flex: 1,
-      minWidth: 200,
+      flex: 0.5,
+      minWidth: 100,
     },
     {
       field: "actions",
       headerName: "Actions",
       headerClassName: "user-header",
-      flex: 1,
-      minWidth: 200,
+      flex: 0.5,
+      minWidth: 100,
       disableColumnMenu: true,
       sortable: false,
-      renderCell: (params) => (
+      renderCell: (params: GridCellParams) => (
         <>
           <IconButton aria-label="view" onClick={() => handleView(params.row)}>
             <Visibility />
@@ -193,19 +197,25 @@ const UserList = () => {
     try {
       const response = await UserApi.create(newUser);
       setUniqueAlert("");
+      setInvalidEmail("");
       if (response) {
         if (response.statusCode == 409) {
           setUniqueAlert(response.message);
         } else if (response.statusCode == 200) {
+          handleCloseAddUserModal();
           setRows(response.data);
           setAlertShow(response.message);
-          handleCloseAddUserModal();
         }
       }
     } catch (error: any) {
       var response = error.response.data;
-      if (response.statusCode == 422 && response.message.application) {
-        setUniqueAlert(response.message.application);
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.statusCode === 422
+      ) {
+        setUniqueAlert(response.message.userName);
+        setInvalidEmail(response.message.email);
       }
 
       console.log(error);
@@ -216,20 +226,25 @@ const UserList = () => {
     try {
       const response = await UserApi.update(id, updatedData);
       setUniqueAlert("");
-
+      setInvalidEmail("");
       if (response) {
         if (response.statusCode == 409) {
           setUniqueAlert(response.message);
         } else if (response.statusCode == 200) {
+          handleEditModalClose();
           setRows(response.data);
           setAlertShow(response.message);
-          handleEditModalClose();
         }
       }
     } catch (error: any) {
       var response = error.response.data;
-      if (response.statusCode == 422 && response.message.application) {
-        setUniqueAlert(response.message.application);
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.statusCode === 422
+      ) {
+        setUniqueAlert(response.message.userName);
+        setInvalidEmail(response.message.email);
       }
 
       console.error(error);
@@ -278,13 +293,14 @@ const UserList = () => {
       color: "white",
     },
   }));
-  
 
   return (
     <Card
       sx={{
+        width: "100%",
+        height: "100%",
         boxShadow: "none",
-        marginTop: "5%",
+        marginTop: "5vh",
         "& .user-header": {
           backgroundColor: "#265073",
           color: "#fff",
@@ -306,20 +322,28 @@ const UserList = () => {
         )}
         {!loading && (
           <>
-          <Stack sx={{ width: "100%" }} spacing={2}>
-              {alertShow && <Alert severity="success" onClose={() => { setAlertShow(""); }}>{alertShow}</Alert>}
+            <Stack sx={{ width: "100%" }} spacing={2}>
+              {alertShow && (
+                <Alert
+                  severity="success"
+                  onClose={() => {
+                    setAlertShow("");
+                  }}
+                >
+                  {alertShow}
+                </Alert>
+              )}
             </Stack>
-
             <Grid
               container
               justifyContent="flex-end"
               alignItems="center"
               style={{ marginBottom: "5px" }}
-            >              
+            >
               <Grid item>
                 <PrimaryButton
                   startIcon={<AddIcon />}
-                  style={{  marginTop: "13%" }}
+                  style={{ padding: "8px 16px" }}
                   onClick={handleAddUserClick}
                 >
                   Add New User
@@ -330,6 +354,8 @@ const UserList = () => {
               rows={rows}
               columns={columns}
               getRowId={(row) => row.id}
+              autoHeight
+              disableColumnMenu
               initialState={{
                 pagination: {
                   paginationModel: { page: 0, pageSize: 5 },
@@ -338,11 +364,15 @@ const UserList = () => {
               slots={{
                 noResultsOverlay: () => {
                   return (
-                    <Typography variant="body1" align="center" sx={{ marginTop: 10, justifyContent: "center"}}>
+                    <Typography
+                      variant="body1"
+                      align="center"
+                      sx={{ marginTop: 10, justifyContent: "center" }}
+                    >
                       No results found.
                     </Typography>
                   );
-                }
+                },
               }}
               pageSizeOptions={[5, 10, 15, 20]}
               style={{
@@ -361,6 +391,7 @@ const UserList = () => {
         rowData={selectedRow}
         onEdit={handleEditSave}
         uniqueValidation={uniqueAlert}
+        uniqueEmail={invalidEmail}
       />
 
       <DeleteModal
@@ -375,9 +406,9 @@ const UserList = () => {
         onClose={handleCloseAddUserModal}
         onAddUser={handleAddUser}
         uniqueValidation={uniqueAlert}
+        uniqueEmail={invalidEmail}
       />
     </Card>
-    
   );
 };
 
