@@ -100,6 +100,25 @@ export class UserApi {
     }
   }
 
+  static async deleteUserApplicationMapping(
+    userId: number,
+    applicationId: number,
+  ): Promise<ApiResponseDto> {
+    try {
+      const res: any = await axios.post(
+        `${config.service}/user-applications/delete-applications`,
+        {
+          userId: userId,
+          applicationId: applicationId,
+        }
+      );
+      return res.data;
+    } catch (error: any) {
+      return error.response.data;
+    }
+  }
+
+
   static async getApplication() {
     const res = await axios.get(`${config.service}/applications`);
     return res.data;

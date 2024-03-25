@@ -32,6 +32,11 @@ export interface RowData {
   base_url?: string;
 }
 
+interface AlertState {
+  severity: 'success' | 'info' | 'warning' | 'error';
+  message: string;
+}
+
 const ApplicationList = () => {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState([]);
@@ -43,6 +48,8 @@ const ApplicationList = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [alertShow, setAlertShow] = useState("");
   const [uniqueAlert, setUniqueAlert] = useState("");
+  const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
+
 
   useEffect(() => {
     getApplications();
@@ -200,11 +207,12 @@ const ApplicationList = () => {
 
         if (response && response.data) {
           setRows(response.data);
-          setAlertShow(response.message);
+          setDeleteAlert({ severity: 'error', message: response.message });
         }
         setDeleteModalOpen(false);
       } catch (error: any) {
         console.error(error);
+        setDeleteAlert({ severity: 'error', message: 'An error occurred while deleting.' });
       }
     }
   };
@@ -277,6 +285,7 @@ const ApplicationList = () => {
           <>
             <Stack sx={{ width: "100%" }} spacing={2}>
               {alertShow && <Alert severity="success" onClose={() => { setAlertShow(""); }}>{alertShow}</Alert>}
+              {deleteAlert && <Alert severity={deleteAlert.severity} onClose={() => { setDeleteAlert(null); }}>{deleteAlert.message}</Alert>}
             </Stack>
 
             <Grid

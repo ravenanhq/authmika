@@ -167,4 +167,40 @@ export class UserApplicationService {
       };
     }
   }
+
+  async deleteUserApplicationMapping(
+    userId: number,
+    applicationId: number,
+  ): Promise<{ message: string; statusCode: number }> {
+    const isMapAvailable = await this.userApplictionsModel.findOne({
+      where: {
+        userId: userId,
+        applicationId: applicationId,
+      },
+    });
+    if (isMapAvailable) {
+      try {
+        await this.userApplictionsModel.destroy({
+          where: {
+            userId: userId,
+            applicationId: applicationId,
+          },
+        });
+        return {
+          message: 'Mapping deleted successfully',
+          statusCode: HttpStatus.OK,
+        };
+      } catch (error) {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
+    } else {
+      return {
+        message: 'No mapping found',
+        statusCode: HttpStatus.NOT_FOUND,
+      };
+    }
+  }
 }

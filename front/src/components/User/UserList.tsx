@@ -36,6 +36,11 @@ export interface RowData {
   role?: string;
 }
 
+interface AlertState {
+  severity: "success" | "info" | "warning" | "error";
+  message: string;
+}
+
 const UserList = () => {
   const [alertShow, setAlertShow] = useState("");
   const [loading, setLoading] = useState(true);
@@ -46,6 +51,7 @@ const UserList = () => {
   const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
   const [uniqueAlert, setUniqueAlert] = useState("");
   const [invalidEmail, setInvalidEmail] = useState("");
+  const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
 
   useEffect(() => {
     getUsers();
@@ -258,7 +264,7 @@ const UserList = () => {
 
         if (response && response.data) {
           setRows(response.data);
-          setAlertShow(response.message);
+          setDeleteAlert({ severity: "error", message: response.message });
         }
         setDeleteModalOpen(false);
       } catch (error: any) {
@@ -322,7 +328,7 @@ const UserList = () => {
         )}
         {!loading && (
           <>
-            <Stack sx={{ width: "100%" }} spacing={2}>
+            <Stack sx={{ width: "100%", paddingBottom: "20px" }} spacing={4}>
               {alertShow && (
                 <Alert
                   severity="success"
@@ -331,6 +337,16 @@ const UserList = () => {
                   }}
                 >
                   {alertShow}
+                </Alert>
+              )}
+              {deleteAlert && (
+                <Alert
+                  severity={deleteAlert.severity}
+                  onClose={() => {
+                    setDeleteAlert(null);
+                  }}
+                >
+                  {deleteAlert.message}
                 </Alert>
               )}
             </Stack>
@@ -343,7 +359,7 @@ const UserList = () => {
               <Grid item>
                 <PrimaryButton
                   startIcon={<AddIcon />}
-                  style={{ padding: "8px 16px" }}
+                  style={{ padding: "10px 18px" }}
                   onClick={handleAddUserClick}
                 >
                   Add New User
