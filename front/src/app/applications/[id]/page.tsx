@@ -102,13 +102,13 @@ const ApplicationView = () => {
               <TableCell>
                 <strong>Client Secret ID:</strong>
               </TableCell>
-              <TableCell  style={{ wordWrap: "anywhere" }}>{applicationData.clientSecretId}</TableCell>
+              <TableCell  style={{ whiteSpace: "unset", wordBreak: "break-all" }}>{applicationData.clientSecretId}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>
                 <strong>Client Secret Key:</strong>
               </TableCell>
-              <TableCell  style={{ wordWrap: "anywhere" }}>{applicationData.clientSecretKey}</TableCell>
+              <TableCell  style={{ whiteSpace: "unset", wordBreak: "break-all" }}>{applicationData.clientSecretKey}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
