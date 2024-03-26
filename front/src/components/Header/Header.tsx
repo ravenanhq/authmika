@@ -69,7 +69,6 @@ export default function DrawerAppBar() {
 
   const handleSetActivePage = (page: string) => {
     setActivePage(page);
-    console.log("aa", activePage);
   };
 
   const open = Boolean(anchorEl);
