@@ -9,7 +9,6 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
-import Button from "@mui/material/Button";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import Popover from "@mui/material/Popover";
 import { signOut } from "next-auth/react";
@@ -21,7 +20,9 @@ import { getSession } from "next-auth/react";
 const drawerWidth = 240;
 
 export default function DrawerAppBar() {
-  const pathName = usePathname();
+  const pathName = usePathname() || "";
+  const [activePage, setActivePage] = useState<string>(pathName);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const showHeader = !["/login"].includes(pathName);
   const [navItems, setNavItems] = useState([
     { label: "Dashboard", route: "/dashboard" },
@@ -62,6 +63,14 @@ export default function DrawerAppBar() {
     setAnchorEl(null);
   };
 
+  const handleItemClick = (index: number) => {
+    setActiveIndex(index);
+  };
+
+  const handleSetActivePage = (page: string) => {
+    setActivePage(page);
+  };
+
   const open = Boolean(anchorEl);
 
   const drawer = (
@@ -71,13 +80,23 @@ export default function DrawerAppBar() {
       </Typography>
       <Divider />
       <List>
-        {navItems.map((item) => (
+        {navItems.map((item, index) => (
           <Link
             key={item.route}
             href={item.route}
-            sx={{ textDecoration: "none", color: "inherit", cursor: "pointer" }}
+            underline="none"
+            sx={{
+              textDecoration: "none",
+              color: "inherit",
+              "&:hover": { color: "blue" },
+              backgroundColor: activeIndex === index ? "black" : "white",
+            }}
           >
-            <ListItemButton>
+            <ListItemButton
+              selected={activeIndex === index}
+              onClick={() => handleItemClick(index)}
+              sx={{ cursor: "pointer" }}
+            >
               <ListItemText primary={item.label} />
             </ListItemButton>
           </Link>
@@ -104,7 +123,7 @@ export default function DrawerAppBar() {
                 aria-label="open drawer"
                 edge="start"
                 onClick={handleDrawerToggle}
-                sx={{ mr: 2, display: { sm: "none" } }}
+                sx={{ mr: 2, display: { md: "none" } }}
               >
                 <MenuIcon />
               </IconButton>
@@ -119,14 +138,28 @@ export default function DrawerAppBar() {
               </Typography>
               <Box sx={{ flexGrow: 0.1 }} />
               <Box sx={{ display: { xs: "none", md: "flex" } }}>
-                {navItems.map((item) => (
-                  <Link key={item.route} href={item.route}>
-                    <Button sx={{ color: "#fff", textTransform: "none" }}>
-                      {item.label}
-                    </Button>
+                {navItems.map((item, index) => (
+                  <Link
+                    key={item.route}
+                    href={item.route}
+                    underline="none"
+                    sx={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    <ListItemButton
+                      selected={activeIndex === index}
+                      onClick={() => handleSetActivePage(item.route)}
+                      sx={{
+                        "&:hover": { backgroundColor: "#f1eded26" },
+                        textDecoration: "none",
+                        backgroundColor:
+                          activePage === item.route ? "#f1eded26" : "inherit",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <ListItemText primary={item.label} />
+                    </ListItemButton>
                   </Link>
                 ))}
-                <Box />
               </Box>
               <Box sx={{ marginLeft: "auto" }}>
                 <IconButton color="inherit" onClick={handleClick}>
@@ -185,7 +218,7 @@ export default function DrawerAppBar() {
               keepMounted: true,
             }}
             sx={{
-              display: { xs: "block", sm: "none" },
+              display: { xs: "block", md: "none" },
               "& .MuiDrawer-paper": {
                 boxSizing: "border-box",
                 width: drawerWidth,
