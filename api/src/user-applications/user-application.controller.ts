@@ -48,4 +48,22 @@ export class UserApplicationsController {
       throw new Error(`Error fetching user applications: ${error.message}`);
     }
   }
+
+  @Post('delete-applications')
+  @UsePipes(new ValidationPipe())
+  @HttpCode(HttpStatus.OK)
+  async deleteUserApplicationMapping(
+    @Body() requestBody: { userId: number; applicationId: number },
+  ): Promise<{ message: string; statusCode: number }> {
+    try {
+      const userApplications =
+        await this.userapplicationService.deleteUserApplicationMapping(
+          requestBody.userId,
+          requestBody.applicationId,
+        );
+      return userApplications;
+    } catch (error) {
+      throw new Error(`Error fetching user applications: ${error.message}`);
+    }
+  }
 }

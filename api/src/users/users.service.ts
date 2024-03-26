@@ -10,12 +10,15 @@ import { Optional } from 'sequelize';
 import { Users } from 'src/db/model/users.model';
 import { UsersDto } from './dto/users.dto';
 import { hash } from 'bcrypt';
+import { UserApplications } from 'src/db/model/user-applications.model';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(Users)
     private userModel: typeof Users,
+    @InjectModel(UserApplications)
+    private userApplictionsModel: typeof UserApplications,
   ) {}
 
   async findUsername(userName: string): Promise<Users> {
@@ -219,32 +222,53 @@ export class UsersService {
   async deleteUser(
     id: number,
   ): Promise<{ message: string; statusCode: number; data: object }> {
-    const user = await Users.findOne({
-      where: { id: id },
-    });
-    if (user) {
-      try {
-        user.isActive = false;
-        await user.save();
-        const users = await this.userModel.findAll({
-          where: { isActive: true },
+    try {
+      const user = await Users.findOne({
+        where: { id: id },
+      });
+
+      if (user) {
+        const userApplication = await this.userApplictionsModel.findOne({
+          where: {
+            userId: id,
+          },
         });
+
+        if (userApplication) {
+          const users = await this.userModel.findAll({
+            where: { isActive: true },
+          });
+
+          return {
+            message: 'The user cannot be deleted as a mapping exists.',
+            statusCode: HttpStatus.OK,
+            data: users,
+          };
+        } else {
+          user.isActive = false;
+          await user.save();
+
+          const users = await this.userModel.findAll({
+            where: { isActive: true },
+          });
+
+          return {
+            message: 'User deleted successfully.',
+            statusCode: HttpStatus.OK,
+            data: users,
+          };
+        }
+      } else {
         return {
-          message: 'User deleted successfully',
-          statusCode: HttpStatus.OK,
-          data: users,
-        };
-      } catch (error) {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'User not found.',
+          statusCode: HttpStatus.NOT_FOUND,
           data: {},
         };
       }
-    } else {
+    } catch (error) {
       return {
-        message: 'User not found',
-        statusCode: HttpStatus.NOT_FOUND,
+        message: error.message,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         data: {},
       };
     }

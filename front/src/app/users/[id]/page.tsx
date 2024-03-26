@@ -24,12 +24,20 @@ import {
   TextField,
   Typography,
   styled,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import Modal from "@mui/material/Modal";
 import React, { useState, useEffect } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
+import { Container } from "@mui/material";
+
+export interface RowData {
+  name: string;
+  id: number;
+}
 
 interface IUserView {
   id?: number;
@@ -38,10 +46,8 @@ interface IUserView {
 }
 
 interface ICreateListProps {
-  application: Application;
   name: string;
   id: number;
-  isChecked: boolean;
 }
 
 interface Application {
@@ -70,6 +76,11 @@ const UserView = ({ params }: { params: IUserView }) => {
   const users = localStorage.getItem("user-data");
   const userData = users ? JSON.parse(users) : null;
   const [id, setId] = useState<number | undefined>(params.id);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [newlySelectedCheckboxes, setNewlySelectedCheckboxes] = useState<
+    ICreateListProps[]
+  >([]);
 
   useEffect(() => {
     getApplication();
@@ -102,7 +113,7 @@ const UserView = ({ params }: { params: IUserView }) => {
       }
       const res = await UserApi.getApplicationsByUserId(id);
       if (res.length === 0) {
-        setApplications([]); // Clear applications array
+        setApplications([]);
         setSelectedCheckboxes([]);
         return;
       }
@@ -171,30 +182,58 @@ const UserView = ({ params }: { params: IUserView }) => {
   };
 
   const handleCheckboxChange = (optionId: number) => {
-    setSelectedCheckboxes((prevSelected) => {
-      const existingOptionIndex = prevSelected.findIndex(
-        (item) => item.id === optionId
+    if (selectedCheckboxes.some((checkbox) => checkbox.id === optionId)) {
+      setSelectedCheckboxes((prevSelected) =>
+        prevSelected.filter((checkbox) => checkbox.id !== optionId)
       );
-      if (existingOptionIndex !== -1) {
-        const updatedSelected = [...prevSelected];
-        updatedSelected.splice(existingOptionIndex, 1);
-        return updatedSelected;
-      } else {
-        const selectedOption = options.find((opt) => opt.id === optionId);
-        if (!selectedOption) {
-          return prevSelected;
-        }
-        return [
+      setNewlySelectedCheckboxes((prevNewlySelected) =>
+        prevNewlySelected.filter((checkbox) => checkbox.id !== optionId)
+      );
+    } else {
+      const selectedOption = options.find((opt) => opt.id === optionId);
+      if (selectedOption) {
+        setSelectedCheckboxes((prevSelected) => [
           ...prevSelected,
           {
-            application: selectedOption,
             name: selectedOption.name,
             id: selectedOption.id,
-            isChecked: true,
           },
-        ];
+        ]);
+        setNewlySelectedCheckboxes((prevNewlySelected) => [
+          ...prevNewlySelected,
+          {
+            name: selectedOption.name,
+            id: selectedOption.id,
+          },
+        ]);
       }
-    });
+    }
+  };
+
+  const handleCancelClick = () => {
+    setSelectedCheckboxes((prevSelected) =>
+      prevSelected.filter(
+        (checkbox) =>
+          !newlySelectedCheckboxes.some(
+            (newCheckbox) => newCheckbox.id === checkbox.id
+          )
+      )
+    );
+    setNewlySelectedCheckboxes([]);
+    setOpen(false);
+  };
+
+  const handleCancel = async (
+    userId: number | undefined,
+    applicationId: number
+  ) => {
+    try {
+      await UserApi.deleteUserApplicationMapping(userId!, applicationId);
+      getApplicationsByUserId(userId);
+      setOpen(false);
+    } catch (error) {
+      console.error("Error deleting user application mapping:", error);
+    }
   };
 
   const handleBackButtonClick = () => {
@@ -239,201 +278,239 @@ const UserView = ({ params }: { params: IUserView }) => {
   }));
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="h5" component="h2" mb={1} sx={{ marginTop: 5 }}>
-        {userData.userName}
-      </Typography>
-      <Chip label={userData.email} />
-      <Typography
-        variant="h5"
-        component="h2"
-        sx={{ marginBottom: 1, marginTop: 7 }}
-      >
-        Assigned Applications
-      </Typography>
-      <Divider sx={{ marginBottom: 1, flexGrow: 1 }} color="#265073" />
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>
-                <Grid container spacing={1} alignItems="center">
-                  <Grid item xs={12} sm={6}>
-                    <PrimaryButton
-                      variant="contained"
-                      onClick={handleOpen}
-                      startIcon={<AddIcon />}
-                    >
-                      Assign Applications
-                    </PrimaryButton>
-                  </Grid>
-                  {applications.length > 0 && (
-                    <Grid item xs={12} sm={6}>
-                      <Box display="flex" justifyContent="flex-end">
-                        <TextField
-                          InputProps={{
-                            startAdornment: (
-                              <SearchIcon
-                                sx={{
-                                  color: "grey",
-                                }}
-                              />
-                            ),
-                          }}
-                          placeholder="Search applications"
-                          variant="outlined"
-                          value={searchTerm}
-                          onChange={handleSearchChange}
-                          size="small"
-                        />
-                      </Box>
-                    </Grid>
-                  )}
-                </Grid>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {applications.length === 0 && (
+    <Container maxWidth="xl">
+      <Box sx={{ p: 2 }}>
+        <Typography variant="h5" component="h2" mb={1} sx={{ marginTop: 5 }}>
+          {userData.userName}
+        </Typography>
+        <Chip label={userData.email} />
+        <Typography
+          variant="h5"
+          component="h2"
+          sx={{ marginBottom: 1, marginTop: 7 }}
+        >
+          Assigned Applications
+        </Typography>
+        <Divider sx={{ marginBottom: 1, flexGrow: 1 }} color="#265073" />
+        <TableContainer
+          component={Paper}
+          sx={{ width: "100%", maxHeight: 400, overflow: "auto" }}
+        >
+          <Table style={{ maxWidth: "100%" }}>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={3}>
-                  <Typography>No results found</Typography>
+                <TableCell>
+                  <Grid container spacing={1} alignItems="center">
+                    <Grid item xs={12} sm={6}>
+                      <PrimaryButton
+                        variant="contained"
+                        onClick={handleOpen}
+                        startIcon={<AddIcon />}
+                      >
+                        Assign Applications
+                      </PrimaryButton>
+                    </Grid>
+                    {applications.length > 0 && (
+                      <Grid item xs={12} sm={6}>
+                        <Box display="flex" justifyContent="flex-end">
+                          <TextField
+                            InputProps={{
+                              startAdornment: (
+                                <SearchIcon
+                                  sx={{
+                                    color: "grey",
+                                  }}
+                                />
+                              ),
+                            }}
+                            placeholder="Search applications"
+                            variant="outlined"
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            size="small"
+                          />
+                        </Box>
+                      </Grid>
+                    )}
+                  </Grid>
                 </TableCell>
               </TableRow>
-            )}
-
-            {filteredApplications.map((application) => (
-              <TableRow key={application.id}>
-                <TableCell>{application.name}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <Box display="flex" justifyContent="flex-end">
-        <BackButton
-          variant="contained"
-          onClick={handleBackButtonClick}
-          startIcon={<ArrowBackIcon />}
-        >
-          Back
-        </BackButton>
-      </Box>
-      {options && options.length > 0 && (
-        <Modal
-          open={open && options.length > 0}
-          onClose={() => setOpen(false)}
-          title="Application"
-          aria-labelledby="modal-title"
-          aria-describedby="modal-description"
-        >
-          <Box
-            sx={{
-              position: "relative",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: 400,
-              bgcolor: "background.paper",
-              boxShadow: "0 3px 5px rgba(0,0,0,0.2)",
-            }}
+            </TableHead>
+            <TableBody>
+              {filteredApplications.length < 1 && (
+                <TableRow>
+                  <TableCell style={{ width: "100%" }}>
+                    <Typography>No results found</Typography>
+                  </TableCell>
+                </TableRow>
+              )}
+              {filteredApplications.map((application) => (
+                <TableRow key={application.id}>
+                  <TableCell style={{ width: "100%" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "right",
+                      }}
+                    >
+                      <Typography>{application.name}</Typography>
+                      <IconButton
+                        onClick={() => {
+                          handleCancel(id, application.id);
+                        }}
+                        sx={{
+                          fontSize: "4px",
+                          color: "#FF9843",
+                          filled: "none",
+                          padding: "0",
+                        }}
+                      >
+                        <CloseIcon />
+                      </IconButton>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Box display="flex" justifyContent="flex-end">
+          <BackButton
+            variant="contained"
+            onClick={handleBackButtonClick}
+            startIcon={<ArrowBackIcon />}
           >
-            <DialogTitle
+            Back
+          </BackButton>
+        </Box>
+        {options && options.length > 0 && (
+          <Modal
+            open={open && options.length > 0}
+            onClose={() => setOpen(false)}
+            title="Application"
+            aria-labelledby="modal-title"
+            aria-describedby="modal-description"
+          >
+            <Box
               sx={{
-                backgroundColor: "#265073",
-                color: "#fff",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                width: "100%",
-                padding: "12px",
+                position: "relative",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                width: isMobile ? "90%" : 400,
+                maxWidth: "100%",
+                bgcolor: "background.paper",
+                boxShadow: "0 3px 5px rgba(0,0,0,0.2)",
               }}
             >
-              Assign Applications
-              <IconButton
-                onClick={handleClose}
+              <DialogTitle
                 sx={{
-                  backgroundColor: "#FF9843",
+                  backgroundColor: "#265073",
                   color: "#fff",
-                  ":hover": {
-                    color: "#fff",
-                    backgroundColor: "#FE7A36",
-                  },
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "100%",
+                  padding: "12px",
                 }}
               >
-                <CloseIcon />
-              </IconButton>
-            </DialogTitle>
-            <Divider color="#265073" />
-            {open && options.length > 0 && (
-              <Box id="modal-description" sx={{ mt: 2 }}>
-                <Box style={{ width: "100%", boxSizing: "border-box" }}>
-                  <Box sx={{ mt: 2, mx: 2, height: 250, overflowY: "scroll" }}>
-                    <FormGroup sx={{ marginLeft: 7 }}>
-                      <Grid container spacing={1}>
-                        {options.map((option) => (
-                          <Grid item xs={6} key={option.id}>
-                            <FormControlLabel
-                              key={option.id}
-                              control={
-                                <Checkbox
-                                  checked={selectedCheckboxes.some(
-                                    (item) => item.id === option.id
-                                  )}
-                                  onChange={() =>
-                                    handleCheckboxChange(option.id)
-                                  }
-                                  style={{ color: "#265073" }}
-                                />
-                              }
-                              label={
-                                <span
-                                  style={{
-                                    maxWidth: "150px",
-                                    overflow: "hidden",
-                                    display: "inline-block",
-                                    whiteSpace: "nowrap",
-                                    textOverflow: "ellipsis",
-                                  }}
-                                >
-                                  {option.name}
-                                </span>
-                              }
-                            />
-                          </Grid>
-                        ))}
-                      </Grid>
-                    </FormGroup>
+                Assign Applications
+                <IconButton
+                  onClick={handleClose}
+                  sx={{
+                    backgroundColor: "#FF9843",
+                    color: "#fff",
+                    ":hover": {
+                      color: "#fff",
+                      backgroundColor: "#FE7A36",
+                    },
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </DialogTitle>
+              <Divider color="#265073" />
+              {open && options.length > 0 && (
+                <Box id="modal-description" sx={{ mt: 2 }}>
+                  <Box style={{ width: "100%", boxSizing: "border-box" }}>
+                    <Box
+                      sx={{
+                        mt: 2,
+                        mx: 2,
+                        overflowY: "auto",
+                        height: "100%",
+                        maxHeight: "85vh",
+                      }}
+                    >
+                      <FormGroup sx={{ marginLeft: 7 }}>
+                        <Grid container spacing={1}>
+                          {options.map((option) => (
+                            <Grid item xs={6} key={option.id}>
+                              <FormControlLabel
+                                key={option.id}
+                                control={
+                                  <Checkbox
+                                    key={option.id}
+                                    checked={selectedCheckboxes.some(
+                                      (checkbox) => checkbox.id === option.id
+                                    )}
+                                    onChange={() =>
+                                      handleCheckboxChange(option.id)
+                                    }
+                                    style={{ color: "#265073" }}
+                                  />
+                                }
+                                label={
+                                  <span
+                                    style={{
+                                      maxWidth: "150px",
+                                      overflow: "hidden",
+                                      display: "inline-block",
+                                      whiteSpace: "nowrap",
+                                      textOverflow: "ellipsis",
+                                    }}
+                                  >
+                                    {option.name}
+                                  </span>
+                                }
+                              />
+                            </Grid>
+                          ))}
+                        </Grid>
+                      </FormGroup>
+                    </Box>
                   </Box>
+                  <Divider
+                    color="#265073"
+                    sx={{ marginBottom: "2%", marginTop: "10%" }}
+                  ></Divider>
+                  <DialogActions style={{ margin: "0 16px 10px 0" }}>
+                    <PrimaryButton
+                      startIcon={<AddIcon />}
+                      type="submit"
+                      onClick={() => handleSubmit(selectedCheckboxes)}
+                    >
+                      Add
+                    </PrimaryButton>
+                    <SecondaryButton
+                      startIcon={<CloseIcon />}
+                      type="submit"
+                      onClick={() => {
+                        handleCancelClick();
+                        setOpen(false);
+                      }}
+                    >
+                      Cancel
+                    </SecondaryButton>
+                  </DialogActions>
                 </Box>
-
-                <Divider
-                  color="#265073"
-                  sx={{ marginBottom: "2%", marginTop: "10%" }}
-                ></Divider>
-                <DialogActions style={{ margin: "0 16px 10px 0" }}>
-                  <PrimaryButton
-                    startIcon={<AddIcon />}
-                    type="submit"
-                    onClick={() => handleSubmit(selectedCheckboxes)}
-                  >
-                    Add
-                  </PrimaryButton>
-                  <SecondaryButton
-                    startIcon={<CloseIcon />}
-                    type="submit"
-                    onClick={() => setOpen(false)}
-                  >
-                    Cancel
-                  </SecondaryButton>
-                </DialogActions>
-              </Box>
-            )}
-          </Box>
-        </Modal>
-      )}
-    </Box>
+              )}
+            </Box>
+          </Modal>
+        )}
+      </Box>
+    </Container>
   );
 };
 

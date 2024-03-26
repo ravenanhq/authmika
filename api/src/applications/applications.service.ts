@@ -10,10 +10,13 @@ import { Applications } from 'src/db/model/applications.model';
 import { randomBytes } from 'crypto';
 import { Optional } from 'sequelize';
 import { ApplicationsDto } from './dto/applications.dto';
+import { UserApplications } from 'src/db/model/user-applications.model';
 
 @Injectable()
 export class ApplicationsService {
   constructor(
+    @InjectModel(UserApplications)
+    private userApplictionsModel: typeof UserApplications,
     @InjectModel(Applications)
     private applicationsModel: typeof Applications,
   ) {}
@@ -219,18 +222,36 @@ export class ApplicationsService {
       });
 
       if (application) {
-        application.isActive = false;
-        await application.save();
-
-        const applications = await this.applicationsModel.findAll({
-          where: { isActive: true },
+        const userApplication = await this.userApplictionsModel.findOne({
+          where: {
+            applicationId: id,
+          },
         });
 
-        return {
-          message: 'Application deleted successfully.',
-          statusCode: HttpStatus.OK,
-          data: applications,
-        };
+        if (userApplication) {
+          const applications = await this.applicationsModel.findAll({
+            where: { isActive: true },
+          });
+
+          return {
+            message: 'The application cannot be deleted as a mapping exists.',
+            statusCode: HttpStatus.OK,
+            data: applications,
+          };
+        } else {
+          application.isActive = false;
+          await application.save();
+
+          const applications = await this.applicationsModel.findAll({
+            where: { isActive: true },
+          });
+
+          return {
+            message: 'Application deleted successfully.',
+            statusCode: HttpStatus.OK,
+            data: applications,
+          };
+        }
       } else {
         return {
           message: 'Application not found.',
