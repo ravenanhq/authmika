@@ -30,6 +30,9 @@ export class Applications extends Model {
   @Column({ field: 'base_url', type: DataType.STRING })
   baseUrl: string;
 
+  @Column({ field: 'logo_path', type: DataType.STRING })
+  logoPath: string;
+
   @Column({ field: 'client_secret_id', type: DataType.STRING })
   clientSecretId: string;
 

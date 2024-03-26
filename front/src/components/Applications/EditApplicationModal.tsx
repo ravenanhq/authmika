@@ -9,10 +9,12 @@ import {
   DialogContent,
   DialogActions,
   styled,
+  CardMedia,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import { RowData } from "./ApplicationList";
+import FileUpload from "../FileUpload/FileUpload";
 
 interface Errors {
   name?: string;
@@ -26,6 +28,9 @@ const InitialRowData = {
   application: "",
   baseUrl: "",
   base_url: "",
+  logoPath: "",
+  file: "",
+  logo_path: "",
 };
 
 interface EditModalProps {
@@ -53,7 +58,7 @@ export default function EditApplicationModal({
   }, [rowData]);
 
   useEffect(() => {
-    setErrors({application: uniqueValidation});
+    setErrors({ application: uniqueValidation });
   }, [uniqueValidation]);
 
   useEffect(() => {
@@ -83,6 +88,18 @@ export default function EditApplicationModal({
     setErrors(newErrors);
 
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleFileUpload = (file: File) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const base64String = reader.result as string;
+      editedData.file = base64String;
+    };
+
+    reader.readAsDataURL(file);
+    editedData.logoPath = file.name;
   };
 
   const handleUpdateApplication = () => {
@@ -180,6 +197,10 @@ export default function EditApplicationModal({
           margin="normal"
           error={!!errors.baseUrl}
           helperText={errors.baseUrl}
+        />
+        <FileUpload
+          onFileUpload={handleFileUpload}
+          imageFile={editedData.logoPath}
         />
       </DialogContent>
       <Divider

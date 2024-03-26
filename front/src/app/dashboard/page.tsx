@@ -1,6 +1,6 @@
 "use client";
 import CustomCard from "@/components/CustomCard/CustomCard";
-import { CircularProgress, Grid } from "@mui/material";
+import { CircularProgress, Container, Divider, Grid } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import { DashboardApi } from "@/services/api/DashboardApi";
 import { useEffect, useState } from "react";
@@ -10,6 +10,7 @@ interface Application {
   application: any;
   logo_path: string;
   name: string;
+  logoPath: string;
 }
 
 export default function Home() {
@@ -32,7 +33,9 @@ export default function Home() {
       setLoading(false);
       // Asserting the type of response
       setApplications(
-        session?.user.role.toLowerCase() === "admin" ? response.application : response
+        session?.user.role.toLowerCase() === "admin"
+          ? response.application
+          : response
       );
     } catch (error: any) {
       console.log(error);
@@ -41,36 +44,42 @@ export default function Home() {
 
   return (
     <>
-      {loading ? (
-        <div style={{ textAlign: "center", marginTop: "5%" }}>
-          <CircularProgress />
-        </div>
-      ) : (
-        <>
-          <Typography variant="h5" sx={{ marginTop: "25px" }}>
-            My Applications
-          </Typography>
-          <Grid container spacing={3}>
-            {sessionData?.toLowerCase() === "admin"
-              ? applications.map((result, index) => (
-                  <Grid item xs={12} sm={6} md={2} key={index}>
-                    <CustomCard
-                      name={result.name}
-                      logo_path={result.logo_path}
-                    />
-                  </Grid>
-                ))
-              : applications.map((result, index) => (
-                  <Grid item xs={12} sm={6} md={2} key={index}>
-                    <CustomCard
-                      name={result.application.name}
-                      logo_path={result.application.logo_path}
-                    />
-                  </Grid>
-                ))}
-          </Grid>
-        </>
-      )}
+      <Container maxWidth="xl">
+        <Typography variant="h4" sx={{ marginTop: "5%" }}>
+          Your Applications
+        </Typography>
+        <Divider
+          color="#265073"
+          sx={{ marginTop: "5px", marginBottom: "3%" }}
+        ></Divider>
+        {loading ? (
+          <div style={{ textAlign: "center", marginTop: "5%" }}>
+            <CircularProgress />
+          </div>
+        ) : (
+          <>
+            <Grid container spacing={3}>
+              {sessionData?.toLowerCase() === "admin"
+                ? applications.map((result, index) => (
+                    <Grid item xs={12} sm={6} md={2} key={index}>
+                      <CustomCard
+                        name={result.name}
+                        logo_path={result.logoPath}
+                      />
+                    </Grid>
+                  ))
+                : applications.map((result, index) => (
+                    <Grid item xs={12} sm={6} md={2} key={index}>
+                      <CustomCard
+                        name={result.application.name}
+                        logo_path={result.application.logoPath}
+                      />
+                    </Grid>
+                  ))}
+            </Grid>
+          </>
+        )}
+      </Container>
     </>
   );
 }

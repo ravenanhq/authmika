@@ -10,7 +10,7 @@ export class ApplicationApi {
     const res = await axios.post(`${config.service}/applications`, newApplication);
     return res.data;
   }
-  static async updateApplication(applicationId: string, updatedData: any) {
+  static async updateApplication(applicationId: number, updatedData: any) {
     const res = await axios.put(`${config.service}/applications/${applicationId}`, updatedData);
     return res.data;
   }
