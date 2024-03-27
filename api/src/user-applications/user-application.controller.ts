@@ -24,7 +24,6 @@ export class UserApplicationsController {
     @Body('userId') userId: number,
     @Body('applicationId') applicationId: Array<string>,
   ) {
-    console.log('applicationId', applicationId);
     return this.userapplicationService.create(userId, applicationId);
   }
 
@@ -39,6 +38,7 @@ export class UserApplicationsController {
     application?: object;
   }> {
     try {
+      console.log('body', requestBody.userId);
       const userApplications =
         await this.userapplicationService.getApplicationsByUserId(
           requestBody.userId,

@@ -13,7 +13,6 @@ import {
 import React from "react";
 import Image from "next/image";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import useMediaQuery from "@mui/material/useMediaQuery";
 
 const ApplicationView = () => {
   const application = localStorage.getItem("application-data");
@@ -30,9 +29,9 @@ const ApplicationView = () => {
       backgroundColor: "#FE7A36",
     },
     marginTop: theme.spacing(3),
-    textAlign: "end", // Align the text to the end
-    float: "right", // Float the button to the right
-    marginBottom: "20px", // Add margin at the bottom
+    textAlign: "end",
+    float: "right",
+    marginBottom: "20px",
   }));
 
   const handleBackButtonClick = () => {
@@ -40,14 +39,16 @@ const ApplicationView = () => {
     window.location.href = "/applications";
   };
   return (
-    <Card sx={{
-      width: "50%",
-      margin: "auto",
-      mt: "50px",
-      [theme.breakpoints.down("md")]: {
-        width: "100%", // Set width to 100% for screens smaller than or equal to "sm" breakpoint (e.g., iPad portrait)
-      },
-    }}>
+    <Card
+      sx={{
+        width: "50%",
+        margin: "auto",
+        mt: "50px",
+        [theme.breakpoints.down("md")]: {
+          width: "100%",
+        },
+      }}
+    >
       <CardContent>
         <Table>
           <TableBody>
@@ -62,10 +63,11 @@ const ApplicationView = () => {
                 <strong>Image:</strong>
               </TableCell>
               <TableCell>
-                {applicationData.logo_path !== undefined &&
-                applicationData.logo_path !== "" ? (
+                {applicationData.logoPath !== undefined &&
+                applicationData.logoPath !== "" &&
+                applicationData.logoPath !== null ? (
                   <Image
-                    src={applicationData.logo_path}
+                    src={"/assets/images/" + applicationData.logoPath}
                     alt="logo"
                     width={80}
                     height={100}
@@ -79,12 +81,6 @@ const ApplicationView = () => {
                   />
                 )}
               </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>
-                <strong>Client:</strong>
-              </TableCell>
-              <TableCell>{applicationData.client}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>
@@ -102,13 +98,21 @@ const ApplicationView = () => {
               <TableCell>
                 <strong>Client Secret ID:</strong>
               </TableCell>
-              <TableCell  style={{ whiteSpace: "unset", wordBreak: "break-all" }}>{applicationData.clientSecretId}</TableCell>
+              <TableCell
+                style={{ whiteSpace: "unset", wordBreak: "break-all" }}
+              >
+                {applicationData.clientSecretId}
+              </TableCell>
             </TableRow>
             <TableRow>
               <TableCell>
                 <strong>Client Secret Key:</strong>
               </TableCell>
-              <TableCell  style={{ whiteSpace: "unset", wordBreak: "break-all" }}>{applicationData.clientSecretKey}</TableCell>
+              <TableCell
+                style={{ whiteSpace: "unset", wordBreak: "break-all" }}
+              >
+                {applicationData.clientSecretKey}
+              </TableCell>
             </TableRow>
           </TableBody>
         </Table>

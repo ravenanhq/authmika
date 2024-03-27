@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Stack,
   Alert,
+  CardMedia,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { SetStateAction, useEffect, useState } from "react";
@@ -30,10 +31,13 @@ export interface RowData {
   application?: string;
   baseUrl?: string;
   base_url?: string;
+  file?: string;
+  logoPath: string;
+  logo_path: string;
 }
 
 interface AlertState {
-  severity: 'success' | 'info' | 'warning' | 'error';
+  severity: "success" | "info" | "warning" | "error";
   message: string;
 }
 
@@ -49,7 +53,6 @@ const ApplicationList = () => {
   const [alertShow, setAlertShow] = useState("");
   const [uniqueAlert, setUniqueAlert] = useState("");
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
-
 
   useEffect(() => {
     getApplications();
@@ -71,6 +74,7 @@ const ApplicationList = () => {
   };
 
   const handleEditSave = (editedData: RowData) => {
+    editedData["logo_path"] = editedData["logoPath"];
     editedData["base_url"] = editedData["baseUrl"];
     editApplication(editedData.id, editedData);
   };
@@ -101,6 +105,26 @@ const ApplicationList = () => {
   };
 
   const columns: GridColDef[] = [
+    {
+      field: "logoPath",
+      headerName: "Logo",
+      headerClassName: "application-header",
+      flex: 1,
+      minWidth: 100,
+      disableColumnMenu: true,
+      sortable: false,
+      renderCell: (params) => (
+        <CardMedia
+          component="img"
+          alt="Image"
+          height="auto"
+          image={
+            "/assets/images/" + (params.value ? params.value : "no_image.jpg")
+          }
+          style={{ width: "20%", padding: "10px" }}
+        />
+      ),
+    },
     {
       field: "name",
       headerName: "Name",
@@ -207,12 +231,15 @@ const ApplicationList = () => {
 
         if (response && response.data) {
           setRows(response.data);
-          setDeleteAlert({ severity: 'error', message: response.message });
+          setDeleteAlert({ severity: "error", message: response.message });
         }
         setDeleteModalOpen(false);
       } catch (error: any) {
         console.error(error);
-        setDeleteAlert({ severity: 'error', message: 'An error occurred while deleting.' });
+        setDeleteAlert({
+          severity: "error",
+          message: "An error occurred while deleting.",
+        });
       }
     }
   };
@@ -284,8 +311,26 @@ const ApplicationList = () => {
         {!loading && (
           <>
             <Stack sx={{ width: "100%" }} spacing={2}>
-              {alertShow && <Alert severity="success" onClose={() => { setAlertShow(""); }}>{alertShow}</Alert>}
-              {deleteAlert && <Alert severity={deleteAlert.severity} onClose={() => { setDeleteAlert(null); }}>{deleteAlert.message}</Alert>}
+              {alertShow && (
+                <Alert
+                  severity="success"
+                  onClose={() => {
+                    setAlertShow("");
+                  }}
+                >
+                  {alertShow}
+                </Alert>
+              )}
+              {deleteAlert && (
+                <Alert
+                  severity={deleteAlert.severity}
+                  onClose={() => {
+                    setDeleteAlert(null);
+                  }}
+                >
+                  {deleteAlert.message}
+                </Alert>
+              )}
             </Stack>
 
             <Grid
@@ -314,11 +359,15 @@ const ApplicationList = () => {
               slots={{
                 noResultsOverlay: () => {
                   return (
-                    <Typography variant="body1" align="center" sx={{ marginTop: 10, justifyContent: "center" }}>
+                    <Typography
+                      variant="body1"
+                      align="center"
+                      sx={{ marginTop: 10, justifyContent: "center" }}
+                    >
                       No results found.
                     </Typography>
                   );
-                }
+                },
               }}
               pageSizeOptions={[5, 10, 15, 20]}
               style={{

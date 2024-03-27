@@ -16,8 +16,13 @@ const CustomCard: React.FC<CustomCardProps> = ({ name, logo_path }) => {
       style={{ marginTop: "25px", boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)" }}
     >
       <CardContent style={{ textAlign: "center" }}>
-        {logo_path !== undefined && logo_path !== "" ? (
-          <Image src={logo_path} alt="logo" width={80} height={100} />
+        {logo_path !== undefined && logo_path !== "" && logo_path !== null ? (
+          <Image
+            src={"/assets/images/" + logo_path}
+            alt="logo"
+            width={80}
+            height={100}
+          />
         ) : (
           <Image
             src="/assets/images/no_image.jpg"
