@@ -16,27 +16,31 @@ interface Application {
 export default function Home() {
   const [loading, setLoading] = useState(true);
   const [applications, setApplications] = useState<Application[]>([]);
-  const [sessionData, setSessionData] = useState<string | undefined>();
+  const [userRole, setUserRole] = useState<string>();
 
   useEffect(() => {
     getApplications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getApplications = async () => {
     const session = await getSession();
-    setSessionData(session?.user.role);
-    try {
-      const response = await DashboardApi.getApplicationsByUserId(
-        session?.user.role.toLowerCase() === "admin" ? "" : session?.user.id
-      );
 
-      setLoading(false);
-      // Asserting the type of response
-      setApplications(
-        session?.user.role.toLowerCase() === "admin"
-          ? response.application
-          : response
-      );
+    try {
+      if (
+        session &&
+        session.hasOwnProperty("user") &&
+        session.user.hasOwnProperty("role")
+      ) {
+        setUserRole(session.user.role);
+        let role = session.user.role;
+        const response = await DashboardApi.getApplicationsByUserId(
+          role.toLowerCase() === "admin" ? "" : session?.user.id
+        );
+
+        setLoading(false);
+        setApplications(role.toLowerCase() === "admin" ? response.application : response);
+      }
     } catch (error: any) {
       console.log(error);
     }
@@ -59,7 +63,7 @@ export default function Home() {
         ) : (
           <>
             <Grid container spacing={3}>
-              {sessionData?.toLowerCase() === "admin"
+              {userRole?.toLowerCase() === "admin"
                 ? applications.map((result, index) => (
                     <Grid item xs={12} sm={6} md={2} key={index}>
                       <CustomCard
