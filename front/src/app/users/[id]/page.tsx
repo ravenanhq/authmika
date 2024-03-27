@@ -5,8 +5,9 @@ import { UserApi } from "@/services/api/UserApi";
 import {
   Box,
   Button,
+  Card,
+  CardContent,
   Checkbox,
-  Chip,
   DialogActions,
   DialogTitle,
   Divider,
@@ -65,6 +66,13 @@ interface ExtractedDataItem {
   baseUrl: string;
 }
 
+interface UserData {
+  userName: string;
+  displayName: string;
+  email: string;
+  role: string;
+}
+
 const UserView = ({ params }: { params: IUserView }) => {
   const [applications, setApplications] = React.useState<Application[]>([]);
   const [open, setOpen] = React.useState(false);
@@ -73,14 +81,13 @@ const UserView = ({ params }: { params: IUserView }) => {
     ICreateListProps[]
   >([]);
   const [searchTerm, setSearchTerm] = React.useState<string>("");
-  const users = localStorage.getItem("user-data");
-  const userData = users ? JSON.parse(users) : null;
   const [id, setId] = useState<number | undefined>(params.id);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [newlySelectedCheckboxes, setNewlySelectedCheckboxes] = useState<
     ICreateListProps[]
   >([]);
+  const [userData, setUserData] = useState<UserData | null>(null);
 
   useEffect(() => {
     getApplication();
@@ -105,6 +112,15 @@ const UserView = ({ params }: { params: IUserView }) => {
       );
     }
   }, [applications]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const application = localStorage.getItem("user-data");
+      if (application) {
+        setUserData(JSON.parse(application));
+      }
+    }
+  }, []);
 
   const getApplicationsByUserId = async (id: number | undefined) => {
     try {
@@ -277,13 +293,62 @@ const UserView = ({ params }: { params: IUserView }) => {
     marginTop: theme.spacing(3),
   }));
 
+  if (!userData) {
+    return null;
+  }
+
   return (
     <Container maxWidth="xl">
       <Box sx={{ p: 2 }}>
-        <Typography variant="h5" component="h2" mb={1} sx={{ marginTop: 5 }}>
-          {userData.userName}
+        <Typography
+          variant="h5"
+          component="h2"
+          sx={{ marginBottom: 1, marginTop: 2 }}
+        >
+          User Details
         </Typography>
-        <Chip label={userData.email} />
+        <Divider sx={{ marginBottom: 1, flexGrow: 1 }} color="#265073" />
+        <Card
+          sx={{
+            width: "60%",
+            margin: "auto",
+            mt: "30px",
+            [theme.breakpoints.down("md")]: {
+              width: "100%",
+            },
+          }}
+        >
+          <CardContent>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell>
+                    <strong>UserName:</strong>
+                  </TableCell>
+                  <TableCell>{userData.userName}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <strong>DisplayName:</strong>
+                  </TableCell>
+                  <TableCell>{userData.displayName}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <strong>Email:</strong>
+                  </TableCell>
+                  <TableCell>{userData.email}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <strong>Role:</strong>
+                  </TableCell>
+                  <TableCell>{userData.role}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
         <Typography
           variant="h5"
           component="h2"
@@ -509,7 +574,7 @@ const UserView = ({ params }: { params: IUserView }) => {
             </Box>
           </Modal>
         )}
-      </Box>
+     </Box>
     </Container>
   );
 };

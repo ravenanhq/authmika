@@ -65,7 +65,6 @@ const UserList = () => {
       }
       return prevRowData;
     });
-
     setEditModalOpen(true);
   };
 
@@ -129,42 +128,42 @@ const UserList = () => {
       headerName: "Username",
       headerClassName: "user-header",
       flex: 0.5,
-      minWidth: 100,
+      minWidth: 200,
     },
     {
       field: "displayName",
       headerName: "Display Name",
       headerClassName: "user-header",
       flex: 0.5,
-      minWidth: 100,
+      minWidth: 200,
     },
     {
       field: "email",
       headerName: "Email",
       headerClassName: "user-header",
       flex: 0.5,
-      minWidth: 100,
+      minWidth: 200,
     },
     {
       field: "mobile",
       headerName: "Mobile",
       headerClassName: "user-header",
       flex: 0.5,
-      minWidth: 100,
+      minWidth: 200,
     },
     {
       field: "role",
       headerName: "Role",
       headerClassName: "user-header",
       flex: 0.5,
-      minWidth: 100,
+      minWidth: 200,
     },
     {
       field: "actions",
       headerName: "Actions",
       headerClassName: "user-header",
       flex: 0.5,
-      minWidth: 100,
+      minWidth: 200,
       disableColumnMenu: true,
       sortable: false,
       renderCell: (params: GridCellParams) => (
@@ -252,7 +251,6 @@ const UserList = () => {
         setUniqueAlert(response.message.userName);
         setInvalidEmail(response.message.email);
       }
-
       console.error(error);
     }
   };
@@ -261,7 +259,6 @@ const UserList = () => {
     if (selectedRow !== null) {
       try {
         const response = await UserApi.deleteUser(selectedRow.id);
-
         if (response && response.data) {
           setRows(response.data);
           setDeleteAlert({ severity: "error", message: response.message });
@@ -311,7 +308,7 @@ const UserList = () => {
           backgroundColor: "#265073",
           color: "#fff",
         },
-        gridWidth: "500px",
+        gridWidth: "700px",
       }}
     >
       <Snackbar autoHideDuration={12000} />

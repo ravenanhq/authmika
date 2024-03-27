@@ -13,7 +13,6 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import { MenuItem } from "@mui/material";
-import { RowData } from "./UserList";
 
 interface Errors {
   userName?: string;
@@ -196,8 +195,8 @@ export default function AddUserModal({
           required
           value={user_name}
           onChange={(e) => setUserName(e.target.value)}
-          error={!!errors.userName}
-          helperText={errors.userName}
+          error={!!errors.user_name}
+          helperText={errors.user_name}
           size="small"
         />
         <TextField
