@@ -90,11 +90,10 @@ export default function AddApplicationModal({
         file: file,
       };
       onAddApplication(newApplication);
-      if (!errors) {
-        setName("");
-        setApplication("");
-        setBaseUrl("");
-      }
+      setErrors({});
+      setName("");
+      setApplication("");
+      setBaseUrl("");
     }
   };
 

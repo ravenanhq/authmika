@@ -171,7 +171,6 @@ const UserList = () => {
           <IconButton aria-label="view" onClick={() => handleView(params.row)}>
             <Visibility />
           </IconButton>
-
           <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
             <EditIcon />
           </IconButton>
@@ -356,7 +355,6 @@ const UserList = () => {
               <Grid item>
                 <PrimaryButton
                   startIcon={<AddIcon />}
-                  style={{ padding: "10px 18px" }}
                   onClick={handleAddUserClick}
                 >
                   Add New User
