@@ -113,14 +113,13 @@ export default function AddUserModal({
         role: role,
       };
       onAddUser(newUser);
-      if (!errors) {
-        setUserName("");
-        setDisplayName("");
-        setEmail("");
-        setMobile("");
-        setPassword("");
-        setRole("");
-      }
+      setErrors({});
+      setUserName("");
+      setDisplayName("");
+      setEmail("");
+      setMobile("");
+      setPassword("");
+      setRole("");
     }
   };
 

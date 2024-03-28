@@ -25,7 +25,6 @@ import {
   TextField,
   Typography,
   styled,
-  useMediaQuery,
   useTheme,
 } from "@mui/material";
 import Modal from "@mui/material/Modal";
@@ -34,6 +33,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import { Container } from "@mui/material";
+import Image from "next/image";
 
 export interface RowData {
   name: string;
@@ -52,6 +52,7 @@ interface ICreateListProps {
 }
 
 interface Application {
+  logoPath: string;
   id: number;
   name: string;
 }
@@ -61,6 +62,7 @@ interface ExtractedDataItem {
     id: any;
     name: string;
     baseUrl: string;
+    logoPath: string;
   };
   name: string;
   baseUrl: string;
@@ -83,11 +85,10 @@ const UserView = ({ params }: { params: IUserView }) => {
   const [searchTerm, setSearchTerm] = React.useState<string>("");
   const [id, setId] = useState<number | undefined>(params.id);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [newlySelectedCheckboxes, setNewlySelectedCheckboxes] = useState<
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [existingCheckboxes, setExistingCheckboxes] = useState<
     ICreateListProps[]
   >([]);
-  const [userData, setUserData] = useState<UserData | null>(null);
 
   useEffect(() => {
     getApplication();
@@ -103,6 +104,15 @@ const UserView = ({ params }: { params: IUserView }) => {
   useEffect(() => {
     if (applications.length > 0) {
       setSelectedCheckboxes(
+        applications.map((app) => ({
+          application: app,
+          name: app.name,
+          id: app.id,
+          isChecked: true,
+        }))
+      );
+
+      setExistingCheckboxes(
         applications.map((app) => ({
           application: app,
           name: app.name,
@@ -139,6 +149,7 @@ const UserView = ({ params }: { params: IUserView }) => {
           id: item.application.id,
           name: item.application.name,
           baseUrl: item.application.baseUrl,
+          logoPath: item.application.logoPath,
         })
       );
       setApplications(mappedData);
@@ -202,9 +213,6 @@ const UserView = ({ params }: { params: IUserView }) => {
       setSelectedCheckboxes((prevSelected) =>
         prevSelected.filter((checkbox) => checkbox.id !== optionId)
       );
-      setNewlySelectedCheckboxes((prevNewlySelected) =>
-        prevNewlySelected.filter((checkbox) => checkbox.id !== optionId)
-      );
     } else {
       const selectedOption = options.find((opt) => opt.id === optionId);
       if (selectedOption) {
@@ -215,27 +223,12 @@ const UserView = ({ params }: { params: IUserView }) => {
             id: selectedOption.id,
           },
         ]);
-        setNewlySelectedCheckboxes((prevNewlySelected) => [
-          ...prevNewlySelected,
-          {
-            name: selectedOption.name,
-            id: selectedOption.id,
-          },
-        ]);
       }
     }
   };
 
   const handleCancelClick = () => {
-    setSelectedCheckboxes((prevSelected) =>
-      prevSelected.filter(
-        (checkbox) =>
-          !newlySelectedCheckboxes.some(
-            (newCheckbox) => newCheckbox.id === checkbox.id
-          )
-      )
-    );
-    setNewlySelectedCheckboxes([]);
+    setSelectedCheckboxes(existingCheckboxes);
     setOpen(false);
   };
 
@@ -323,27 +316,43 @@ const UserView = ({ params }: { params: IUserView }) => {
               <TableBody>
                 <TableRow>
                   <TableCell>
-                    <strong>UserName:</strong>
+                    <strong>Username:</strong>
                   </TableCell>
-                  <TableCell>{userData.userName}</TableCell>
+                  <TableCell
+                    style={{ whiteSpace: "unset", wordBreak: "break-all" }}
+                  >
+                    {userData.userName}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>
-                    <strong>DisplayName:</strong>
+                    <strong>Display Name:</strong>
                   </TableCell>
-                  <TableCell>{userData.displayName}</TableCell>
+                  <TableCell
+                    style={{ whiteSpace: "unset", wordBreak: "break-all" }}
+                  >
+                    {userData.displayName}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>
                     <strong>Email:</strong>
                   </TableCell>
-                  <TableCell>{userData.email}</TableCell>
+                  <TableCell
+                    style={{ whiteSpace: "unset", wordBreak: "break-all" }}
+                  >
+                    {userData.email}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>
                     <strong>Role:</strong>
                   </TableCell>
-                  <TableCell>{userData.role}</TableCell>
+                  <TableCell
+                    style={{ whiteSpace: "unset", wordBreak: "break-all" }}
+                  >
+                    {userData.role}
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -356,15 +365,15 @@ const UserView = ({ params }: { params: IUserView }) => {
         >
           Assigned Applications
         </Typography>
-        <Divider sx={{ marginBottom: 1, flexGrow: 1 }} color="#265073" />
+        <Divider sx={{ marginBottom: 1, flexGrow: 2 }} color="#265073" />
         <TableContainer
           component={Paper}
           sx={{ width: "100%", maxHeight: 400, overflow: "auto" }}
         >
-          <Table style={{ maxWidth: "100%" }}>
+          <Table stickyHeader style={{ maxWidth: "100%" }}>
             <TableHead>
               <TableRow>
-                <TableCell>
+                <TableCell style={{ width: "80%" }}>
                   <Grid container spacing={1} alignItems="center">
                     <Grid item xs={12} sm={6}>
                       <PrimaryButton
@@ -375,9 +384,13 @@ const UserView = ({ params }: { params: IUserView }) => {
                         Assign Applications
                       </PrimaryButton>
                     </Grid>
-                    {applications.length > 0 && (
-                      <Grid item xs={12} sm={6}>
-                        <Box display="flex" justifyContent="flex-end">
+                    <Grid item xs={12} sm={6}>
+                      {applications.length > 0 && (
+                        <Box
+                          display="flex"
+                          justifyContent="flex-end"
+                          width="100%"
+                        >
                           <TextField
                             InputProps={{
                               startAdornment: (
@@ -395,8 +408,8 @@ const UserView = ({ params }: { params: IUserView }) => {
                             size="small"
                           />
                         </Box>
-                      </Grid>
-                    )}
+                      )}
+                    </Grid>
                   </Grid>
                 </TableCell>
               </TableRow>
@@ -404,36 +417,72 @@ const UserView = ({ params }: { params: IUserView }) => {
             <TableBody>
               {filteredApplications.length < 1 && (
                 <TableRow>
-                  <TableCell style={{ width: "100%" }}>
+                  <TableCell>
                     <Typography>No results found</Typography>
                   </TableCell>
                 </TableRow>
               )}
               {filteredApplications.map((application) => (
-                <TableRow key={application.id}>
-                  <TableCell style={{ width: "100%" }}>
+                <TableRow key={application.id} style={{ display: "flex" }}>
+                  <TableCell style={{ width: "6%" }}>
+                    {application.logoPath !== undefined &&
+                    application.logoPath !== "" &&
+                    application.logoPath !== null ? (
+                      <Image
+                        src={"/assets/images/" + application.logoPath}
+                        alt="logo"
+                        width={60}
+                        height={40}
+                      />
+                    ) : (
+                      <Image
+                        src="/assets/images/no_image.jpg"
+                        alt="logo"
+                        width={60}
+                        height={40}
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell style={{ width: "84%" }}>
                     <Box
                       sx={{
                         display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "right",
+                        padding: "10px",
                       }}
                     >
-                      <Typography>{application.name}</Typography>
-                      <IconButton
-                        onClick={() => {
-                          handleCancel(id, application.id);
-                        }}
-                        sx={{
-                          fontSize: "4px",
-                          color: "#FF9843",
-                          filled: "none",
-                          padding: "0",
+                      <Typography
+                        style={{
+                          marginRight: "auto",
+                          display: "inline",
+                          textAlign: "left",
                         }}
                       >
-                        <CloseIcon />
-                      </IconButton>
+                        {application.name}
+                      </Typography>
                     </Box>
+                  </TableCell>
+                  <TableCell
+                    style={{
+                      width: "10%",
+                      display: "flex",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <IconButton
+                      onClick={() => {
+                        handleCancel(id, application.id);
+                      }}
+                      sx={{
+                        fontSize: "4px",
+                        color: "#FF9843",
+                        filled: "none",
+                        padding: 0,
+                        display: "inline",
+                        width: "100",
+                      }}
+                    >
+                      <CloseIcon />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))}
@@ -459,12 +508,14 @@ const UserView = ({ params }: { params: IUserView }) => {
           >
             <Box
               sx={{
-                position: "relative",
+                position: "absolute",
                 top: "50%",
                 left: "50%",
                 transform: "translate(-50%, -50%)",
-                width: isMobile ? "90%" : 400,
-                maxWidth: "100%",
+                maxWidth: "400px",
+                width: "90%",
+                maxHeight: "95vh",
+                overflow: "auto",
                 bgcolor: "background.paper",
                 boxShadow: "0 3px 5px rgba(0,0,0,0.2)",
               }}
@@ -503,9 +554,8 @@ const UserView = ({ params }: { params: IUserView }) => {
                       sx={{
                         mt: 2,
                         mx: 2,
-                        overflowY: "auto",
-                        height: "100%",
-                        maxHeight: "85vh",
+                        overflow: "auto",
+                        height: "250px",
                       }}
                     >
                       <FormGroup sx={{ marginLeft: 7 }}>
@@ -574,7 +624,7 @@ const UserView = ({ params }: { params: IUserView }) => {
             </Box>
           </Modal>
         )}
-     </Box>
+      </Box>
     </Container>
   );
 };
