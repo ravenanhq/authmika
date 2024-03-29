@@ -198,10 +198,10 @@ export default function EditApplicationModal({
           error={!!errors.baseUrl}
           helperText={errors.baseUrl}
         />
-        <FileUpload
+        {/* <FileUpload
           onFileUpload={handleFileUpload}
           imageFile={editedData.logoPath}
-        />
+        /> */}
       </DialogContent>
       <Divider
         color="#265073"

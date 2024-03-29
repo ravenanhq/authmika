@@ -79,16 +79,12 @@ const UserView = ({ params }: { params: IUserView }) => {
   const [applications, setApplications] = React.useState<Application[]>([]);
   const [open, setOpen] = React.useState(false);
   const [options, setOptions] = useState<ICreateListProps[]>([]);
-  const [selectedCheckboxes, setSelectedCheckboxes] = useState<
-    ICreateListProps[]
-  >([]);
+  const [selectedCheckboxes, setSelectedCheckboxes] = useState<ICreateListProps[]>([]);
   const [searchTerm, setSearchTerm] = React.useState<string>("");
   const [id, setId] = useState<number | undefined>(params.id);
   const theme = useTheme();
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [existingCheckboxes, setExistingCheckboxes] = useState<
-    ICreateListProps[]
-  >([]);
+  const [existingCheckboxes, setExistingCheckboxes] = useState<ICreateListProps[]>([]);
 
   useEffect(() => {
     getApplication();
@@ -522,6 +518,9 @@ const UserView = ({ params }: { params: IUserView }) => {
             >
               <DialogTitle
                 sx={{
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 1,
                   backgroundColor: "#265073",
                   color: "#fff",
                   display: "flex",
@@ -555,7 +554,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                         mt: 2,
                         mx: 2,
                         overflow: "auto",
-                        height: "250px",
+                        height: "200px",
                       }}
                     >
                       <FormGroup sx={{ marginLeft: 7 }}>
@@ -596,29 +595,36 @@ const UserView = ({ params }: { params: IUserView }) => {
                       </FormGroup>
                     </Box>
                   </Box>
-                  <Divider
-                    color="#265073"
-                    sx={{ marginBottom: "2%", marginTop: "10%" }}
-                  ></Divider>
-                  <DialogActions style={{ margin: "0 16px 10px 0" }}>
-                    <PrimaryButton
-                      startIcon={<AddIcon />}
-                      type="submit"
-                      onClick={() => handleSubmit(selectedCheckboxes)}
-                    >
-                      Add
-                    </PrimaryButton>
-                    <SecondaryButton
-                      startIcon={<CloseIcon />}
-                      type="submit"
-                      onClick={() => {
-                        handleCancelClick();
-                        setOpen(false);
-                      }}
-                    >
-                      Cancel
-                    </SecondaryButton>
-                  </DialogActions>
+                  <Box
+                    style={{
+                      position: "sticky",
+                      bottom: 0,
+                      backgroundColor: "white",
+                      zIndex: 1,
+                      padding: "10px",
+                    }}
+                  >
+                    <Divider color="#265073" />
+                    <DialogActions style={{ margin: "0 16px 10px 0" }}>
+                      <PrimaryButton
+                        startIcon={<AddIcon />}
+                        type="submit"
+                        onClick={() => handleSubmit(selectedCheckboxes)}
+                      >
+                        Add
+                      </PrimaryButton>
+                      <SecondaryButton
+                        startIcon={<CloseIcon />}
+                        type="submit"
+                        onClick={() => {
+                          handleCancelClick();
+                          setOpen(false);
+                        }}
+                      >
+                        Cancel
+                      </SecondaryButton>
+                    </DialogActions>
+                  </Box>
                 </Box>
               )}
             </Box>

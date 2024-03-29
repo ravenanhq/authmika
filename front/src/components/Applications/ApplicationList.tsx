@@ -24,6 +24,7 @@ import AddApplicationModal from "./AddApplicationModal";
 import EditApplicationModal from "./EditApplicationModal";
 import DeleteApplicationModal from "./DeleteApplicationModal";
 import { Visibility } from "@mui/icons-material";
+import { getSession } from "next-auth/react";
 
 export interface RowData {
   id: number;
@@ -53,11 +54,36 @@ const ApplicationList = () => {
   const [alertShow, setAlertShow] = useState("");
   const [uniqueAlert, setUniqueAlert] = useState("");
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
+  const [userRole, setUserRole] = useState<string>();
 
   useEffect(() => {
+    restrictMenuAccess();
     getApplications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const restrictMenuAccess = async () => {
+    const session = await getSession();
+    try {
+      if (
+        session &&
+        session.hasOwnProperty("user") &&
+        session.user.hasOwnProperty("role")
+      ) {
+        setUserRole(session.user.role);
+        let role = session.user.role;
+        if (role.toLowerCase() === "client") {
+          const restrictedPage = "/applications";
+          if (restrictedPage == window.location.pathname) {
+            window.location.href = "/dashboard";
+            return;
+          }
+        }
+      }
+    } catch (error: any) {
+      console.log(error);
+    }
+  };
 
   const handleEdit = (rowData: SetStateAction<null>) => {
     setSelectedRow(rowData);
@@ -105,26 +131,26 @@ const ApplicationList = () => {
   };
 
   const columns: GridColDef[] = [
-    {
-      field: "logoPath",
-      headerName: "Logo",
-      headerClassName: "application-header",
-      flex: 1,
-      minWidth: 100,
-      disableColumnMenu: true,
-      sortable: false,
-      renderCell: (params) => (
-        <CardMedia
-          component="img"
-          alt="Image"
-          height="auto"
-          image={
-            "/assets/images/" + (params.value ? params.value : "no_image.jpg")
-          }
-          style={{ width: "20%", padding: "10px" }}
-        />
-      ),
-    },
+    // {
+    //   field: "logoPath",
+    //   headerName: "Logo",
+    //   headerClassName: "application-header",
+    //   flex: 1,
+    //   minWidth: 100,
+    //   disableColumnMenu: true,
+    //   sortable: false,
+    //   renderCell: (params) => (
+    //     <CardMedia
+    //       component="img"
+    //       alt="Image"
+    //       height="auto"
+    //       image={
+    //         "/assets/images/" + (params.value ? params.value : "no_image.jpg")
+    //       }
+    //       style={{ width: "20%", padding: "10px" }}
+    //     />
+    //   ),
+    // },
     {
       field: "name",
       headerName: "Name",
@@ -191,7 +217,6 @@ const ApplicationList = () => {
       if (response.statusCode == 422 && response.message.application) {
         setUniqueAlert(response.message.application);
       }
-
       console.log(error);
     }
   };
@@ -202,9 +227,7 @@ const ApplicationList = () => {
         applicationId,
         updatedData
       );
-
       setUniqueAlert("");
-
       if (response) {
         if (response.statusCode == 409) {
           setUniqueAlert(response.message);
@@ -332,7 +355,6 @@ const ApplicationList = () => {
                 </Alert>
               )}
             </Stack>
-
             <Grid
               container
               justifyContent="flex-end"

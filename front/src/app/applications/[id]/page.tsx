@@ -15,7 +15,6 @@ import {
   Container,
 } from "@mui/material";
 import React from "react";
-import Image from "next/image";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useEffect, useState } from "react";
 
@@ -98,7 +97,7 @@ const ApplicationView = () => {
                   </TableCell>
                   <TableCell>{applicationData.name}</TableCell>
                 </TableRow>
-                <TableRow>
+                {/* <TableRow>
                   <TableCell>
                     <strong>Image:</strong>
                   </TableCell>
@@ -121,7 +120,7 @@ const ApplicationView = () => {
                       />
                     )}
                   </TableCell>
-                </TableRow>
+                </TableRow> */}
                 <TableRow>
                   <TableCell>
                     <strong>Application:</strong>
