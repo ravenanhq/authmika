@@ -53,7 +53,6 @@ const UserList = () => {
   const [uniqueAlert, setUniqueAlert] = useState("");
   const [invalidEmail, setInvalidEmail] = useState("");
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
-  const [userRole, setUserRole] = useState<string>();
 
   useEffect(() => {
     restrictMenuAccess();
@@ -69,7 +68,6 @@ const UserList = () => {
         session.hasOwnProperty("user") &&
         session.user.hasOwnProperty("role")
       ) {
-        setUserRole(session.user.role);
         let role = session.user.role;
         if (role.toLowerCase() === "client") {
           const restrictedPage = "/users";
@@ -390,7 +388,6 @@ const UserList = () => {
                 columns={columns}
                 getRowId={(row) => row.id}
                 autoHeight
-                disableColumnMenu
                 initialState={{
                   pagination: {
                     paginationModel: { page: 0, pageSize: 5 },

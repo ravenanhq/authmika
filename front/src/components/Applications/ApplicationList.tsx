@@ -54,7 +54,6 @@ const ApplicationList = () => {
   const [alertShow, setAlertShow] = useState("");
   const [uniqueAlert, setUniqueAlert] = useState("");
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
-  const [userRole, setUserRole] = useState<string>();
 
   useEffect(() => {
     restrictMenuAccess();
@@ -70,7 +69,6 @@ const ApplicationList = () => {
         session.hasOwnProperty("user") &&
         session.user.hasOwnProperty("role")
       ) {
-        setUserRole(session.user.role);
         let role = session.user.role;
         if (role.toLowerCase() === "client") {
           const restrictedPage = "/applications";
