@@ -33,7 +33,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import { Container } from "@mui/material";
-import Image from "next/image";
 
 export interface RowData {
   name: string;
@@ -79,12 +78,16 @@ const UserView = ({ params }: { params: IUserView }) => {
   const [applications, setApplications] = React.useState<Application[]>([]);
   const [open, setOpen] = React.useState(false);
   const [options, setOptions] = useState<ICreateListProps[]>([]);
-  const [selectedCheckboxes, setSelectedCheckboxes] = useState<ICreateListProps[]>([]);
+  const [selectedCheckboxes, setSelectedCheckboxes] = useState<
+    ICreateListProps[]
+  >([]);
   const [searchTerm, setSearchTerm] = React.useState<string>("");
   const [id, setId] = useState<number | undefined>(params.id);
   const theme = useTheme();
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [existingCheckboxes, setExistingCheckboxes] = useState<ICreateListProps[]>([]);
+  const [existingCheckboxes, setExistingCheckboxes] = useState<
+    ICreateListProps[]
+  >([]);
 
   useEffect(() => {
     getApplication();
@@ -369,8 +372,8 @@ const UserView = ({ params }: { params: IUserView }) => {
           <Table stickyHeader style={{ maxWidth: "100%" }}>
             <TableHead>
               <TableRow>
-                <TableCell style={{ width: "80%" }}>
-                  <Grid container spacing={1} alignItems="center">
+                <TableCell>
+                  <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} sm={6}>
                       <PrimaryButton
                         variant="contained"
@@ -382,11 +385,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       {applications.length > 0 && (
-                        <Box
-                          display="flex"
-                          justifyContent="flex-end"
-                          width="100%"
-                        >
+                        <Box display="flex">
                           <TextField
                             InputProps={{
                               startAdornment: (
@@ -420,7 +419,7 @@ const UserView = ({ params }: { params: IUserView }) => {
               )}
               {filteredApplications.map((application) => (
                 <TableRow key={application.id} style={{ display: "flex" }}>
-                  <TableCell style={{ width: "6%" }}>
+                  {/* <TableCell style={{ width: "6%" }}>
                     {application.logoPath !== undefined &&
                     application.logoPath !== "" &&
                     application.logoPath !== null ? (
@@ -438,8 +437,8 @@ const UserView = ({ params }: { params: IUserView }) => {
                         height={40}
                       />
                     )}
-                  </TableCell>
-                  <TableCell style={{ width: "84%" }}>
+                  </TableCell> */}
+                  <TableCell style={{ width: "100%" }}>
                     <Box
                       sx={{
                         display: "flex",
@@ -511,7 +510,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                 maxWidth: "400px",
                 width: "90%",
                 maxHeight: "95vh",
-                overflow: "auto",
+                overflowX: "hidden",
                 bgcolor: "background.paper",
                 boxShadow: "0 3px 5px rgba(0,0,0,0.2)",
               }}
@@ -553,7 +552,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                       sx={{
                         mt: 2,
                         mx: 2,
-                        overflow: "auto",
+                        overflowX: "hidden",
                         height: "200px",
                       }}
                     >
@@ -581,8 +580,9 @@ const UserView = ({ params }: { params: IUserView }) => {
                                       maxWidth: "150px",
                                       overflow: "hidden",
                                       display: "inline-block",
-                                      whiteSpace: "nowrap",
+                                      whiteSpace: "unset",
                                       textOverflow: "ellipsis",
+                                      wordBreak: "break-all",
                                     }}
                                   >
                                     {option.name}
