@@ -33,7 +33,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import { Container } from "@mui/material";
-import Image from "next/image";
 
 export interface RowData {
   name: string;
@@ -373,8 +372,8 @@ const UserView = ({ params }: { params: IUserView }) => {
           <Table stickyHeader style={{ maxWidth: "100%" }}>
             <TableHead>
               <TableRow>
-                <TableCell style={{ width: "80%" }}>
-                  <Grid container spacing={1} alignItems="center">
+                <TableCell>
+                  <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} sm={6}>
                       <PrimaryButton
                         variant="contained"
@@ -386,11 +385,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       {applications.length > 0 && (
-                        <Box
-                          display="flex"
-                          justifyContent="flex-end"
-                          width="100%"
-                        >
+                        <Box display="flex" justifyContent="flex-end" width="100%">
                           <TextField
                             InputProps={{
                               startAdornment: (
@@ -424,7 +419,7 @@ const UserView = ({ params }: { params: IUserView }) => {
               )}
               {filteredApplications.map((application) => (
                 <TableRow key={application.id} style={{ display: "flex" }}>
-                  <TableCell style={{ width: "6%" }}>
+                  {/* <TableCell style={{ width: "6%" }}>
                     {application.logoPath !== undefined &&
                     application.logoPath !== "" &&
                     application.logoPath !== null ? (
@@ -442,8 +437,8 @@ const UserView = ({ params }: { params: IUserView }) => {
                         height={40}
                       />
                     )}
-                  </TableCell>
-                  <TableCell style={{ width: "84%" }}>
+                  </TableCell> */}
+                  <TableCell style={{ width: "100%" }}>
                     <Box
                       sx={{
                         display: "flex",
@@ -515,13 +510,16 @@ const UserView = ({ params }: { params: IUserView }) => {
                 maxWidth: "400px",
                 width: "90%",
                 maxHeight: "95vh",
-                overflow: "auto",
+                overflowX: "hidden",
                 bgcolor: "background.paper",
                 boxShadow: "0 3px 5px rgba(0,0,0,0.2)",
               }}
             >
               <DialogTitle
                 sx={{
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 1,
                   backgroundColor: "#265073",
                   color: "#fff",
                   display: "flex",
@@ -554,8 +552,8 @@ const UserView = ({ params }: { params: IUserView }) => {
                       sx={{
                         mt: 2,
                         mx: 2,
-                        overflow: "auto",
-                        height: "250px",
+                        overflowX: "hidden",
+                        height: "200px",
                       }}
                     >
                       <FormGroup sx={{ marginLeft: 7 }}>
@@ -582,8 +580,9 @@ const UserView = ({ params }: { params: IUserView }) => {
                                       maxWidth: "150px",
                                       overflow: "hidden",
                                       display: "inline-block",
-                                      whiteSpace: "nowrap",
+                                      whiteSpace: "unset",
                                       textOverflow: "ellipsis",
+                                      wordBreak: "break-all",
                                     }}
                                   >
                                     {option.name}
@@ -596,29 +595,36 @@ const UserView = ({ params }: { params: IUserView }) => {
                       </FormGroup>
                     </Box>
                   </Box>
-                  <Divider
-                    color="#265073"
-                    sx={{ marginBottom: "2%", marginTop: "10%" }}
-                  ></Divider>
-                  <DialogActions style={{ margin: "0 16px 10px 0" }}>
-                    <PrimaryButton
-                      startIcon={<AddIcon />}
-                      type="submit"
-                      onClick={() => handleSubmit(selectedCheckboxes)}
-                    >
-                      Add
-                    </PrimaryButton>
-                    <SecondaryButton
-                      startIcon={<CloseIcon />}
-                      type="submit"
-                      onClick={() => {
-                        handleCancelClick();
-                        setOpen(false);
-                      }}
-                    >
-                      Cancel
-                    </SecondaryButton>
-                  </DialogActions>
+                  <Box
+                    style={{
+                      position: "sticky",
+                      bottom: 0,
+                      backgroundColor: "white",
+                      zIndex: 1,
+                      padding: "10px",
+                    }}
+                  >
+                    <Divider color="#265073" />
+                    <DialogActions style={{ margin: "0 16px 10px 0" }}>
+                      <PrimaryButton
+                        startIcon={<AddIcon />}
+                        type="submit"
+                        onClick={() => handleSubmit(selectedCheckboxes)}
+                      >
+                        Add
+                      </PrimaryButton>
+                      <SecondaryButton
+                        startIcon={<CloseIcon />}
+                        type="submit"
+                        onClick={() => {
+                          handleCancelClick();
+                          setOpen(false);
+                        }}
+                      >
+                        Cancel
+                      </SecondaryButton>
+                    </DialogActions>
+                  </Box>
                 </Box>
               )}
             </Box>

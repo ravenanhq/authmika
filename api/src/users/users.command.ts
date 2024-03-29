@@ -123,7 +123,7 @@ export class UsersCommand {
         type: 'select',
         name: 'role',
         message: 'Select the user role:',
-        choices: ['admin', 'user'],
+        choices: ['ADMIN', 'CLIENT'],
       },
     ]).then(async (userInput: IUserInput) => {
       userData = {

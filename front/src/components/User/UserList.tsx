@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Alert,
   Stack,
+  Container,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
@@ -23,7 +24,7 @@ import AddUserModal from "./AddUserModal";
 import EditUserModal from "./EditUserModal";
 import { UserApi } from "@/services/api/UserApi";
 import { Visibility } from "@mui/icons-material";
-import { GridCellParams } from "@mui/x-data-grid";
+import { getSession } from "next-auth/react";
 
 export interface RowData {
   id: number;
@@ -54,9 +55,32 @@ const UserList = () => {
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
 
   useEffect(() => {
+    restrictMenuAccess();
     getUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const restrictMenuAccess = async () => {
+    const session = await getSession();
+    try {
+      if (
+        session &&
+        session.hasOwnProperty("user") &&
+        session.user.hasOwnProperty("role")
+      ) {
+        let role = session.user.role;
+        if (role.toLowerCase() === "client") {
+          const restrictedPage = "/users";
+          if (restrictedPage == window.location.pathname) {
+            window.location.href = "/dashboard";
+            return;
+          }
+        }
+      }
+    } catch (error: any) {
+      console.log(error);
+    }
+  };
 
   const handleEdit = (rowData: RowData | null) => {
     setSelectedRow((prevRowData) => {
@@ -128,45 +152,45 @@ const UserList = () => {
       headerName: "Username",
       headerClassName: "user-header",
       flex: 0.5,
-      minWidth: 200,
+      minWidth: 140,
     },
     {
       field: "displayName",
       headerName: "Display Name",
       headerClassName: "user-header",
       flex: 0.5,
-      minWidth: 200,
+      minWidth: 160,
     },
     {
       field: "email",
       headerName: "Email",
       headerClassName: "user-header",
       flex: 0.5,
-      minWidth: 200,
+      minWidth: 180,
     },
     {
       field: "mobile",
       headerName: "Mobile",
       headerClassName: "user-header",
       flex: 0.5,
-      minWidth: 200,
+      minWidth: 120,
     },
     {
       field: "role",
       headerName: "Role",
       headerClassName: "user-header",
       flex: 0.5,
-      minWidth: 200,
+      minWidth: 100,
     },
     {
       field: "actions",
       headerName: "Actions",
       headerClassName: "user-header",
       flex: 0.5,
-      minWidth: 200,
+      minWidth: 150,
       disableColumnMenu: true,
       sortable: false,
-      renderCell: (params: GridCellParams) => (
+      renderCell: (params) => (
         <>
           <IconButton aria-label="view" onClick={() => handleView(params.row)}>
             <Visibility />
@@ -221,7 +245,6 @@ const UserList = () => {
         setUniqueAlert(response.message.userName);
         setInvalidEmail(response.message.email);
       }
-
       console.log(error);
     }
   };
@@ -297,129 +320,128 @@ const UserList = () => {
   }));
 
   return (
-    <Card
-      sx={{
-        width: "100%",
-        height: "100%",
-        boxShadow: "none",
-        marginTop: "5vh",
-        "& .user-header": {
-          backgroundColor: "#265073",
-          color: "#fff",
-        },
-        gridWidth: "700px",
-      }}
-    >
-      <Snackbar autoHideDuration={12000} />
-      <CardContent style={{ padding: "0" }}>
-        <Typography variant="h4">Users</Typography>
-        <Divider
-          color="#265073"
-          sx={{ marginTop: "5px", marginBottom: "3%" }}
-        ></Divider>
-        {loading && (
-          <div style={{ textAlign: "center", marginTop: "5%" }}>
-            <CircularProgress />
-          </div>
-        )}
-        {!loading && (
-          <>
-            <Stack sx={{ width: "100%", paddingBottom: "20px" }} spacing={4}>
-              {alertShow && (
-                <Alert
-                  severity="success"
-                  onClose={() => {
-                    setAlertShow("");
-                  }}
-                >
-                  {alertShow}
-                </Alert>
-              )}
-              {deleteAlert && (
-                <Alert
-                  severity={deleteAlert.severity}
-                  onClose={() => {
-                    setDeleteAlert(null);
-                  }}
-                >
-                  {deleteAlert.message}
-                </Alert>
-              )}
-            </Stack>
-            <Grid
-              container
-              justifyContent="flex-end"
-              alignItems="center"
-              style={{ marginBottom: "5px" }}
-            >
-              <Grid item>
-                <PrimaryButton
-                  startIcon={<AddIcon />}
-                  onClick={handleAddUserClick}
-                >
-                  Add New User
-                </PrimaryButton>
+    <Container maxWidth="xl">
+      <Card
+        sx={{
+          boxShadow: "none",
+          marginTop: "5vh",
+          "& .user-header": {
+            backgroundColor: "#265073",
+            color: "#fff",
+          },
+          gridWidth: "500px",
+        }}
+      >
+        <Snackbar autoHideDuration={12000} />
+        <CardContent style={{ padding: "0" }}>
+          <Typography variant="h4">Users</Typography>
+          <Divider
+            color="#265073"
+            sx={{ marginTop: "5px", marginBottom: "3%" }}
+          ></Divider>
+          {loading && (
+            <div style={{ textAlign: "center", marginTop: "5%" }}>
+              <CircularProgress />
+            </div>
+          )}
+          {!loading && (
+            <>
+              <Stack sx={{ width: "100%", paddingBottom: "20px" }} spacing={4}>
+                {alertShow && (
+                  <Alert
+                    severity="success"
+                    onClose={() => {
+                      setAlertShow("");
+                    }}
+                  >
+                    {alertShow}
+                  </Alert>
+                )}
+                {deleteAlert && (
+                  <Alert
+                    severity={deleteAlert.severity}
+                    onClose={() => {
+                      setDeleteAlert(null);
+                    }}
+                  >
+                    {deleteAlert.message}
+                  </Alert>
+                )}
+              </Stack>
+              <Grid
+                container
+                justifyContent="flex-end"
+                alignItems="center"
+                style={{ marginBottom: "5px" }}
+              >
+                <Grid item>
+                  <PrimaryButton
+                    startIcon={<AddIcon />}
+                    onClick={handleAddUserClick}
+                  >
+                    Add New User
+                  </PrimaryButton>
+                </Grid>
               </Grid>
-            </Grid>
-            <StyledDataGrid
-              rows={rows}
-              columns={columns}
-              getRowId={(row) => row.id}
-              autoHeight
-              disableColumnMenu
-              initialState={{
-                pagination: {
-                  paginationModel: { page: 0, pageSize: 5 },
-                },
-              }}
-              slots={{
-                noResultsOverlay: () => {
-                  return (
-                    <Typography
-                      variant="body1"
-                      align="center"
-                      sx={{ marginTop: 10, justifyContent: "center" }}
-                    >
-                      No results found.
-                    </Typography>
-                  );
-                },
-              }}
-              pageSizeOptions={[5, 10, 15, 20]}
-              style={{
-                backgroundColor: "white",
-                marginTop: "2%",
-                width: "100%",
-              }}
-            />
-          </>
-        )}
-      </CardContent>
+              <StyledDataGrid
+                rows={rows}
+                columns={columns}
+                getRowId={(row) => row.id}
+                autoHeight
+                initialState={{
+                  pagination: {
+                    paginationModel: { page: 0, pageSize: 5 },
+                  },
+                }}
+                slots={{
+                  noResultsOverlay: () => {
+                    return (
+                      <Typography
+                        variant="body1"
+                        align="center"
+                        sx={{ marginTop: 10, justifyContent: "center" }}
+                      >
+                        No results found.
+                      </Typography>
+                    );
+                  },
+                }}
+                pageSizeOptions={[5, 10, 15, 20]}
+                style={{
+                  backgroundColor: "white",
+                  marginTop: "2%",
+                  width: "100%",
+                }}
+              />
+            </>
+          )}
+        </CardContent>
 
-      <EditUserModal
-        open={editModalOpen}
-        onClose={handleEditModalClose}
-        rowData={selectedRow}
-        onEdit={handleEditSave}
-        uniqueValidation={uniqueAlert}
-        uniqueEmail={invalidEmail}
-      />
+        <EditUserModal
+          open={editModalOpen}
+          onClose={handleEditModalClose}
+          rowData={selectedRow}
+          onEdit={handleEditSave}
+          uniqueValidation={uniqueAlert}
+          uniqueEmail={invalidEmail}
+        />
 
-      <DeleteModal
-        open={deleteModalOpen}
-        onClose={handleDeleteModalClose}
-        onDeleteConfirm={() => handleDeleteConfirm(selectedRow)}
-        rowData={selectedRow}
-      />
+        <DeleteModal
+          open={deleteModalOpen}
+          onClose={handleDeleteModalClose}
+          onDeleteConfirm={() => handleDeleteConfirm(selectedRow)}
+          rowData={selectedRow}
+        />
 
-      <AddUserModal
-        open={isAddUserModalOpen}
-        onClose={handleCloseAddUserModal}
-        onAddUser={handleAddUser}
-        uniqueValidation={uniqueAlert}
-        uniqueEmail={invalidEmail}
-      />
-    </Card>
+        <AddUserModal
+          open={isAddUserModalOpen}
+          onClose={handleCloseAddUserModal}
+          onAddUser={handleAddUser}
+          uniqueValidation={uniqueAlert}
+          uniqueEmail={invalidEmail}
+        />
+      </Card>
+    </Container>
   );
 };
 
