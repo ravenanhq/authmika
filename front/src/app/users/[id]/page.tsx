@@ -385,7 +385,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       {applications.length > 0 && (
-                        <Box display="flex">
+                        <Box display="flex" justifyContent="flex-end" width="100%">
                           <TextField
                             InputProps={{
                               startAdornment: (
