@@ -26,25 +26,25 @@ export class UsersCommand {
       const users = await this.userService.getUsers();
 
       if (users.length > 0) {
-        var Table = require('cli-table3');
-        let table = new Table({
-          head: ['id', 'user_name', 'name', 'email', 'role', 'is_active'],
-          style: {
-            head: [],
-          },
+        const userList = [];
+        users.forEach((application) => {
+          userList.push({
+            id: application.dataValues.id,
+            user_name: application.dataValues.userName,
+            name: application.dataValues.displayName,
+            email: application.dataValues.email,
+            role: application.dataValues.role,
+            is_active: application.dataValues.isActive ? 'Yes' : 'No',
+          });
         });
-
-        users.forEach((user) => {
-          table.push([
-            user.dataValues.id,
-            user.dataValues.userName,
-            user.dataValues.displayName,
-            user.dataValues.email,
-            user.dataValues.role,
-            user.dataValues.isActive ? 'Yes' : 'No',
-          ]);
-        });
-        console.log(table.toString());
+        console.table(userList, [
+          'id',
+          'user_name',
+          'name',
+          'email',
+          'role',
+          'is_active',
+        ]);
       } else {
         console.log('No users found.');
       }
@@ -58,8 +58,15 @@ export class UsersCommand {
     describe: 'Create a new user',
   })
   async createUser() {
-    let userData;
-    const userInput = await prompt([
+    let userData: {
+      userName: string;
+      displayName: string;
+      email: string;
+      password: string;
+      mobile: string;
+      role: string;
+    };
+    await prompt([
       {
         type: 'input',
         name: 'userName',
@@ -116,7 +123,7 @@ export class UsersCommand {
         type: 'select',
         name: 'role',
         message: 'Select the user role:',
-        choices: ['admin', 'user'],
+        choices: ['ADMIN', 'CLIENT'],
       },
     ]).then(async (userInput: IUserInput) => {
       userData = {
@@ -148,7 +155,7 @@ export class UsersCommand {
       describe: 'The user id to delete',
       type: 'number',
     })
-    userId: Number,
+    userId: number,
   ) {
     const result = await this.userService.deleteUser(userId);
 

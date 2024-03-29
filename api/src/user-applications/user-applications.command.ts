@@ -24,14 +24,7 @@ export class UserApplicationCommand {
       const userApplications =
         await this.userApplicationService.getAllUserApplications();
       if (userApplications.length > 0) {
-        var Table = require('cli-table3');
-        let table = new Table({
-          head: ['id', 'user', 'application'],
-          style: {
-            head: [],
-          },
-        });
-
+        const userApplicationList = [];
         for (const userApplication of userApplications) {
           const userData = await Users.findOne({
             where: { id: userApplication.userId },
@@ -40,13 +33,13 @@ export class UserApplicationCommand {
             where: { id: userApplication.applicationId },
           });
 
-          table.push([
-            userApplication.dataValues.id,
-            userData.dataValues.displayName,
-            applicationData.dataValues.name,
-          ]);
+          userApplicationList.push({
+            id: userApplication.dataValues.id,
+            user: userData.dataValues.displayName,
+            application: applicationData.dataValues.name,
+          });
         }
-        console.log(table.toString());
+        console.table(userApplicationList, ['id', 'user', 'application']);
       } else {
         console.log('No mapping found.');
       }
@@ -60,7 +53,7 @@ export class UserApplicationCommand {
     describe: 'Link a new user to application',
   })
   async createUser() {
-    const userInput = await prompt([
+    await prompt([
       {
         type: 'number',
         name: 'userId',
@@ -121,7 +114,7 @@ export class UserApplicationCommand {
       describe: 'The user id to delete',
       type: 'number',
     })
-    linkId: Number,
+    linkId: number,
   ) {
     const result = await this.userApplicationService.deleteMapping(linkId);
 

@@ -19,7 +19,7 @@ import * as dotenv from 'dotenv';
 import { AuthClientsController } from 'src/auth-clients/auth-clients.controller';
 import { AuthClientsService } from 'src/auth-clients/auth-clients.service';
 import { ApplicationsService } from 'src/applications/applications.service';
-import { UserApplicationService } from 'src/user-application/user-applications.service';
+import { UserApplicationService } from 'src/user-applications/user-applications.service';
 
 dotenv.config();
 

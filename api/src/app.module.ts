@@ -13,9 +13,10 @@ import { UsersCommand } from './users/users.command';
 import { CommandModule } from 'nestjs-command';
 import { ApplicationsCommand } from './applications/applications.command';
 import { ApplicationsModule } from './applications/applications.module';
-import { UserApplicationsModule } from './user-application/user-applications.module';
-import { UserApplicationCommand } from './user-application/user-applications.command';
+import { UserApplicationsModule } from './user-applications/user-applications.module';
+import { UserApplicationCommand } from './user-applications/user-applications.command';
 import { AuthClientsModule } from './auth-clients/auth-clients.module';
+import { UserApplicationsController } from './user-applications/user-application.controller';
 
 dotenv.config();
 
@@ -43,7 +44,7 @@ dotenv.config();
     CommandModule,
     AuthClientsModule,
   ],
-  controllers: [AppController, AuthController],
+  controllers: [AppController, AuthController, UserApplicationsController],
   providers: [
     UsersCommand,
     ApplicationsCommand,
