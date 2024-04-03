@@ -31,4 +31,6 @@ export class UsersDto {
 
   @IsNotEmpty({ message: 'role cannot be blank' })
   role: string;
+
+  currentPassword: string;
 }

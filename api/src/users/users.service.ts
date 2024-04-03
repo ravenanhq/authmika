@@ -11,6 +11,7 @@ import { Users } from 'src/db/model/users.model';
 import { UsersDto } from './dto/users.dto';
 import { hash } from 'bcrypt';
 import { UserApplications } from 'src/db/model/user-applications.model';
+import { compare } from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -192,7 +193,67 @@ export class UsersService {
         return {
           message: 'User updated successfully.',
           statusCode: HttpStatus.OK,
+          data: users,
+        };
+      } else {
+        return {
+          message: 'User not found.',
+          statusCode: HttpStatus.NOT_FOUND,
+          data: {},
+        };
+      }
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.CONFLICT,
+          data: {},
+        };
+      } else {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          data: {},
+        };
+      }
+    }
+  }
 
+  async updatePassword(
+    userDto: UsersDto,
+    user: { id: any; password: string | undefined },
+    id: number,
+    currentPassword: string,
+  ): Promise<{ message: string; statusCode: number; data: object }> {
+    const { password } = userDto;
+    try {
+      const existingUser = await this.userModel.findOne({
+        where: { id: id },
+      });
+      if (existingUser) {
+        const isPasswordMatch = await compare(
+          currentPassword,
+          existingUser.password,
+        );
+        if (!isPasswordMatch) {
+          return {
+            message: 'Current password is incorrect.',
+            statusCode: 422,
+            data: {},
+          };
+        }
+        const hashedPassword = await hash(password, 10);
+        existingUser.password = hashedPassword;
+        existingUser.updatedBy = user ? user.id : null;
+        await existingUser.save();
+
+        const users = await this.userModel.findAll({
+          where: { isActive: true },
+        });
+
+        return {
+          message: 'Password updated successfully.',
+          statusCode: HttpStatus.OK,
           data: users,
         };
       } else {

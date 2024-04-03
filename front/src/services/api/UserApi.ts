@@ -41,6 +41,14 @@ export class UserApi {
     return res.data;
   }
 
+  static async updatePassword(id: number, updatedData: any) {
+    const res = await axios.post(
+      `${config.service}/users/update-password/${id}`,
+      updatedData
+    );
+    return res.data;
+  }
+
   static async deleteUser(id: number) {
     const res = await axios.delete(`${config.service}/users/${id}`);
     return res.data;
@@ -102,7 +110,7 @@ export class UserApi {
 
   static async deleteUserApplicationMapping(
     userId: number,
-    applicationId: number,
+    applicationId: number
   ): Promise<ApiResponseDto> {
     try {
       const res: any = await axios.post(
@@ -117,7 +125,6 @@ export class UserApi {
       return error.response.data;
     }
   }
-
 
   static async getApplication() {
     const res = await axios.get(`${config.service}/applications`);

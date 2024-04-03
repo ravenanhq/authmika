@@ -65,6 +65,23 @@ export class UsersController {
     return this.userService.update(usersDto, req.user, id);
   }
 
+  @Post('update-password/:id')
+  @UsePipes(new ValidationPipe())
+  @HttpCode(HttpStatus.OK)
+  async updatePassword(
+    @Body() usersDto: UsersDto,
+    @Request() req,
+    @Param('id') id: number,
+  ): Promise<{ message: string; statusCode: number }> {
+    const { currentPassword } = req.body;
+    return this.userService.updatePassword(
+      usersDto,
+      req.user,
+      id,
+      currentPassword,
+    );
+  }
+
   @Delete(':id')
   async remove(
     @Param('id') id: number,
