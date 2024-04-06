@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
@@ -12,6 +14,7 @@ import { UsersDto } from './dto/users.dto';
 import { hash } from 'bcrypt';
 import { UserApplications } from 'src/db/model/user-applications.model';
 import { compare } from 'bcrypt';
+import { Applications } from 'src/db/model/applications.model';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +23,8 @@ export class UsersService {
     private userModel: typeof Users,
     @InjectModel(UserApplications)
     private userApplictionsModel: typeof UserApplications,
+    @InjectModel(Applications)
+    private readonly applictionsModel: typeof Applications,
   ) {}
 
   async findUsername(userName: string): Promise<Users> {
@@ -224,7 +229,7 @@ export class UsersService {
     user: { id: any; password: string | undefined },
     id: number,
     currentPassword: string,
-  ): Promise<{ message: string; statusCode: number; data: object }> {
+  ): Promise<{ message: string; statusCode: number }> {
     const { password } = userDto;
     try {
       const existingUser = await this.userModel.findOne({
@@ -239,28 +244,20 @@ export class UsersService {
           return {
             message: 'Current password is incorrect.',
             statusCode: 422,
-            data: {},
           };
         }
         const hashedPassword = await hash(password, 10);
         existingUser.password = hashedPassword;
         existingUser.updatedBy = user ? user.id : null;
         await existingUser.save();
-
-        const users = await this.userModel.findAll({
-          where: { isActive: true },
-        });
-
         return {
           message: 'Password updated successfully.',
           statusCode: HttpStatus.OK,
-          data: users,
         };
       } else {
         return {
           message: 'User not found.',
           statusCode: HttpStatus.NOT_FOUND,
-          data: {},
         };
       }
     } catch (error) {
@@ -268,13 +265,11 @@ export class UsersService {
         return {
           message: error.message,
           statusCode: HttpStatus.CONFLICT,
-          data: {},
         };
       } else {
         return {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: {},
         };
       }
     }

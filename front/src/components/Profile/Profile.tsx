@@ -56,10 +56,6 @@ interface AlertState {
   message: string;
 }
 
-interface AddProfileModalProps {
-  onEdit: (editedData: RowData) => void;
-}
-
 const bull = (
   <Box
     component="span"
@@ -67,7 +63,7 @@ const bull = (
   ></Box>
 );
 
-export default function ProfilePage() {
+const ProfilePage = () => {
   const theme = useTheme();
   const [userDetails, setUserDetails] = useState<{
     id?: number;
@@ -87,16 +83,10 @@ export default function ProfilePage() {
   });
 
   const [errors, setErrors] = useState<Errors>({});
-  const [user_name, setUserName] = useState(userDetails.user_name);
-  const [display_name, setDisplayName] = useState(userDetails.display_name);
-  const [role, setRole] = useState(userDetails.role);
-  const [email, setEmail] = useState(userDetails.email);
-  const [mobile, setMobile] = useState(userDetails.mobile);
   const [editedData, setEditedData] = useState<RowData>(InitialRowData);
   const [rows, setRows] = useState<RowData[]>([]);
   const [alertShow, setAlertShow] = useState("");
   const [passwordAlert, setPasswordAlert] = useState("");
-  const [password, setPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [newPassword, setNewPassword] = useState<string>("");
@@ -133,13 +123,7 @@ export default function ProfilePage() {
             role,
             password,
           }));
-          setUserName(user_name || "");
-          setDisplayName(display_name || "");
-          setEmail(email || "");
-          setMobile(mobile || "");
-          setRole(role || "");
           setUserId(id);
-          setPassword(password || "");
         }
       } catch (error) {
         console.error("Error fetching user details:", error);
@@ -147,38 +131,6 @@ export default function ProfilePage() {
     };
     fetchUserDetails();
   }, []);
-
-  useEffect(() => {
-    if (userDetails) {
-      setUserName(userDetails.user_name || "");
-      setDisplayName(userDetails.display_name || "");
-      setEmail(userDetails.email || "");
-      setMobile(userDetails.mobile || "");
-      setRole(userDetails.role || "");
-    }
-  }, [userDetails]);
-
-  useEffect(() => {
-    getApplications();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const getApplications = async () => {
-    const session = await getSession();
-    try {
-      if (session) {
-        const { user_name, email, mobile, role, password } = session.user;
-        setUserName(user_name || "");
-        setDisplayName(display_name || "");
-        setMobile(mobile || "");
-        setEmail(email || "");
-        setRole(role || "");
-        setPassword(password || "");
-      }
-    } catch (error: any) {
-      console.log(error);
-    }
-  };
 
   const handlePasswordVisibility = (field: number) => {
     switch (field) {
@@ -196,14 +148,10 @@ export default function ProfilePage() {
     }
   };
 
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEditedData((prevData) => ({ ...prevData, [name]: value }));
-    if (name === "user_name") {
-      setUserName(value);
-    } else if (name === "display_name") {
-      setDisplayName(value);
-    }
   };
 
   const validateEmail = (email: string): boolean => {
@@ -230,7 +178,7 @@ export default function ProfilePage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const editUser = async (id: number, updatedData: RowData) => {
+  const updateProfile = async (id: number, updatedData: RowData) => {
     if (validateProfile()) {
       try {
         const response = await UserApi.update(id, updatedData);
@@ -300,7 +248,7 @@ export default function ProfilePage() {
     return true;
   };
 
-  const editPassword = async (
+  const updatePassword = async (
     id: any,
     currentPassword: string,
     newPassword: any
@@ -454,8 +402,7 @@ export default function ProfilePage() {
                 onClick={() => {
                   if (userId !== undefined) {
                     const updatedData = { ...editedData, id: userId };
-                    editUser(userId, updatedData);
-                   
+                    updateProfile(userId, updatedData);
                   } else {
                     console.error("User ID is undefined");
                   }
@@ -607,7 +554,7 @@ export default function ProfilePage() {
                 color="primary"
                 sx={{ mt: 2, position: "sticky", top: "20px" }}
                 onClick={() =>
-                  editPassword(userId, currentPassword, newPassword)
+                  updatePassword(userId, currentPassword, newPassword)
                 }
                 startIcon={<SaveIcon />}
               >
@@ -619,4 +566,6 @@ export default function ProfilePage() {
       </Card>
     </Box>
   );
-}
+};
+
+export default ProfilePage;
