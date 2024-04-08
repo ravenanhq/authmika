@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
@@ -11,6 +13,8 @@ import { Users } from 'src/db/model/users.model';
 import { UsersDto } from './dto/users.dto';
 import { hash } from 'bcrypt';
 import { UserApplications } from 'src/db/model/user-applications.model';
+import { compare } from 'bcrypt';
+import { Applications } from 'src/db/model/applications.model';
 
 @Injectable()
 export class UsersService {
@@ -19,6 +23,8 @@ export class UsersService {
     private userModel: typeof Users,
     @InjectModel(UserApplications)
     private userApplictionsModel: typeof UserApplications,
+    @InjectModel(Applications)
+    private readonly applictionsModel: typeof Applications,
   ) {}
 
   async findUsername(userName: string): Promise<Users> {
@@ -192,7 +198,6 @@ export class UsersService {
         return {
           message: 'User updated successfully.',
           statusCode: HttpStatus.OK,
-
           data: users,
         };
       } else {
@@ -214,6 +219,57 @@ export class UsersService {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           data: {},
+        };
+      }
+    }
+  }
+
+  async updatePassword(
+    userDto: UsersDto,
+    user: { id: any; password: string | undefined },
+    id: number,
+    currentPassword: string,
+  ): Promise<{ message: string; statusCode: number }> {
+    const { password } = userDto;
+    try {
+      const existingUser = await this.userModel.findOne({
+        where: { id: id },
+      });
+      if (existingUser) {
+        const isPasswordMatch = await compare(
+          currentPassword,
+          existingUser.password,
+        );
+        if (!isPasswordMatch) {
+          return {
+            message: 'Current password is incorrect.',
+            statusCode: 422,
+          };
+        }
+        const hashedPassword = await hash(password, 10);
+        existingUser.password = hashedPassword;
+        existingUser.updatedBy = user ? user.id : null;
+        await existingUser.save();
+        return {
+          message: 'Password updated successfully.',
+          statusCode: HttpStatus.OK,
+        };
+      } else {
+        return {
+          message: 'User not found.',
+          statusCode: HttpStatus.NOT_FOUND,
+        };
+      }
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.CONFLICT,
+        };
+      } else {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         };
       }
     }
