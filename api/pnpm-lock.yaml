@@ -10,6 +10,7 @@ specifiers:
   '@nestjs/schematics': ^10.0.0
   '@nestjs/sequelize': ^10.0.0
   '@nestjs/testing': ^10.0.0
+  '@types/bcrypt': ^5.0.2
   '@types/express': ^4.17.17
   '@types/jest': ^29.5.2
   '@types/node': ^20.3.1
@@ -72,6 +73,7 @@ devDependencies:
   '@nestjs/cli': 10.3.0
   '@nestjs/schematics': 10.1.0_typescript@5.3.3
   '@nestjs/testing': 10.3.0_g7waps35gzgnpafmfia4y44ese
+  '@types/bcrypt': 5.0.2
   '@types/express': 4.17.21
   '@types/jest': 29.5.11
   '@types/node': 20.11.5
@@ -1223,6 +1225,12 @@ packages:
     resolution: {integrity: sha512-WXCyOcRtH37HAUkpXhUduaxdm82b4GSlyTqajXviN4EfiuPgNYR109xMCKvpl6zPIpua0DGlMEDCq+g8EdoheQ==}
     dependencies:
       '@babel/types': 7.23.6
+    dev: true
+
+  /@types/bcrypt/5.0.2:
+    resolution: {integrity: sha512-6atioO8Y75fNcbmj0G7UjI9lXN2pQ/IGJ2FWT4a/btd0Lk9lQalHLKhkgKVZ3r+spnmWUKfbMi1GEe9wyHQfNQ==}
+    dependencies:
+      '@types/node': 20.11.5
     dev: true
 
   /@types/bluebird/3.5.42:

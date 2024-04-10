@@ -34,4 +34,9 @@ export class AuthController {
   getProfile(@Request() req) {
     return req.user;
   }
+
+  @Post('quick-sign-in-url')
+  getQuickSignInUrl(@Body() body: { userId: number; applicationId: number }) {
+    return this.authService.quickSignIn(body.userId, body.applicationId);
+  }
 }

@@ -38,7 +38,6 @@ export class UserApplicationsController {
     application?: object;
   }> {
     try {
-      console.log('body', requestBody.userId);
       const userApplications =
         await this.userapplicationService.getApplicationsByUserId(
           requestBody.userId,
