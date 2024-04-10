@@ -82,6 +82,27 @@ export class UsersController {
     );
   }
 
+  @Post('create-from-api')
+  @UsePipes(new ValidationPipe())
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe())
+  async createFromApi(
+    @Body() usersDto: UsersDto,
+    @Body('clientSecretKey') clientSecretKey: any,
+    @Body('clientSecretId') clientSecretId: any,
+    @Request() req,
+  ): Promise<{
+    message: string;
+    statusCode: number;
+  }> {
+    return this.userService.createFromApi(
+      usersDto,
+      clientSecretId,
+      clientSecretKey,
+      req.user,
+    );
+  }
+
   @Delete(':id')
   async remove(
     @Param('id') id: number,

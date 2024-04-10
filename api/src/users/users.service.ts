@@ -131,6 +131,72 @@ export class UsersService {
     }
   }
 
+  async createFromApi(
+    userDto: UsersDto,
+    clientSecretId: any,
+    clientSecretKey: any,
+    user: {
+      id: any;
+    },
+  ): Promise<{ message: string; statusCode: number }> {
+    const { user_name, display_name, email, password, mobile, role } = userDto;
+    try {
+      if (!clientSecretId || !clientSecretKey) {
+        throw new BadRequestException('Client secret id and key are required.');
+      }
+
+      const application = await this.applictionsModel.findOne({
+        where: {
+          clientSecretId: clientSecretId,
+          clientSecretKey: clientSecretKey,
+        },
+      });
+      if (!application) {
+        throw new NotFoundException('Application not found.');
+      }
+      const existingUser = await this.userModel.findOne({
+        where: { userName: user_name },
+      });
+      if (existingUser) {
+        throw new UnprocessableEntityException('User already exists.');
+      }
+      const newUser = await this.userModel.create({
+        userName: user_name,
+        displayName: display_name,
+        email: email,
+        password: await hash(password, 10),
+        mobile: mobile,
+        role: role,
+        createdBy: user ? user.id : null,
+      });
+      if (!newUser) {
+        throw new InternalServerErrorException('User creation failed');
+      }
+
+      await this.userApplictionsModel.create({
+        userId: newUser.id,
+        applicationId: application.id,
+      });
+
+      return {
+        message: 'User created successfully',
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.CONFLICT,
+        };
+      } else {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
+    }
+  }
+
   async show(
     id: number,
   ): Promise<{ data: object; message: string; statusCode: number }> {
