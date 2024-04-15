@@ -29,6 +29,8 @@ interface Errors {
   newPassword?: string;
   confirmPassword?: string;
   currentPassword?: string;
+  password?: string;
+  uniqueEmail?: string;
 }
 
 interface RowData {
@@ -96,6 +98,8 @@ const ProfilePage = () => {
   const [showPassword3, setShowPassword3] = useState(false);
   const [currentPasswordAlert, setCurrentPasswordAlert] =
     useState<AlertState | null>(null);
+  const [uniqueValidation, setUniqueValidation] = React.useState("");
+  const [uniqueEmail, setUniqueEmail] = React.useState("");
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -148,7 +152,6 @@ const ProfilePage = () => {
     }
   };
 
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEditedData((prevData) => ({ ...prevData, [name]: value }));
@@ -165,16 +168,17 @@ const ProfilePage = () => {
     if (!editedData.user_name?.trim()) {
       newErrors.user_name = "Username is required";
     }
+
     if (!editedData.display_name?.trim()) {
       newErrors.display_name = "Display Name is required";
     }
+
     if (!editedData.email?.trim()) {
       newErrors.Email = "Email is required";
     } else if (!validateEmail(editedData.email)) {
       newErrors.Email = "Invalid email address";
     }
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   };
 
@@ -182,13 +186,17 @@ const ProfilePage = () => {
     if (validateProfile()) {
       try {
         const response = await UserApi.update(id, updatedData);
+        setUniqueValidation("");
+        setUniqueEmail("");
         if (response) {
           if (response.statusCode == 409) {
+            setUniqueValidation(response.message);
           } else if (response.statusCode == 200) {
             setRows(response.data);
             const updatedUserDetails = { ...userDetails, ...updatedData };
             setUserDetails(updatedUserDetails);
             setAlertShow(response.message);
+            setErrors({});
           }
         }
       } catch (error: any) {
@@ -198,8 +206,10 @@ const ProfilePage = () => {
           error.response.data &&
           error.response.data.statusCode === 422
         ) {
-          console.error(error);
+          setUniqueEmail(response.message.email);
+          setErrors({});
         }
+        console.error(error);
       }
     }
   };
@@ -255,28 +265,40 @@ const ProfilePage = () => {
   ) => {
     if (validate()) {
       try {
-        const updatedData = {
-          ...editedData,
-          id: id,
-          password: newPassword,
-          currentPassword: currentPassword,
-        };
-        const response = await UserApi.updatePassword(id, updatedData);
-        setPasswordAlert("");
-        setCurrentPasswordAlert(null);
-        if (response) {
-          if (response.statusCode === 409) {
-          } else if (response.statusCode === 200) {
-            setRows(response.data);
-            const updatedUserDetails = { ...userDetails, ...updatedData };
-            setUserDetails(updatedUserDetails);
-            setPasswordAlert(response.message);
-          } else if (response.statusCode === 422) {
-            setCurrentPasswordAlert({
-              severity: "error",
-              message: response.message,
-            });
+        const session: Session | null = await getSession();
+        if (session) {
+          const { email, userName, displayName, mobile, role } = session.user;
+          const updatedData = {
+            id: id,
+            password: newPassword,
+            currentPassword: currentPassword,
+            email: email,
+            user_name: userName,
+            display_name: displayName,
+            mobile: mobile,
+            role: role,
+          };
+          const response = await UserApi.updatePassword(id, updatedData);
+          setPasswordAlert("");
+          setCurrentPasswordAlert(null);
+          if (response) {
+            if (response.statusCode === 409) {
+            } else if (response.statusCode === 200) {
+              setRows(response.data);
+              const updatedUserDetails = { ...userDetails, ...updatedData };
+              setUserDetails(updatedUserDetails);
+              setPasswordAlert(response.message);
+            } else if (response.statusCode === 422) {
+              setCurrentPasswordAlert({
+                severity: "error",
+                message: response.message,
+              });
+            }
           }
+          setErrors({});
+          setCurrentPassword("");
+          setNewPassword("");
+          setConfirmPassword("");
         }
       } catch (error: any) {
         if (
@@ -284,7 +306,8 @@ const ProfilePage = () => {
           error.response.data &&
           error.response.data.statusCode === 422
         )
-          console.error(error);
+          setErrors({});
+        console.error(error);
       }
     }
   };
@@ -350,8 +373,23 @@ const ProfilePage = () => {
               value={editedData.user_name}
               onChange={handleChange}
               error={!!errors.user_name}
-              helperText={errors.user_name && <span>{errors.user_name}</span>}
-              sx={{ marginTop: 1, marginBottom: 2 }}
+              helperText={
+                errors.user_name
+                  ? errors.user_name
+                  : uniqueValidation
+                  ? "User already exists"
+                  : ""
+              }
+              sx={{
+                marginTop: 1,
+                marginBottom: 2,
+                "& .MuiFormHelperText-root": {
+                  color:
+                    errors.user_name || uniqueValidation
+                      ? "#e33241"
+                      : "inherit",
+                },
+              }}
             />
 
             <TextField
@@ -376,8 +414,19 @@ const ProfilePage = () => {
               fullWidth
               margin="normal"
               error={!!errors.Email}
-              helperText={errors.Email ? errors.Email : " "}
-              sx={{ marginTop: 0.5 }}
+              helperText={
+                errors.Email
+                  ? errors.Email
+                  : uniqueEmail
+                  ? "Invalid email address"
+                  : ""
+              }
+              sx={{
+                marginTop: 1,
+                "& .MuiFormHelperText-root": {
+                  color: errors.Email || uniqueEmail ? "#e33241" : "inherit",
+                },
+              }}
             />
 
             <TextField
@@ -390,7 +439,7 @@ const ProfilePage = () => {
               onChange={handleChange}
               error={!!errors.role}
               helperText={errors.role ? errors.role : " "}
-              sx={{ marginBottom: 0.5 }}
+              sx={{ marginBottom: 0.5, marginTop: 3 }}
             ></TextField>
 
             <Grid container justifyContent="flex-end">
@@ -417,7 +466,7 @@ const ProfilePage = () => {
       <Typography
         variant="h5"
         component="h2"
-        sx={{ marginBottom: 1, marginTop: 2 }}
+        sx={{ marginBottom: 1, marginTop: 5 }}
       >
         Change Password
       </Typography>
@@ -476,6 +525,7 @@ const ProfilePage = () => {
               required
               fullWidth
               margin="normal"
+              value={currentPassword}
               type={showPassword1 ? "text" : "password"}
               id="password"
               onChange={(e) => setCurrentPassword(e.target.value)}
@@ -553,9 +603,9 @@ const ProfilePage = () => {
                 variant="contained"
                 color="primary"
                 sx={{ mt: 2, position: "sticky", top: "20px" }}
-                onClick={() =>
-                  updatePassword(userId, currentPassword, newPassword)
-                }
+                onClick={() => {
+                  updatePassword(userId, currentPassword, newPassword);
+                }}
                 startIcon={<SaveIcon />}
               >
                 Save
