@@ -91,6 +91,8 @@ const Login = () => {
           setLoading(false);
         }
       }
+    } else {
+        setLoading(false);
     }
   };
 
