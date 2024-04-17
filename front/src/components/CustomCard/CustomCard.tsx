@@ -42,7 +42,6 @@ const CustomCard: React.FC<CustomCardProps> = ({
     const handleClick = async () => {
         try {
             if (role?.toLowerCase() === "client") {
-                console.log(role);
                 const response = await UserApi.quickSignIn({
                     userId: userId,
                     applicationId: applicationId,

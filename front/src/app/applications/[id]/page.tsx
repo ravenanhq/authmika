@@ -43,7 +43,6 @@ const ApplicationView = () => {
             }
         }
     }, []);
-    console.log(applicationData);
     const BackButton = styled(Button)(({ theme }) => ({
         textTransform: "none",
         paddingLeft: theme.spacing(1),

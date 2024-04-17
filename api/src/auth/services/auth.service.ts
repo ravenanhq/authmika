@@ -90,6 +90,8 @@ export class AuthService {
         displayName: user.displayName,
         email: user.email,
         role: user.role,
+        clientSecretId: application.clientSecretId,
+        clientSecretKey: application.clientSecretKey
       };
 
       apiToken = jwt.sign(userdetails, application.clientSecretKey, {
