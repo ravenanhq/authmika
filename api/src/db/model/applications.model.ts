@@ -30,6 +30,9 @@ export class Applications extends Model {
   @Column({ field: 'base_url', type: DataType.STRING })
   baseUrl: string;
 
+  @Column({ field: 'call_back_url', type: DataType.STRING })
+  callBackUrl: string;
+
   @Column({ field: 'logo_path', type: DataType.STRING })
   logoPath: string;
 

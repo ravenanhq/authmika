@@ -3,6 +3,7 @@ import {
   HttpStatus,
   Injectable,
   InternalServerErrorException,
+  UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
@@ -11,6 +12,7 @@ import { randomBytes } from 'crypto';
 import { Optional } from 'sequelize';
 import { ApplicationsDto } from './dto/applications.dto';
 import { UserApplications } from 'src/db/model/user-applications.model';
+import { AuthClients } from 'src/db/model/auth-clients.model';
 
 @Injectable()
 export class ApplicationsService {
@@ -69,7 +71,7 @@ export class ApplicationsService {
     applicationDto: ApplicationsDto,
     user: { id: any },
   ): Promise<{ message: string; statusCode: number; data: object }> {
-    const { name, application, base_url } = applicationDto;
+    const { name, application, base_url, call_back_url } = applicationDto;
     try {
       const fileName = null;
       // if (file) {
@@ -102,6 +104,7 @@ export class ApplicationsService {
           name: name,
           application: application,
           baseUrl: base_url,
+          callBackUrl: call_back_url,
           logoPath: fileName,
           clientSecretId: clientSecretId,
           clientSecretKey: clientSecretKey,
@@ -176,7 +179,7 @@ export class ApplicationsService {
     user: { id: any },
     id: number,
   ): Promise<{ message: string; statusCode: number; data: object }> {
-    const { name, application, base_url } = applicationDto;
+    const { name, application, base_url, call_back_url } = applicationDto;
     try {
       const existingApplication = await this.applicationsModel.findOne({
         where: { id: id },
@@ -224,6 +227,7 @@ export class ApplicationsService {
         existingApplication.name = name;
         existingApplication.application = application;
         existingApplication.baseUrl = base_url;
+        existingApplication.callBackUrl = call_back_url;
         existingApplication.logoPath = fileName;
         existingApplication.updatedBy = user ? user.id : null;
         await existingApplication.save();
@@ -315,6 +319,42 @@ export class ApplicationsService {
         message: error.message,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         data: {},
+      };
+    }
+  }
+
+  async getApplication(clientId: number): Promise<{
+    message: string;
+    statusCode: number;
+    applicationId: number | null;
+  }> {
+    try {
+      if (clientId) {
+        const clientModel = await AuthClients.findOne({
+          where: { id: clientId },
+        });
+
+        const application = await Applications.findOne({
+          where: {
+            clientSecretId: clientModel.clientSecretId,
+            clientSecretKey: clientModel.clientSecretKey,
+          },
+        });
+
+        if (!application) {
+          throw new UnauthorizedException('Application not found.');
+        }
+        return {
+          message: 'Success',
+          statusCode: HttpStatus.OK,
+          applicationId: application.id,
+        };
+      }
+    } catch (error) {
+      return {
+        message: error.message,
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        applicationId: null,
       };
     }
   }

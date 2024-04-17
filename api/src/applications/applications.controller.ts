@@ -60,4 +60,9 @@ export class ApplicationsController {
   ): Promise<{ message: string; statusCode: number }> {
     return this.applicationService.deleteApplication(id);
   }
+
+  @Get('get/:clientId')
+  getApplicationId(@Param('clientId') clientId: number) {
+    return this.applicationService.getApplication(clientId);
+  }
 }

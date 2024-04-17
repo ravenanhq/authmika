@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -6,6 +6,7 @@ import { AuthClients } from 'src/db/model/auth-clients.model';
 import { Applications } from 'src/db/model/applications.model';
 import { UserApplications } from 'src/db/model/user-applications.model';
 import * as jwt from 'jsonwebtoken';
+import { Users } from 'src/db/model/users.model';
 
 @Injectable()
 export class AuthService {
@@ -67,5 +68,50 @@ export class AuthService {
       user: user,
       apiToken: apiToken,
     };
+  }
+
+  async quickSignIn(userId: number, applicationId: number) {
+    let apiToken = '';
+    const user = await Users.findOne({
+      where: { id: userId },
+    });
+    const application = await Applications.findOne({
+      where: { id: applicationId },
+    });
+
+    const isUserHasAccess = await UserApplications.findOne({
+      where: { user_id: userId, application_id: applicationId },
+    });
+
+    if (user && application) {
+      const userdetails = {
+        id: user.id,
+        username: user.userName,
+        displayName: user.displayName,
+        email: user.email,
+        role: user.role,
+        clientSecretId: application.clientSecretId,
+        clientSecretKey: application.clientSecretKey
+      };
+
+      apiToken = jwt.sign(userdetails, application.clientSecretKey, {
+        expiresIn: process.env.JWT_EXPIRATION,
+        algorithm: 'HS256',
+      });
+    }
+
+    if (apiToken && isUserHasAccess) {
+      return {
+        statusCode: HttpStatus.OK,
+        callBackUrl: application.callBackUrl,
+        apiToken: apiToken,
+      };
+    } else {
+      return {
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message:
+          'You are already logged in. Please log out first and then log in with your account.',
+      };
+    }
   }
 }
