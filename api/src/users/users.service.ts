@@ -8,13 +8,16 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Optional } from 'sequelize';
+import { Op, Optional } from 'sequelize';
 import { Users } from 'src/db/model/users.model';
 import { UsersDto } from './dto/users.dto';
 import { hash } from 'bcrypt';
 import { UserApplications } from 'src/db/model/user-applications.model';
 import { compare } from 'bcrypt';
 import { Applications } from 'src/db/model/applications.model';
+import * as speakeasy from 'speakeasy';
+import { randomBytes } from 'crypto';
+// import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class UsersService {
@@ -25,7 +28,79 @@ export class UsersService {
     private userApplictionsModel: typeof UserApplications,
     @InjectModel(Applications)
     private readonly applictionsModel: typeof Applications,
+    // private mailerService: MailerService,
   ) {}
+
+  // async generateQRCodeUrl(
+  //   id: number,
+  //   isTwoFactorEnabled: string,
+  // ): Promise<string> {
+  //   const generatedSecret = this.generateSecretKey(id, isTwoFactorEnabled);
+  //   if (!generatedSecret) {
+  //     return null;
+  //   }
+  //   const user = await this.userModel.findOne({ where: { id } });
+  //   return `otpauth://totp/${user.userName}?secret=${generatedSecret}&issuer=Authmika`;
+  // }
+  async generateSecretKey(
+    id: number,
+    is_two_factor_enabled: string,
+  ): Promise<Users | null> {
+    try {
+      const existingUser = await this.userModel.findOne({
+        where: { id: id },
+      });
+      if (!existingUser) {
+        throw new Error('User not found');
+      }
+      let secretKey: string | null = null;
+      if (is_two_factor_enabled == 'true') {
+        secretKey = speakeasy.generateSecret({ length: 20 }).base32;
+        existingUser.two_factor_secret = secretKey;
+      } else {
+        existingUser.two_factor_secret = null;
+      }
+      existingUser.is_two_factor_enabled = is_two_factor_enabled == 'true';
+      await existingUser.save();
+      return existingUser;
+    } catch (error) {
+      console.error('Error generating and storing secret key:', error);
+      throw error;
+    }
+  }
+
+  async generateQRCodeDataUrl(
+    id: number,
+    isTwoFactorEnabled: string,
+  ): Promise<string> {
+    this.generateSecretKey(id, isTwoFactorEnabled);
+
+    return 'two_factor_enabled';
+  }
+
+  // async verifyToken(token: string, id: number): Promise<boolean> {
+  //   const user = await this.userModel.findOne({ where: { id } });
+  //   if (!user || !user.two_factor_secret) {
+  //     return false;
+  //   }
+  //   const secret = user.two_factor_secret;
+  //   const isValidSpeakeasy = speakeasy.totp.verify({
+  //     secret,
+  //     encoding: 'base32',
+  //     token,
+  //   });
+  //   if (isValidSpeakeasy) {
+  //     return true;
+  //   }
+  // }
+
+  async findById(id: number): Promise<Users | null> {
+    const user = await this.userModel.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
 
   async findUsername(userName: string): Promise<Users> {
     return this.userModel.findOne({
@@ -38,7 +113,7 @@ export class UsersService {
   async getUsers(): Promise<Users[]> {
     try {
       const users = await this.userModel.findAll({
-        where: { isActive: true },
+        where: { status: { [Op.not]: [0] } },
       });
       return users;
     } catch (error) {
@@ -82,9 +157,10 @@ export class UsersService {
 
   async create(
     userDto: UsersDto,
-    user: { id: any },
   ): Promise<{ message: string; statusCode: number; data: object }> {
-    const { user_name, display_name, email, password, mobile, role } = userDto;
+    const password = randomBytes(10).toString('hex');
+
+    const { user_name, display_name, email, mobile, role } = userDto;
     try {
       const existingUser = await this.userModel.findOne({
         where: { userName: user_name },
@@ -99,20 +175,29 @@ export class UsersService {
           password: await hash(password, 10),
           mobile: mobile,
           role: role,
-          createdBy: user ? user.id : null,
+          createdBy: null,
         });
 
         if (!newUser) {
           throw new InternalServerErrorException('User creation failed');
+        } else {
+          // const url = `${process.env.BASE_URL}/login`;
+          // await this.sendPasswordByEmail(
+          //   email,
+          //   password,
+          //   user_name,
+          //   display_name,
+          //   url,
+          // );
         }
       }
       const users = await this.userModel.findAll({
-        where: { isActive: true },
+        where: { isActive: 1 },
       });
       return {
         message: 'User created successfully',
         statusCode: HttpStatus.OK,
-        data: users,
+        data: { users },
       };
     } catch (error) {
       if (error instanceof HttpException) {
@@ -129,6 +214,122 @@ export class UsersService {
         };
       }
     }
+  }
+
+  // async sendPasswordByEmail(
+  //   email: string,
+  //   password: string,
+  //   user_name: string,
+  //   display_name: string,
+  //   url: string,
+  // ) {
+  //   try {
+  //     await this.mailerService.sendMail({
+  //       to: email,
+  //       subject: 'User credentials - AUTHMIKA',
+  //       template: './user-credentials',
+  //       context: {
+  //         userName: user_name,
+  //         displayName: display_name,
+  //         password: password,
+  //         url: url,
+  //       },
+  //     });
+  //     return true;
+  //   } catch {
+  //     return false;
+  //   }
+  // }
+
+  // async sendOtp(
+  //   userDto: UsersDto,
+  //   user: { id: any },
+  //   id: number | undefined,
+  // ): Promise<{ message: string; statusCode: number; data: object }> {
+  //   try {
+  //     const { user_name, display_name, email } = userDto;
+
+  //     const otp: number = Math.floor(Math.random() * 900000) + 100000;
+
+  //     console.log('Generated OTP:', otp);
+  //     const existingUser = await this.userModel.findOne({
+  //       where: { id: id },
+  //     });
+  //     if (existingUser) {
+  //       const fetchedUser = await this.userModel.findOne({
+  //         where: { userName: user_name },
+  //       });
+
+  //       if (fetchedUser && fetchedUser.dataValues.id != id) {
+  //         throw new UnprocessableEntityException('User already exists.');
+  //       }
+
+  //       existingUser.otp = otp;
+
+  //       await existingUser.save();
+  //       console.log('Generated OTddddotpotpP:', existingUser.otp);
+
+  //       const url = `${process.env.BASE_URL}/login`;
+  //       await this.sendOtpByEmail(email, otp, user_name, display_name, url);
+
+  //       return {
+  //         message: 'User created successfully',
+  //         statusCode: HttpStatus.OK,
+  //         data: { existingUser },
+  //       };
+  //     }
+  //   } catch (error) {
+  //     if (error instanceof HttpException) {
+  //       return {
+  //         message: error.message,
+  //         statusCode: HttpStatus.CONFLICT,
+  //         data: {},
+  //       };
+  //     } else {
+  //       return {
+  //         message: error.message,
+  //         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+  //         data: {},
+  //       };
+  //     }
+  //   }
+  // }
+
+  // async sendOtpByEmail(
+  //   email: string,
+  //   otp: number,
+  //   user_name: string,
+  //   display_name: string,
+  //   url: string,
+  // ) {
+  //   try {
+  //     await this.mailerService.sendMail({
+  //       to: email,
+  //       subject: 'One Time Password (OTP) - AUTHMIKA',
+  //       template: './otp-email-template',
+  //       context: {
+  //         userName: user_name,
+  //         displayName: display_name,
+  //         otp: otp,
+  //         url: url,
+  //       },
+  //     });
+  //     console.log('email', otp);
+  //     return true;
+  //   } catch {
+  //     return false;
+  //   }
+  // }
+
+  async verifyOtp(id: number, otp: string) {
+    const existingUser = await this.userModel.findOne({
+      where: { id: id },
+    });
+    if (!existingUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    return existingUser.otp === Number(otp);
   }
 
   async createFromApi(
@@ -258,7 +459,7 @@ export class UsersService {
         await existingUser.save();
 
         const users = await this.userModel.findAll({
-          where: { isActive: true },
+          where: { isActive: 1 },
         });
 
         return {
@@ -285,6 +486,52 @@ export class UsersService {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           data: {},
+        };
+      }
+    }
+  }
+
+  async verifyCurrentPassword(
+    userDto: UsersDto,
+    user: { id: any; password: string | undefined },
+    id: number,
+    currentPassword: string,
+  ): Promise<{ message: string; statusCode: number }> {
+    try {
+      const existingUser = await this.userModel.findOne({
+        where: { id: id },
+      });
+      if (existingUser) {
+        const isPasswordMatch = await compare(
+          currentPassword,
+          existingUser.password,
+        );
+        if (!isPasswordMatch) {
+          return {
+            message: 'Current password is incorrect.',
+            statusCode: 422,
+          };
+        }
+        return {
+          message: 'Password verified successfully.',
+          statusCode: HttpStatus.OK,
+        };
+      } else {
+        return {
+          message: 'User not found.',
+          statusCode: HttpStatus.NOT_FOUND,
+        };
+      }
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.CONFLICT,
+        };
+      } else {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         };
       }
     }
@@ -341,6 +588,47 @@ export class UsersService {
     }
   }
 
+  async checkPassword(
+    id: number,
+    password: string,
+    confirmPassword: string,
+  ): Promise<{ message: string; statusCode: number; status?: number }> {
+    try {
+      const existingUser = await this.userModel.findOne({
+        where: { id: id },
+      });
+      if (password === confirmPassword) {
+        const hashedPassword = await hash(password, 10);
+        existingUser.password = hashedPassword;
+        await existingUser.save();
+        existingUser.status = 1;
+        await existingUser.save();
+        const status = 1;
+        return {
+          message: 'Password is correct.',
+          statusCode: 422,
+          status,
+        };
+      }
+      return {
+        message: 'Password is incorrect.',
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.CONFLICT,
+        };
+      } else {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
+    }
+  }
+
   async deleteUser(
     id: number,
   ): Promise<{ message: string; statusCode: number; data: object }> {
@@ -358,7 +646,7 @@ export class UsersService {
 
         if (userApplication) {
           const users = await this.userModel.findAll({
-            where: { isActive: true },
+            where: { isActive: 1 },
           });
 
           return {
@@ -367,11 +655,11 @@ export class UsersService {
             data: users,
           };
         } else {
-          user.isActive = false;
+          user.status = 0;
           await user.save();
 
           const users = await this.userModel.findAll({
-            where: { isActive: true },
+            where: { isActive: 1 },
           });
 
           return {
