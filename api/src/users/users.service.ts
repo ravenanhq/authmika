@@ -17,7 +17,8 @@ import { compare } from 'bcrypt';
 import { Applications } from 'src/db/model/applications.model';
 import * as speakeasy from 'speakeasy';
 import { randomBytes } from 'crypto';
-// import { MailerService } from '@nestjs-modules/mailer';
+import { PasswordResetTokens } from 'src/db/model/password-reset-tokens.model';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class UsersService {
@@ -28,7 +29,9 @@ export class UsersService {
     private userApplictionsModel: typeof UserApplications,
     @InjectModel(Applications)
     private readonly applictionsModel: typeof Applications,
-    // private mailerService: MailerService,
+    @InjectModel(PasswordResetTokens)
+    private passwordResetTokensModel: typeof PasswordResetTokens,
+    private readonly mailservice: MailService,
   ) {}
 
   // async generateQRCodeUrl(
@@ -181,18 +184,32 @@ export class UsersService {
         if (!newUser) {
           throw new InternalServerErrorException('User creation failed');
         } else {
-          // const url = `${process.env.BASE_URL}/login`;
-          // await this.sendPasswordByEmail(
-          //   email,
-          //   password,
-          //   user_name,
-          //   display_name,
-          //   url,
-          // );
+          const token = randomBytes(32).toString('hex');
+          const currentDate = new Date();
+          const expires = new Date(
+            currentDate.getTime() +
+              parseInt(process.env.PASSWORD_RESET_EXPIRATION_TIME, 10) * 60000,
+          );
+          const url = `${
+            process.env.BASE_URL
+          }/reset-password/?key=${token}&expires=${expires.getTime()}`;
+
+          const oldToken = await this.passwordResetTokensModel.findOne({
+            where: { email },
+          });
+          if (oldToken) {
+            await this.passwordResetTokensModel.update(
+              { token: token },
+              { where: { email } },
+            );
+          } else {
+            await this.passwordResetTokensModel.create({ email, token });
+          }
+          await this.mailservice.sendForgotPasswordEmail(email, url);
         }
       }
       const users = await this.userModel.findAll({
-        where: { isActive: 1 },
+        where: { status: 1 },
       });
       return {
         message: 'User created successfully',
@@ -215,111 +232,6 @@ export class UsersService {
       }
     }
   }
-
-  // async sendPasswordByEmail(
-  //   email: string,
-  //   password: string,
-  //   user_name: string,
-  //   display_name: string,
-  //   url: string,
-  // ) {
-  //   try {
-  //     await this.mailerService.sendMail({
-  //       to: email,
-  //       subject: 'User credentials - AUTHMIKA',
-  //       template: './user-credentials',
-  //       context: {
-  //         userName: user_name,
-  //         displayName: display_name,
-  //         password: password,
-  //         url: url,
-  //       },
-  //     });
-  //     return true;
-  //   } catch {
-  //     return false;
-  //   }
-  // }
-
-  // async sendOtp(
-  //   userDto: UsersDto,
-  //   user: { id: any },
-  //   id: number | undefined,
-  // ): Promise<{ message: string; statusCode: number; data: object }> {
-  //   try {
-  //     const { user_name, display_name, email } = userDto;
-
-  //     const otp: number = Math.floor(Math.random() * 900000) + 100000;
-
-  //     console.log('Generated OTP:', otp);
-  //     const existingUser = await this.userModel.findOne({
-  //       where: { id: id },
-  //     });
-  //     if (existingUser) {
-  //       const fetchedUser = await this.userModel.findOne({
-  //         where: { userName: user_name },
-  //       });
-
-  //       if (fetchedUser && fetchedUser.dataValues.id != id) {
-  //         throw new UnprocessableEntityException('User already exists.');
-  //       }
-
-  //       existingUser.otp = otp;
-
-  //       await existingUser.save();
-  //       console.log('Generated OTddddotpotpP:', existingUser.otp);
-
-  //       const url = `${process.env.BASE_URL}/login`;
-  //       await this.sendOtpByEmail(email, otp, user_name, display_name, url);
-
-  //       return {
-  //         message: 'User created successfully',
-  //         statusCode: HttpStatus.OK,
-  //         data: { existingUser },
-  //       };
-  //     }
-  //   } catch (error) {
-  //     if (error instanceof HttpException) {
-  //       return {
-  //         message: error.message,
-  //         statusCode: HttpStatus.CONFLICT,
-  //         data: {},
-  //       };
-  //     } else {
-  //       return {
-  //         message: error.message,
-  //         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-  //         data: {},
-  //       };
-  //     }
-  //   }
-  // }
-
-  // async sendOtpByEmail(
-  //   email: string,
-  //   otp: number,
-  //   user_name: string,
-  //   display_name: string,
-  //   url: string,
-  // ) {
-  //   try {
-  //     await this.mailerService.sendMail({
-  //       to: email,
-  //       subject: 'One Time Password (OTP) - AUTHMIKA',
-  //       template: './otp-email-template',
-  //       context: {
-  //         userName: user_name,
-  //         displayName: display_name,
-  //         otp: otp,
-  //         url: url,
-  //       },
-  //     });
-  //     console.log('email', otp);
-  //     return true;
-  //   } catch {
-  //     return false;
-  //   }
-  // }
 
   async verifyOtp(id: number, otp: string) {
     const existingUser = await this.userModel.findOne({
@@ -459,7 +371,7 @@ export class UsersService {
         await existingUser.save();
 
         const users = await this.userModel.findAll({
-          where: { isActive: 1 },
+          where: { status: 1 },
         });
 
         return {
@@ -646,7 +558,7 @@ export class UsersService {
 
         if (userApplication) {
           const users = await this.userModel.findAll({
-            where: { isActive: 1 },
+            where: { status: 1 },
           });
 
           return {
@@ -659,7 +571,7 @@ export class UsersService {
           await user.save();
 
           const users = await this.userModel.findAll({
-            where: { isActive: 1 },
+            where: { status: 1 },
           });
 
           return {

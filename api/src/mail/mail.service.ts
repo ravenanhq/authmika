@@ -66,7 +66,6 @@ export class MailService {
           url: url,
         },
       });
-      console.log('email', otp);
       return true;
     } catch {
       return false;
