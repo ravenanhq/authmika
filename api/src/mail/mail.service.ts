@@ -46,4 +46,29 @@ export class MailService {
       return false;
     }
   }
+
+  async sendOtpByEmail(
+    email: string,
+    otp: number,
+    user_name: string,
+    display_name: string,
+    url: string,
+  ) {
+    try {
+      await this.mailerService.sendMail({
+        to: email,
+        subject: 'One Time Password (OTP) - AUTHMIKA',
+        template: './otp-email-template',
+        context: {
+          userName: user_name,
+          displayName: display_name,
+          otp: otp,
+          url: url,
+        },
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }

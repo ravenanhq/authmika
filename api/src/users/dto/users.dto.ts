@@ -15,15 +15,17 @@ export class UsersDto {
       message: ' Invalid email address',
     },
   )
+  @IsNotEmpty({ message: 'email cannot be blank' })
   email: string;
 
-  @Matches(
-    /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~`!@#$%^&*()-_+={}[\]|\\:;"'<>,.?/]).{8,}$/,
-    {
-      message:
-        'Must contain: 8 or more characters, 1 uppercase, 1 lowercase, 1 number, 1 special character.',
-    },
-  )
+  // @Matches(
+  //   /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~`!@#$%^&*()-_+={}[\]|\\:;"'<>,.?/]).{8,}$/,
+  //   {
+  //     message:
+  //       'Must contain: 8 or more characters, 1 uppercase, 1 lowercase, 1 number, 1 special character.',
+  //   },
+  // )
+  // @IsNotEmpty({ message: 'password cannot be blank' })
   password: string;
 
   @IsNotEmpty({ message: 'mobile cannot be blank' })
@@ -33,4 +35,6 @@ export class UsersDto {
   role: string;
 
   currentPassword: string;
+
+  confirmPassword: string;
 }

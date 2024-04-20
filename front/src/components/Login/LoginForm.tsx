@@ -20,17 +20,19 @@ import { useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
 import * as dotenv from "dotenv";
 import { ApplicationApi } from "@/services/api/ApplicationApi";
+import { Session } from "next-auth";
 
 dotenv.config();
 
 interface ISignInFormProp {
-  username?: string;
+  user_name?: string;
+  display_name?: string;
   password?: string;
 }
 
 const Login = () => {
   const searchParams = useSearchParams();
-  const key = searchParams.get("key");
+  const key = searchParams?.get("key");
 
   const {
     register,
@@ -39,7 +41,7 @@ const Login = () => {
     setValue,
     clearErrors,
   } = useForm<ISignInFormProp>();
-  const [username, setUsername] = useState<string>("");
+  const [user_name, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<Boolean>(false);
   const [error, setError] = useState<string>("");
@@ -47,6 +49,11 @@ const Login = () => {
   const [clientId, setClientId] = useState<string>("");
   const [redirectUrl, setRedirectUrl] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
+  const [userData, setUserData] = useState<any>({
+    userId: "",
+    userName: "",
+    displayName: "",
+  });
 
   const setClientDetails = async () => {
     const session = await getSession();
@@ -92,7 +99,7 @@ const Login = () => {
         }
       }
     } else {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -109,28 +116,32 @@ const Login = () => {
   }, [key, clientId]);
 
   const onSubmit: SubmitHandler<ISignInFormProp> = async () => {
-    const user = { username, password };
+    setError("");
     const res = await signIn("credentials", {
-      username: user.username,
-      password: user.password,
+      username: user_name,
+      password: password,
       redirect: false,
       clientId: clientId,
     });
     if (res?.error == null) {
-      const session = await getSession();
+      const session: Session | null = await getSession();
+      if (session) {
+        const isTwoFactorEnabled = session?.user?.is_two_factor_enabled;
+        if (session?.apiToken) {
+          const externalAppUrl = redirectUrl;
+          const params = new URLSearchParams({
+            code: session?.apiToken,
+          });
 
-      if (session?.apiToken) {
-        const externalAppUrl = redirectUrl;
-        const params = new URLSearchParams({
-          code: session?.apiToken,
-        });
-
-        window.location.href = `${externalAppUrl}?${params.toString()}`;
-      } else {
-        window.location.href = "/dashboard";
+          window.location.href = `${externalAppUrl}?${params.toString()}`;
+        } else if (isTwoFactorEnabled === true) {
+          window.location.href = "/two-factor";
+        } else {
+          window.location.href = "/dashboard";
+        }
       }
     } else {
-      setError(res.error);
+      setError(res?.error || "");
     }
   };
 
@@ -144,7 +155,7 @@ const Login = () => {
   };
 
   const handleUserNameChange = (e: string) => {
-    setValue("username", e);
+    setValue("user_name", e);
     setUsername(e);
   };
 
@@ -192,7 +203,7 @@ const Login = () => {
             </Typography>
             <Box
               component="form"
-              onSubmit={handleSubmit(onSubmit)}
+              onSubmit={handleSubmit((data) => onSubmit(data))}
               noValidate
               sx={{ mt: 1 }}
             >
@@ -228,18 +239,18 @@ const Login = () => {
                     label="Username"
                     autoComplete="username"
                     autoFocus
-                    {...register("username", {
+                    {...register("user_name", {
                       required: "Username is required.",
                     })}
                     onChange={(e) => {
                       handleUserNameChange(e.target.value);
-                      clearErrors("username");
+                      clearErrors("user_name");
                     }}
                     variant="outlined"
-                    error={Boolean(errors.username)}
+                    error={Boolean(errors.user_name)}
                     helperText={
-                      errors.username
-                        ? errors.username.message?.toString()
+                      errors.user_name
+                        ? errors.user_name.message?.toString()
                         : null
                     }
                     InputProps={{

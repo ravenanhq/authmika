@@ -8,6 +8,11 @@ import {
   Grid,
   IconButton,
   InputAdornment,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
   TextField,
   Typography,
   styled,
@@ -19,6 +24,11 @@ import SaveIcon from "@mui/icons-material/Save";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Session } from "next-auth";
 import { getSession } from "next-auth/react";
+import axios from "axios";
+import { config } from "../../../config";
+import CloseIcon from "@mui/icons-material/Close";
+import CheckIcon from "@mui/icons-material/Check";
+import DoneIcon from "@mui/icons-material/Done";
 
 interface Errors {
   Email?: string;
@@ -100,41 +110,50 @@ const ProfilePage = () => {
     useState<AlertState | null>(null);
   const [uniqueValidation, setUniqueValidation] = React.useState("");
   const [uniqueEmail, setUniqueEmail] = React.useState("");
+  const [showPassword4, setShowPassword4] = useState(false);
+  const [twofactorPasswordAlert, setTwoFactorPasswordAlert] =
+    useState<AlertState | null>(null);
+  const [enable, setEnable] = useState<boolean>(false);
+  const [open, setOpen] = React.useState(false);
 
   useEffect(() => {
-    const fetchUserDetails = async () => {
-      try {
-        const session: Session | null = await getSession();
-        if (session) {
-          const { email, mobile, id, role, password } = session.user;
-          const user_name = session.user.userName;
-          const display_name = session.user.displayName;
-          setUserDetails({
-            display_name,
-            user_name,
-            email,
-            mobile,
-            role,
-            password,
-          });
-          setEditedData((prevEditedData) => ({
-            ...prevEditedData,
-            display_name,
-            user_name,
-            email,
-            mobile,
-            id,
-            role,
-            password,
-          }));
-          setUserId(id);
-        }
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-      }
-    };
     fetchUserDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const fetchUserDetails = async () => {
+    try {
+      const session: Session | null = await getSession();
+      if (session) {
+        const { email, mobile, id, role, password, is_two_factor_enabled } =
+          session.user;
+        const user_name = session.user.userName;
+        const display_name = session.user.displayName;
+        setEnable(is_two_factor_enabled);
+        setUserDetails({
+          display_name,
+          user_name,
+          email,
+          mobile,
+          role,
+          password,
+        });
+        setEditedData((prevEditedData) => ({
+          ...prevEditedData,
+          display_name,
+          user_name,
+          email,
+          mobile,
+          id,
+          role,
+          password,
+        }));
+        setUserId(id);
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  };
 
   const handlePasswordVisibility = (field: number) => {
     switch (field) {
@@ -147,9 +166,48 @@ const ProfilePage = () => {
       case 3:
         setShowPassword3((prevShowPassword) => !prevShowPassword);
         break;
+      case 4:
+        setShowPassword4((prevShowPassword) => !prevShowPassword);
+        break;
       default:
         break;
     }
+  };
+
+  const handleOpenDialog = async () => {
+    if (!enable) {
+      setOpen(true);
+    } else {
+      setEnable(false);
+      handleQRCodeVisibility();
+    }
+  };
+
+  const handleQRCodeVisibility = async () => {
+    // setShowQRCode(!showQRCode);
+    try {
+      const res = await axios.get(`${config.service}/users/qrcode/${userId}`, {
+        params: {
+          is_two_factor_enabled: !enable,
+        },
+      });
+      if (enable) {
+        // setIsMessageVisible(true);
+      }
+      if (res.data) {
+        // setQRCodeDataUrl(res.data);
+      } else {
+        console.error("Response is empty");
+      }
+    } catch (error) {
+    } finally {
+    }
+  };
+
+  const handleClose = () => {
+    setErrors({});
+    setOpen(false);
+    setEnable(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,6 +269,47 @@ const ProfilePage = () => {
         }
         console.error(error);
       }
+    }
+  };
+
+  const verifyPassword = async (id: any, currentPassword: string) => {
+    try {
+      const updatedData = {
+        ...editedData,
+        id: id,
+        currentPassword: currentPassword,
+      };
+      const response = await UserApi.verifyCurrentPassword(id, updatedData);
+      setPasswordAlert("");
+      setTwoFactorPasswordAlert(null);
+      if (response) {
+        if (response.statusCode === 409) {
+          return false;
+        } else if (response.statusCode === 200) {
+          setRows(response.data);
+          const updatedUserDetails = { ...userDetails, ...updatedData };
+          setUserDetails(updatedUserDetails);
+          setPasswordAlert(response.message);
+          setEnable(true);
+          setOpen(false);
+          handleQRCodeVisibility();
+        } else if (response.statusCode === 422) {
+          setTwoFactorPasswordAlert({
+            severity: "error",
+            message: response.message,
+          });
+          return false;
+        }
+      }
+      setCurrentPassword("");
+    } catch (error: any) {
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.statusCode === 422
+      )
+        console.error(error);
+      return false;
     }
   };
 
@@ -321,6 +420,18 @@ const ProfilePage = () => {
     ":hover": {
       color: "#fff",
       backgroundColor: "#265073",
+    },
+  }));
+
+  const SecondaryButton = styled(Button)(() => ({
+    textTransform: "none",
+    paddingLeft: "10px",
+    paddingRight: "10px",
+    backgroundColor: "#FF9843",
+    color: "#fff",
+    ":hover": {
+      color: "#fff",
+      backgroundColor: "#FE7A36",
     },
   }));
 
@@ -612,6 +723,149 @@ const ProfilePage = () => {
               </PrimaryButton>
             </Grid>
           </form>
+        </CardContent>
+      </Card>
+      <Typography
+        variant="h5"
+        component="h2"
+        sx={{ marginBottom: 1, marginTop: 5 }}
+      >
+        Two Factor Authentication (OPTIONAL)
+      </Typography>
+      <Divider sx={{ marginBottom: 1, flexGrow: 1 }} color="#265073" />
+      <Card
+        sx={{
+          width: "60%",
+          margin: "auto",
+          mt: "30px",
+          [theme.breakpoints.down("md")]: {
+            width: "100%",
+          },
+        }}
+      >
+        <CardContent>
+          <Typography
+            variant="h6"
+            component="h1"
+            sx={{ marginBottom: 1, marginTop: 2 }}
+          >
+            You have not enabled two factor authentication.
+          </Typography>
+          <Typography
+            variant="h6"
+            component="h1"
+            sx={{ marginBottom: 2, marginTop: 2, fontSize: "16px" }}
+          >
+            When two factor authentication is enabled, you will be prompted for
+            a secure, random otp during authentication. This otp will be sent to
+            you via email and will be required along with your password to
+            access your account. Please note that this otp is unique to each
+            login attempt and provides an additional layer of security to your
+            account.
+          </Typography>
+          {/* {showQRCode && qrCodeDataUrl && (
+            <div>
+              <Image
+                src={qrCodeDataUrl}
+                alt="QR Code"
+                width={300}
+                height={300}
+              />
+            </div>
+          )} */}
+          <div>
+            <PrimaryButton
+              onClick={handleOpenDialog}
+              startIcon={enable ? <CloseIcon /> : <DoneIcon />}
+            >
+              {enable ? "Disable" : "Enable"}
+            </PrimaryButton>
+            <Dialog open={open} onClose={handleClose}>
+              <DialogTitle
+                sx={{
+                  backgroundColor: "#265073",
+                  color: "#fff",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "100%",
+                }}
+              >
+                Confirm Password
+                <IconButton
+                  onClick={handleClose}
+                  sx={{
+                    backgroundColor: "#FF9843",
+                    color: "#fff",
+                    ":hover": {
+                      color: "#fff",
+                      backgroundColor: "#FE7A36",
+                    },
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </DialogTitle>
+              <DialogContent>
+                <Typography
+                  variant="h6"
+                  component="h1"
+                  sx={{ marginBottom: 1, marginTop: 2 }}
+                >
+                  For your security, please confirm your password to continue.
+                </Typography>
+                <TextField
+                  label="Password"
+                  name="password"
+                  fullWidth
+                  margin="normal"
+                  id="password"
+                  type={showPassword4 ? "text" : "password"}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  error={!!errors.password}
+                  helperText={errors.password}
+                  sx={{ marginBottom: 3 }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => handlePasswordVisibility(4)}
+                          onMouseDown={(e) => e.preventDefault()}
+                          edge="end"
+                        >
+                          {showPassword4 ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <DialogActions style={{ margin: "0 16px 10px 0" }}>
+                  <Stack spacing={2} direction="row" paddingLeft="400px">
+                    <SecondaryButton
+                      variant="contained"
+                      color="primary"
+                      sx={{ mt: 2, position: "sticky", top: "20px" }}
+                      startIcon={<CloseIcon />}
+                      onClick={handleClose}
+                    >
+                      Cancel
+                    </SecondaryButton>
+                    <PrimaryButton
+                      variant="contained"
+                      color="primary"
+                      sx={{ position: "sticky", top: "20px" }}
+                      startIcon={<CheckIcon />}
+                      onClick={() => {
+                        verifyPassword(userId, currentPassword);
+                      }}
+                    >
+                      Confirm
+                    </PrimaryButton>
+                  </Stack>
+                </DialogActions>
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardContent>
       </Card>
     </Box>

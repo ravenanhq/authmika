@@ -12,6 +12,8 @@ import {
   Param,
   Put,
   HttpException,
+  Query,
+  NotFoundException,
 } from '@nestjs/common';
 import { UsersDto } from './dto/users.dto';
 import { UsersService } from './users.service';
@@ -19,6 +21,29 @@ import { UsersService } from './users.service';
 @Controller('users')
 export class UsersController {
   constructor(private userService: UsersService) {}
+
+  @Get('qrcode/:id')
+  async generateQRCodeDataUrl(
+    @Query('is_two_factor_enabled') is_two_factor_enabled: string,
+    @Param('id') id: number,
+  ): Promise<string> {
+    const qrCodeDataUrl = await this.userService.generateQRCodeDataUrl(
+      id,
+      is_two_factor_enabled,
+    );
+    return qrCodeDataUrl;
+  }
+
+  // @Get('verify-token/:id/:token')
+  // async verifyToken(@Param('id') id: number, @Param('token') token: string) {
+  //   try {
+  //     const isValid = await this.userService.verifyToken(token, id);
+  //     return isValid;
+  //   } catch (error) {
+  //     console.error('Error verifying token:', error);
+  //     return { isValid: false };
+  //   }
+  // }
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -41,9 +66,53 @@ export class UsersController {
   @UsePipes(new ValidationPipe())
   async create(
     @Body() usersDto: UsersDto,
-    @Request() req,
   ): Promise<{ message: string; statusCode: number }> {
-    return this.userService.create(usersDto, req.user);
+    return this.userService.create(usersDto);
+  }
+
+  // @Post('get-otp/:id')
+  // @UsePipes(new ValidationPipe())
+  // @HttpCode(HttpStatus.OK)
+  // @UsePipes(new ValidationPipe())
+  // async sendOtp(
+  //   @Body() usersDto: UsersDto,
+  //   @Request() req,
+  //   @Param('id') id: number,
+  // ): Promise<{ message: string; statusCode: number }> {
+  //   return this.userService.sendOtp(usersDto, req.user, id);
+  // }
+
+  @Post('verify-current-password/:id')
+  @UsePipes(new ValidationPipe())
+  @HttpCode(HttpStatus.OK)
+  async verifyCurrentPassword(
+    @Body() usersDto: UsersDto,
+    @Request() req,
+    @Param('id') id: number,
+  ): Promise<{ message: string; statusCode: number }> {
+    const { currentPassword } = req.body;
+    return this.userService.verifyCurrentPassword(
+      usersDto,
+      req.user,
+      id,
+      currentPassword,
+    );
+  }
+  @Post('check-password/:id')
+  async checkPassword(
+    @Body() requestBody: { password: string; confirmPassword: string },
+    @Param('id') id: number,
+  ) {
+    try {
+      const result = await this.userService.checkPassword(
+        id,
+        requestBody.password,
+        requestBody.confirmPassword,
+      );
+      return result;
+    } catch (error) {
+      return { message: 'An error occurred', statusCode: 500 };
+    }
   }
 
   @Get(':id')
@@ -101,6 +170,23 @@ export class UsersController {
       clientSecretKey,
       req.user,
     );
+  }
+
+  @Post('verify-otp/:id/:otp')
+  async verifyOtp(
+    @Param('id') id: number,
+    @Param('otp') otp: string,
+  ): Promise<{ success: boolean }> {
+    try {
+      const isOtpMatch = await this.userService.verifyOtp(id, otp);
+      return { success: isOtpMatch };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return { success: false };
+      } else {
+        throw error;
+      }
+    }
   }
 
   @Delete(':id')

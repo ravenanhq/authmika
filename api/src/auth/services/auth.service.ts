@@ -7,12 +7,14 @@ import { Applications } from 'src/db/model/applications.model';
 import { UserApplications } from 'src/db/model/user-applications.model';
 import * as jwt from 'jsonwebtoken';
 import { Users } from 'src/db/model/users.model';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
   async signIn(username: string, pass: string, clientId: string) {
@@ -59,6 +61,20 @@ export class AuthService {
         expiresIn: process.env.JWT_EXPIRATION,
         algorithm: 'HS256',
       });
+    } else if (user.isTwoFactorEnabled) {
+      const otp: number = Math.floor(Math.random() * 900000) + 100000;
+      user.otp = otp;
+
+      await user.save();
+
+      const url = `${process.env.BASE_URL}/login`;
+      await this.mailService.sendOtpByEmail(
+        user.email,
+        otp,
+        user.userName,
+        user.displayName,
+        url,
+      );
     }
 
     const payload = { sub: user.id, username: user.userName };
@@ -91,7 +107,7 @@ export class AuthService {
         email: user.email,
         role: user.role,
         clientSecretId: application.clientSecretId,
-        clientSecretKey: application.clientSecretKey
+        clientSecretKey: application.clientSecretKey,
       };
 
       apiToken = jwt.sign(userdetails, application.clientSecretKey, {
