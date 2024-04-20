@@ -21,7 +21,7 @@ export default function RootLayout({
   const pathName = usePathname();
   const showHeader =
     pathName !== null &&
-    !["/login", "/two-factor", "/update-password"].includes(pathName);
+    !["/login", "/two-factor", "/update-password","/forgot-password","/reset-password"].includes(pathName);
   const theme = useTheme();
   const isMobile = useMediaQuery("(max-width:1023px)");
   return (

@@ -730,157 +730,6 @@ const ProfilePage = () => {
         component="h2"
         sx={{ marginBottom: 1, marginTop: 5 }}
       >
-        Change Password
-      </Typography>
-      <Divider sx={{ marginBottom: 1, flexGrow: 1 }} color="#265073" />
-      {passwordAlert && (
-        <Alert
-          sx={{
-            width: "60%",
-            margin: "auto",
-            mt: "30px",
-            [theme.breakpoints.down("md")]: {
-              width: "100%",
-            },
-          }}
-          severity="success"
-          onClose={() => {
-            setPasswordAlert("");
-          }}
-        >
-          {passwordAlert}
-        </Alert>
-      )}
-      {currentPasswordAlert && (
-        <Alert
-          sx={{
-            width: "60%",
-            margin: "auto",
-            mt: "30px",
-            [theme.breakpoints.down("md")]: {
-              width: "100%",
-            },
-          }}
-          severity={currentPasswordAlert.severity}
-          onClose={() => {
-            setCurrentPasswordAlert(null);
-          }}
-        >
-          {currentPasswordAlert.message}
-        </Alert>
-      )}
-      <Card
-        sx={{
-          width: "60%",
-          margin: "auto",
-          mt: "30px",
-          [theme.breakpoints.down("md")]: {
-            width: "100%",
-          },
-        }}
-      >
-        <CardContent>
-          <form>
-            <TextField
-              label="Current Password"
-              name="currentPassword"
-              required
-              fullWidth
-              margin="normal"
-              value={currentPassword}
-              type={showPassword1 ? "text" : "password"}
-              id="password"
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              error={!!errors.currentPassword}
-              helperText={errors.currentPassword}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => handlePasswordVisibility(1)}
-                      onMouseDown={(e) => e.preventDefault()}
-                      edge="end"
-                    >
-                      {showPassword1 ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              label="Password"
-              type={showPassword2 ? "text" : "password"}
-              name="newPassword"
-              required
-              fullWidth
-              margin="normal"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              error={!!errors.newPassword}
-              helperText={errors.newPassword}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => handlePasswordVisibility(2)}
-                      onMouseDown={(e) => e.preventDefault()}
-                      edge="end"
-                    >
-                      {showPassword2 ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField
-              label="Confirm Password"
-              type={showPassword3 ? "text" : "password"}
-              name="confirmPassword"
-              fullWidth
-              required
-              margin="normal"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              error={!!errors.confirmPassword}
-              helperText={errors.confirmPassword}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => handlePasswordVisibility(3)}
-                      onMouseDown={(e) => e.preventDefault()}
-                      edge="end"
-                    >
-                      {showPassword3 ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Grid container justifyContent="flex-end">
-              <PrimaryButton
-                type="submit"
-                variant="contained"
-                color="primary"
-                sx={{ mt: 2, position: "sticky", top: "20px" }}
-                onClick={() => {
-                  updatePassword(userId, currentPassword, newPassword);
-                }}
-                startIcon={<SaveIcon />}
-              >
-                Save
-              </PrimaryButton>
-            </Grid>
-          </form>
-        </CardContent>
-      </Card>
-      <Typography
-        variant="h5"
-        component="h2"
-        sx={{ marginBottom: 1, marginTop: 5 }}
-      >
         Two Factor Authentication (OPTIONAL)
       </Typography>
       <Divider sx={{ marginBottom: 1, flexGrow: 1 }} color="#265073" />
@@ -908,11 +757,11 @@ const ProfilePage = () => {
             sx={{ marginBottom: 2, marginTop: 2, fontSize: "16px" }}
           >
             When two factor authentication is enabled, you will be prompted for
-            a secure, random token during authentication. This token will be
-            sent to you via email and will be required along with your password
-            to access your account. Please note that this token is unique to
-            each login attempt and provides an additional layer of security to
-            your account.
+            a secure, random otp during authentication. This otp will be sent to
+            you via email and will be required along with your password to
+            access your account. Please note that this otp is unique to each
+            login attempt and provides an additional layer of security to your
+            account.
           </Typography>
           {/* {showQRCode && qrCodeDataUrl && (
             <div>

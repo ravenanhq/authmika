@@ -183,6 +183,14 @@ const UserList = () => {
       minWidth: 100,
     },
     {
+      field: "status",
+      headerName: "Status",
+      headerClassName: "user-header",
+      flex: 0.5,
+      minWidth: 100,
+      renderCell: (params) => <>{params.value === 1 ? "Active" : "Pending"}</>,
+    },
+    {
       field: "actions",
       headerName: "Actions",
       headerClassName: "user-header",

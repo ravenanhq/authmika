@@ -136,8 +136,6 @@ const Login = () => {
           window.location.href = `${externalAppUrl}?${params.toString()}`;
         } else if (isTwoFactorEnabled === true) {
           window.location.href = "/two-factor";
-        } else if (session?.user?.status === 2) {
-          window.location.href = "/update-password";
         } else {
           window.location.href = "/dashboard";
         }
