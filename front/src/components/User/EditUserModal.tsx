@@ -32,6 +32,7 @@ const InitialRowData = {
   email: "",
   mobile: "",
   role: "",
+  created_at: "",
 };
 
 interface EditModalProps {
@@ -39,7 +40,7 @@ interface EditModalProps {
   onClose: () => void;
   rowData: RowData | null;
   onEdit: (editedData: RowData) => void;
-  uniqueValidation: string;
+  // uniqueValidation: string;
   uniqueEmail: string;
 }
 
@@ -59,7 +60,7 @@ export default function EditUserModal({
   onClose,
   rowData,
   onEdit,
-  uniqueValidation,
+  // uniqueValidation,
   uniqueEmail,
 }: EditModalProps) {
   const [editedData, setEditedData] = useState<RowData>(InitialRowData);
@@ -74,11 +75,14 @@ export default function EditUserModal({
 
   useEffect(() => {
     setErrors((prevErrors) => ({ ...prevErrors, email: uniqueEmail }));
+    return () => {
+      setErrors({});
+    };
   }, [uniqueEmail]);
 
-  useEffect(() => {
-    setErrors((prevErrors) => ({ ...prevErrors, userName: uniqueValidation }));
-  }, [uniqueValidation]);
+  // useEffect(() => {
+  //   setErrors((prevErrors) => ({ ...prevErrors, userName: uniqueValidation }));
+  // }, [uniqueValidation]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

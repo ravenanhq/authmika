@@ -27,6 +27,7 @@ import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
 
 export interface RowData {
+  created_at: string | number | Date;
   id: number;
   userName?: string;
   user_name?: string;
@@ -232,14 +233,31 @@ const UserList = () => {
   const addUser = async (newUser: RowData) => {
     try {
       const response = await UserApi.create(newUser);
-      setUniqueAlert("");
+      // setUniqueAlert("");
       setInvalidEmail("");
       if (response) {
         if (response.statusCode == 409) {
-          setUniqueAlert(response.message);
+          // setUniqueAlert(response.message);
+          setInvalidEmail(response.message);
         } else if (response.statusCode == 200) {
-          handleCloseAddUserModal();
           setRows(response.data);
+          const newUserId = Math.floor(Math.random() * 1000);
+          const newUserData = {
+            ...newUser,
+            userName: newUser.user_name,
+            displayName: newUser.display_name,
+            id: newUserId,
+          };
+          const currentUsers = [...rows];
+          currentUsers.unshift(newUserData);
+          const sortedUsers = currentUsers.sort((a, b) => {
+            return (
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+            );
+          });
+          setRows(sortedUsers);
+          handleCloseAddUserModal();
           setAlertShow(response.message);
         }
       }
@@ -250,7 +268,7 @@ const UserList = () => {
         error.response.data &&
         error.response.data.statusCode === 422
       ) {
-        setUniqueAlert(response.message.userName);
+        // setUniqueAlert(response.message.userName);
         setInvalidEmail(response.message.email);
       }
       console.log(error);
@@ -260,11 +278,12 @@ const UserList = () => {
   const editUser = async (id: any, updatedData: any) => {
     try {
       const response = await UserApi.update(id, updatedData);
-      setUniqueAlert("");
+      // setUniqueAlert("");
       setInvalidEmail("");
       if (response) {
         if (response.statusCode == 409) {
-          setUniqueAlert(response.message);
+          // setUniqueAlert(response.message);
+          setInvalidEmail(response.message);
         } else if (response.statusCode == 200) {
           handleEditModalClose();
           setRows(response.data);
@@ -278,7 +297,7 @@ const UserList = () => {
         error.response.data &&
         error.response.data.statusCode === 422
       ) {
-        setUniqueAlert(response.message.userName);
+        // setUniqueAlert(response.message.userName);
         setInvalidEmail(response.message.email);
       }
       console.error(error);
@@ -430,7 +449,7 @@ const UserList = () => {
           onClose={handleEditModalClose}
           rowData={selectedRow}
           onEdit={handleEditSave}
-          uniqueValidation={uniqueAlert}
+          // uniqueValidation={uniqueAlert}
           uniqueEmail={invalidEmail}
         />
 
@@ -445,7 +464,7 @@ const UserList = () => {
           open={isAddUserModalOpen}
           onClose={handleCloseAddUserModal}
           onAddUser={handleAddUser}
-          uniqueValidation={uniqueAlert}
+          // uniqueValidation={uniqueAlert}
           uniqueEmail={invalidEmail}
         />
       </Card>

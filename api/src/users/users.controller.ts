@@ -17,6 +17,7 @@ import {
 } from '@nestjs/common';
 import { UsersDto } from './dto/users.dto';
 import { UsersService } from './users.service';
+import { ResetPasswordDto } from 'src/auth/dto/reset-password.dto';
 
 @Controller('users')
 export class UsersController {
@@ -98,17 +99,15 @@ export class UsersController {
       currentPassword,
     );
   }
-  @Post('check-password/:id')
-  async checkPassword(
-    @Body() requestBody: { password: string; confirmPassword: string },
-    @Param('id') id: number,
+
+  @Get('create-password/:token')
+  @HttpCode(HttpStatus.OK)
+  async createPassword(
+    @Param('token') token: string,
+    @Query() queryParams: ResetPasswordDto,
   ) {
     try {
-      const result = await this.userService.checkPassword(
-        id,
-        requestBody.password,
-        requestBody.confirmPassword,
-      );
+      const result = await this.userService.createPassword(token, queryParams);
       return result;
     } catch (error) {
       return { message: 'An error occurred', statusCode: 500 };

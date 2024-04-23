@@ -18,6 +18,13 @@ interface IResetPasswordData {
   confirm_password?: string;
 }
 
+interface ICreatePasswordData {
+  key?: string;
+  expires?: string;
+  password?: string;
+  confirm_password?: string;
+}
+
 interface IClientData {
   key: string;
 }
@@ -97,7 +104,23 @@ export class UserApi {
       return error.response.data;
     }
   }
+ 
+  static async createPassword(
+    data: IResetPasswordData
+  ): Promise<ApiResponseDto> {
+    const { key, ...payload } = data;
 
+    try {
+      const res: any = await axios.get<IResetPasswordData>(
+        `${config.service}/users/create-password/${key}`,
+        { params: payload }
+      );
+
+      return res.data;
+    } catch (error: any) {
+      return error.response.data;
+    }
+  }
   static async createuser(data: IResetPasswordData): Promise<ApiResponseDto> {
     try {
       const res: any = await axios.post<IResetPasswordData>(
@@ -167,14 +190,6 @@ export class UserApi {
       {
         key: data,
       }
-    );
-    return res.data;
-  }
-
-  static async checkPassword(id: number, updatedData: any) {
-    const res = await axios.post(
-      `${config.service}/users/check-password/${id}`,
-      updatedData
     );
     return res.data;
   }
