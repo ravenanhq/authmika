@@ -51,7 +51,6 @@ const UserList = () => {
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
-  const [uniqueAlert, setUniqueAlert] = useState("");
   const [invalidEmail, setInvalidEmail] = useState("");
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
 
@@ -192,6 +191,16 @@ const UserList = () => {
       renderCell: (params) => <>{params.value === 1 ? "Active" : "Pending"}</>,
     },
     {
+      field: "created_at",
+      headerName: "Created At",
+      type: "date",
+      flex: 0.5,
+      minWidth: 160,
+      valueGetter: (params) => {
+        return new Date(params.row.created_at);
+      },
+    },
+    {
       field: "actions",
       headerName: "Actions",
       headerClassName: "user-header",
@@ -222,7 +231,12 @@ const UserList = () => {
     try {
       const response = await UserApi.getUsers();
       if (response) {
-        setRows(response);
+        const sortedRows = response.sort((a: RowData, b: RowData) => {
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        });
+        setRows(sortedRows);
         setLoading(false);
       }
     } catch (error: any) {
@@ -412,7 +426,9 @@ const UserList = () => {
               </Grid>
               <StyledDataGrid
                 rows={rows}
-                columns={columns}
+                columns={columns.filter(
+                  (column) => column.field !== "created_at"
+                )}
                 getRowId={(row) => row.id}
                 autoHeight
                 initialState={{

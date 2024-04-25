@@ -239,15 +239,34 @@ export class UsersService {
     }
   }
 
-  async verifyOtp(id: number, otp: string) {
-    const existingUser = await this.userModel.findOne({
-      where: { id: id },
-    });
-    if (!existingUser) {
-      throw new NotFoundException('User not found');
-    }
+  async verifyOtp(
+    id: number,
+    otp: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const existingUser = await this.userModel.findOne({
+        where: { id: id },
+      });
 
-    return existingUser.otp === Number(otp);
+      if (!existingUser || !existingUser.otp || !existingUser.otp_expiration) {
+        return { success: false, error: 'OTP not found or expired' };
+      }
+
+      const { otp: storedOTP, otp_expiration: expirationTimestamp } =
+        existingUser;
+      const currentTime = Date.now();
+      if (currentTime > expirationTimestamp) {
+        return { success: false, error: 'OTP has expired' };
+      }
+      const isMatch = storedOTP === Number(otp);
+      return {
+        success: isMatch,
+        error: isMatch ? 'OTP is valid' : 'Invalid OTP',
+      };
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      throw new Error('An error occurred while verifying OTP');
+    }
   }
 
   async createFromApi(
@@ -527,7 +546,8 @@ export class UsersService {
       if (!passwordReset)
         throw new HttpException(
           {
-            message: "Apologies, but we couldn't create password.",
+            message:
+              "Apologies, but we couldn't locate the verification link you provided. The verification link appears to be invalid.",
             statusCode: HttpStatus.NOT_FOUND,
           },
           HttpStatus.NOT_FOUND,
@@ -535,7 +555,7 @@ export class UsersService {
       if (expires < currentTime) {
         throw new HttpException(
           {
-            message: 'Create password link expired.',
+            message: 'Password reset link expired.',
             statusCode: HttpStatus.GONE,
           },
           HttpStatus.GONE,
@@ -636,6 +656,48 @@ export class UsersService {
         message: error.message,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         data: {},
+      };
+    }
+  }
+
+  async resendOtp(params: {
+    id: number;
+    email: string;
+    user_name: string;
+    display_name: string;
+    url: string;
+  }) {
+    const { id, email, user_name, display_name, url } = params;
+    try {
+      const user = await Users.findOne({
+        where: { id: id },
+      });
+      const otp = Math.floor(Math.random() * 900000) + 100000;
+      const expiresTime = parseInt(process.env.OTP_EXPIRATION);
+      const expirationTimestamp = Date.now() + expiresTime * 60 * 1000;
+      user.otp = otp;
+      user.otp_expiration = expirationTimestamp;
+      await user.save();
+      const emailSent = await this.mailservice.sendOtpByEmail(
+        email,
+        otp,
+        user_name,
+        display_name,
+        url,
+      );
+      if (emailSent) {
+        return { success: true, message: 'OTP resent successfully' };
+      } else {
+        return {
+          success: false,
+          message: 'Failed to resend OTP. Please try again.',
+        };
+      }
+    } catch (error) {
+      console.error('Error resending OTP:', error);
+      return {
+        success: false,
+        message: 'An error occurred while resending OTP',
       };
     }
   }

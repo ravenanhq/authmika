@@ -12,7 +12,6 @@ import {
   CircularProgress,
   Stack,
   Alert,
-  CardMedia,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { SetStateAction, useEffect, useState } from "react";
@@ -27,6 +26,7 @@ import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
 
 export interface RowData {
+  created_at: string | number | Date;
   id: number;
   name?: string;
   application?: string;
@@ -174,6 +174,17 @@ const ApplicationList = () => {
       minWidth: 200,
     },
     {
+      field: "created_at",
+      headerName: "Created At",
+      headerClassName: "user-header",
+      type: "date",
+      flex: 0.5,
+      minWidth: 160,
+      valueGetter: (params) => {
+        return new Date(params.row.created_at);
+      },
+    },
+    {
       field: "actions",
       headerName: "Actions",
       headerClassName: "application-header",
@@ -282,8 +293,11 @@ const ApplicationList = () => {
     try {
       const response = await ApplicationApi.getApplications();
       if (response) {
+        const sortedRows = response.sort((a: RowData, b: RowData) => {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+        setRows(sortedRows);
         setLoading(false);
-        setRows(response);
       }
     } catch (error: any) {
       console.log(error);
@@ -383,7 +397,9 @@ const ApplicationList = () => {
             </Grid>
             <StyledDataGrid
               rows={rows}
-              columns={columns}
+              columns={columns.filter(
+                (column) => column.field !== "created_at"
+              )}
               initialState={{
                 pagination: {
                   paginationModel: { page: 0, pageSize: 5 },

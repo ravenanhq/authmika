@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Card,
-  Grid,
   IconButton,
   InputAdornment,
   Link,
@@ -25,31 +24,11 @@ interface ICreatePasswordProps {
   showConfirmPassword: boolean;
 }
 
-interface Errors {
-  password?: string;
-  confirmPassword?: string;
-}
-
-const InitialRowData: RowData = {
-  id: 0,
-  password: "",
-};
-
-interface RowData {
-  id: number;
-  password?: string;
-}
-
 export default function User() {
   const [isVisible, setIsVisible] = useState<ICreatePasswordProps>({
     showPassword: false,
     showConfirmPassword: false,
   });
-  const [showPassword, setShowPassword] = useState<Boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState<Boolean>(false);
-  const [password, setPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const searchParams = useSearchParams();
   const key = searchParams ? searchParams.get("key") : null;
   const expires = searchParams ? searchParams.get("expires") : null;
@@ -90,7 +69,6 @@ export default function User() {
   }, [expires]);
 
   const onSubmit = async (formData: ICreatePasswordProps) => {
-    try {
       const password = formData.password;
       const confirmPassword = formData.confirmPassword;
       const data = {
@@ -102,21 +80,12 @@ export default function User() {
 
       const res = await UserApi.createPassword(data);
       if (res.statusCode == 200) {
-        window.location.href = "/dashboard";
         setisPasswordReset(true);
       } else if (res.statusCode == 410) {
         setIsLinkExpired(true);
       } else {
         if (res.message) setError(res.message);
       }
-    } catch (error: any) {
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.statusCode === 422
-      )
-        console.error(error);
-    }
   };
 
   const PrimaryButton = styled(Button)(() => ({
@@ -159,28 +128,19 @@ export default function User() {
         )}
         {isLinkExpired ? (
           <Typography component="p" align="center">
-            Sorry, the create password link has expired. Please{" "}
-            <Link href="/create-password">request a new create link</Link> to
-            create your password.
+            Sorry, the create password link has expired. Please contact admin.
           </Typography>
         ) : isPasswordReset ? (
           <>
             <Typography component="p" align="center">
-              Your password has been successfully create.
+              Your password created successfully.
             </Typography>
             <Typography component="p" align="center">
-              Click below to login.
+              Click <Link href="/login"  variant="body2">
+          {"here "}
+          </Link>
+          to login.
             </Typography>
-            <Link href="/login" color="#FFFFFF">
-              <Button
-                type="submit"
-                fullWidth
-                sx={{ mt: 2, mb: 1 }}
-                variant="contained"
-              >
-                Login
-              </Button>
-            </Link>
           </>
         ) : (
           <Box

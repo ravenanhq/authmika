@@ -68,13 +68,6 @@ interface AlertState {
   message: string;
 }
 
-const bull = (
-  <Box
-    component="span"
-    sx={{ display: "inline-block", mx: "2px", transform: "scale(0.8)" }}
-  ></Box>
-);
-
 const ProfilePage = () => {
   const theme = useTheme();
   const [userDetails, setUserDetails] = useState<{
@@ -757,10 +750,11 @@ const ProfilePage = () => {
             sx={{ marginBottom: 2, marginTop: 2, fontSize: "16px" }}
           >
             When two factor authentication is enabled, you will be prompted for
-            a secure, random One-Time password(otp) during authentication. This One-Time password(otp) will be sent to
-            you via email and will be required along with your password to
-            access your account. Please note that this One-Time password(otp) is unique to each
-            login attempt and provides an additional layer of security to your
+            a secure, random One-Time password(OTP) during authentication. This
+            One-Time password(OTP) will be sent to you via email and will be
+            required along with your password to access your account. Please
+            note that this One-Time password(OTP) is unique to each login
+            attempt and provides an additional layer of security to your
             account.
           </Typography>
           {/* {showQRCode && qrCodeDataUrl && (

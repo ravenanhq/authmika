@@ -25,6 +25,14 @@ interface ICreatePasswordData {
   confirm_password?: string;
 }
 
+interface ResendOtpParams {
+  id: number;
+  email: string;
+  user_name: string;
+  display_name: string;
+  url: string;
+}
+
 interface IClientData {
   key: string;
 }
@@ -104,7 +112,7 @@ export class UserApi {
       return error.response.data;
     }
   }
- 
+
   static async createPassword(
     data: IResetPasswordData
   ): Promise<ApiResponseDto> {
@@ -234,6 +242,18 @@ export class UserApi {
       `${config.service}/users/verify-otp/${id}/${otp}`
     );
     return res.data;
+  }
+
+  static async resendOtp(params: ResendOtpParams) {
+    try {
+      const res = await axios.post(`${config.service}/users/resend-otp`, {
+        ...params,
+      });
+      return res.data;
+    } catch (error) {
+      console.error("Error resending OTP:", error);
+      throw error;
+    }
   }
 
   static async setClientDetails(data: IClientData): Promise<ApiResponseDto> {

@@ -66,4 +66,7 @@ export class Users extends Model {
 
   @Column({ type: DataType.INTEGER })
   otp: number;
+
+  @Column({ type: DataType.BIGINT })
+  otp_expiration: number;
 }

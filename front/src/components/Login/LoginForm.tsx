@@ -49,16 +49,13 @@ const Login = () => {
   const [clientId, setClientId] = useState<string>("");
   const [redirectUrl, setRedirectUrl] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
-  const [userData, setUserData] = useState<any>({
-    userId: "",
-    userName: "",
-    displayName: "",
-  });
 
-  const setClientDetails = async () => {
+  const setClientDetails: () => Promise<void> = async () => {
     const session = await getSession();
-
-    if (session && !key) {
+    const isTwoFactorEnabled = session?.user?.is_two_factor_enabled;
+    if (isTwoFactorEnabled === true) {
+      setLoading(false);
+    } else if (session && !key) {
       window.location.href = "/dashboard";
     } else if (key) {
       try {
@@ -132,7 +129,6 @@ const Login = () => {
           const params = new URLSearchParams({
             code: session?.apiToken,
           });
-
           window.location.href = `${externalAppUrl}?${params.toString()}`;
         } else if (isTwoFactorEnabled === true) {
           window.location.href = "/two-factor";

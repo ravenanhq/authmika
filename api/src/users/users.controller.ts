@@ -19,6 +19,14 @@ import { UsersDto } from './dto/users.dto';
 import { UsersService } from './users.service';
 import { ResetPasswordDto } from 'src/auth/dto/reset-password.dto';
 
+interface ResendOtpParams {
+  id: number;
+  email: string;
+  user_name: string;
+  display_name: string;
+  url: string;
+}
+
 @Controller('users')
 export class UsersController {
   constructor(private userService: UsersService) {}
@@ -175,13 +183,16 @@ export class UsersController {
   async verifyOtp(
     @Param('id') id: number,
     @Param('otp') otp: string,
-  ): Promise<{ success: boolean }> {
+  ): Promise<{ success: boolean; error?: string }> {
     try {
-      const isOtpMatch = await this.userService.verifyOtp(id, otp);
-      return { success: isOtpMatch };
+      const result = await this.userService.verifyOtp(id, otp);
+      return result;
     } catch (error) {
       if (error instanceof NotFoundException) {
-        return { success: false };
+        return {
+          success: false,
+          error: error.message || 'An error occurred while verifying OTP',
+        };
       } else {
         throw error;
       }
@@ -193,5 +204,19 @@ export class UsersController {
     @Param('id') id: number,
   ): Promise<{ message: string; statusCode: number }> {
     return this.userService.deleteUser(id);
+  }
+
+  @Post('resend-otp')
+  async resendOtp(@Body() params: ResendOtpParams) {
+    try {
+      const result = await this.userService.resendOtp(params);
+      return result;
+    } catch (error) {
+      console.error('Error resending OTP:', error);
+      return {
+        success: false,
+        message: 'An error occurred while resending OTP',
+      };
+    }
   }
 }

@@ -168,6 +168,7 @@ export default function AddApplicationModal({
           fullWidth
           margin="normal"
           value={name}
+          size="small"
           onChange={(e) => setName(e.target.value)}
           error={!!errors.name}
           helperText={errors.name}
@@ -178,6 +179,7 @@ export default function AddApplicationModal({
           fullWidth
           margin="normal"
           value={application}
+          size="small"
           onChange={(e) => setApplication(e.target.value)}
           error={!!errors.application}
           helperText={errors.application}
@@ -187,6 +189,7 @@ export default function AddApplicationModal({
           label="Base Url"
           fullWidth
           margin="normal"
+          size="small"
           value={base_url}
           onChange={(e) => setBaseUrl(e.target.value)}
           error={!!errors.base_url}
@@ -197,6 +200,7 @@ export default function AddApplicationModal({
           label="Call Back Url"
           fullWidth
           margin="normal"
+          size="small"
           value={call_back_url}
           onChange={(e) => setCallBackUrl(e.target.value)}
           error={!!errors.call_back_url}

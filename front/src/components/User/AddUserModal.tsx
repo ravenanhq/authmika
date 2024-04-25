@@ -54,7 +54,9 @@ export default function AddUserModal({
   // }, [uniqueValidation]);
 
   useEffect(() => {
-    setErrors({});
+    if (!open) {
+      setErrors({});
+    }
   }, [open]);
 
   const validateForm = () => {
@@ -118,6 +120,7 @@ export default function AddUserModal({
     setMobile("");
     setRole("");
     onClose();
+    setErrors({});
   };
 
   const PrimaryButton = styled(Button)(() => ({
@@ -205,6 +208,7 @@ export default function AddUserModal({
           error={!!errors.email}
           helperText={errors.email ? errors.email : " "}
           size="small"
+          sx={{ marginBottom: 1 }}
         />
         <TextField
           label="Mobile"
@@ -216,11 +220,10 @@ export default function AddUserModal({
           error={!!errors.mobile}
           helperText={errors.mobile}
           size="small"
-          sx={{marginTop:1}}
+          sx={{ marginTop: 0 }}
         />
         <TextField
           label="Role"
-          sx={{ marginTop: 2, marginBottom: 2 }}
           size="small"
           required
           fullWidth
@@ -229,6 +232,7 @@ export default function AddUserModal({
           onChange={(e) => setRole(e.target.value)}
           error={!!errors.role}
           helperText={errors.role}
+          sx={{ marginTop: 2 }}
         >
           {Role.map((option) => (
             <MenuItem

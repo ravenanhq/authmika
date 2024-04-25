@@ -74,6 +74,12 @@ export default function EditUserModal({
   }, [rowData]);
 
   useEffect(() => {
+    if (open) {
+      setErrors({});
+    }
+  }, [open]);
+
+  useEffect(() => {
     setErrors((prevErrors) => ({ ...prevErrors, email: uniqueEmail }));
     return () => {
       setErrors({});
@@ -118,8 +124,10 @@ export default function EditUserModal({
   };
 
   const handleUpdateUser = () => {
+    setErrors({});
     if (validateForm()) {
       onEdit(editedData);
+      setErrors({});
     }
     setSuccessMessageOpen(true);
   };
@@ -189,6 +197,7 @@ export default function EditUserModal({
           required
           fullWidth
           margin="normal"
+          size="small"
           error={!!errors.userName}
           helperText={errors.userName && <span>{errors.userName}</span>}
         />
@@ -201,6 +210,7 @@ export default function EditUserModal({
           onChange={handleChange}
           fullWidth
           margin="normal"
+          size="small"
           error={!!errors.displayName}
           helperText={errors.displayName ? errors.displayName : " "}
         />
@@ -213,9 +223,10 @@ export default function EditUserModal({
           onChange={handleChange}
           fullWidth
           margin="normal"
+          size="small"
           error={!!errors.email}
           helperText={errors.email ? errors.email : " "}
-          sx={{ marginLeft: "0 !important" }}
+          sx={{ marginTop: 0 }}
         />
 
         <TextField
@@ -226,13 +237,14 @@ export default function EditUserModal({
           onChange={handleChange}
           fullWidth
           margin="normal"
+          size="small"
           error={!!errors.mobile}
           helperText={errors.mobile ? errors.mobile : " "}
+          sx={{ marginTop: 0 }}
         />
 
         <TextField
           label="Role"
-          sx={{ marginTop: 1, marginBottom: 2 }}
           name="role"
           size="small"
           required

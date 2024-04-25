@@ -20,7 +20,11 @@ export class AuthService {
   async signIn(username: string, pass: string, clientId: string) {
     let apiToken = '';
     const user = await this.usersService.findUsername(username);
-    if (!user || !(await bcrypt.compare(pass, user?.password))) {
+    if (
+      !user ||
+      !(await bcrypt.compare(pass, user?.password)) ||
+      user.status === 0
+    ) {
       throw new UnauthorizedException('Incorrect username or password.');
     }
 
@@ -62,9 +66,11 @@ export class AuthService {
         algorithm: 'HS256',
       });
     } else if (user.isTwoFactorEnabled) {
-      const otp: number = Math.floor(Math.random() * 900000) + 100000;
+      const otp = Math.floor(Math.random() * 900000) + 100000;
+      const expiresTime = parseInt(process.env.OTP_EXPIRATION);
+      const expirationTimestamp = Date.now() + expiresTime * 60 * 1000;
       user.otp = otp;
-
+      user.otp_expiration = expirationTimestamp;
       await user.save();
 
       const url = `${process.env.BASE_URL}/login`;
