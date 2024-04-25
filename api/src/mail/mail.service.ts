@@ -30,6 +30,23 @@ export class MailService {
     }
   }
 
+  async sendCreatePasswordEmail(email: string, url: string) {
+    try {
+      await this.mailerService.sendMail({
+        to: email,
+        subject: 'Create Password - Authmika',
+        template: './create-password',
+        context: {
+          email: email,
+          url: url,
+        },
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async sendForgotPasswordEmail(email: string, url: string) {
     try {
       await this.mailerService.sendMail({

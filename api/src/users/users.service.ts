@@ -19,6 +19,7 @@ import * as speakeasy from 'speakeasy';
 import { randomBytes } from 'crypto';
 import { PasswordResetTokens } from 'src/db/model/password-reset-tokens.model';
 import { MailService } from 'src/mail/mail.service';
+import { ResetPasswordDto } from 'src/auth/dto/reset-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -165,11 +166,16 @@ export class UsersService {
 
     const { user_name, display_name, email, mobile, role } = userDto;
     try {
+      // const existingUser = await this.userModel.findOne({
+      //   where: { userName: user_name },
+      // });
+      // if (existingUser) {
+      //   throw new NotFoundException('User already exists.');
       const existingUser = await this.userModel.findOne({
-        where: { userName: user_name },
+        where: { email: email },
       });
       if (existingUser) {
-        throw new UnprocessableEntityException('User already exists.');
+        throw new NotFoundException('Email already exists.');
       } else {
         const newUser = await this.userModel.create({
           userName: user_name,
@@ -192,7 +198,7 @@ export class UsersService {
           );
           const url = `${
             process.env.BASE_URL
-          }/reset-password/?key=${token}&expires=${expires.getTime()}`;
+          }/create-password/?key=${token}&expires=${expires.getTime()}`;
 
           const oldToken = await this.passwordResetTokensModel.findOne({
             where: { email },
@@ -205,7 +211,7 @@ export class UsersService {
           } else {
             await this.passwordResetTokensModel.create({ email, token });
           }
-          await this.mailservice.sendForgotPasswordEmail(email, url);
+          await this.mailservice.sendCreatePasswordEmail(email, url);
         }
       }
       const users = await this.userModel.findAll({
@@ -233,15 +239,34 @@ export class UsersService {
     }
   }
 
-  async verifyOtp(id: number, otp: string) {
-    const existingUser = await this.userModel.findOne({
-      where: { id: id },
-    });
-    if (!existingUser) {
-      throw new NotFoundException('User not found');
-    }
+  async verifyOtp(
+    id: number,
+    otp: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const existingUser = await this.userModel.findOne({
+        where: { id: id },
+      });
 
-    return existingUser.otp === Number(otp);
+      if (!existingUser || !existingUser.otp || !existingUser.otp_expiration) {
+        return { success: false, error: 'OTP not found or expired' };
+      }
+
+      const { otp: storedOTP, otp_expiration: expirationTimestamp } =
+        existingUser;
+      const currentTime = Date.now();
+      if (currentTime > expirationTimestamp) {
+        return { success: false, error: 'OTP has expired' };
+      }
+      const isMatch = storedOTP === Number(otp);
+      return {
+        success: isMatch,
+        error: isMatch ? 'OTP is valid' : 'Invalid OTP',
+      };
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      throw new Error('An error occurred while verifying OTP');
+    }
   }
 
   async createFromApi(
@@ -353,14 +378,20 @@ export class UsersService {
         where: { id: id },
       });
       if (existingUser) {
-        const fetchedUser = await this.userModel.findOne({
-          where: { userName: user_name },
+        // const existingUsername = await this.userModel.findOne({
+        //   where: { userName: user_name },
+        // });
+
+        // if (existingUsername && existingUsername.id !== id) {
+        //   throw new UnprocessableEntityException('User already exists.');
+        // }
+        const existingUsername = await this.userModel.findOne({
+          where: { email: email },
         });
 
-        if (fetchedUser && fetchedUser.dataValues.id != id) {
-          throw new UnprocessableEntityException('User already exists.');
+        if (existingUsername && existingUsername.id !== id) {
+          throw new UnprocessableEntityException('Email already exists.');
         }
-
         existingUser.userName = user_name;
         existingUser.displayName = display_name;
         existingUser.email = email;
@@ -500,32 +531,65 @@ export class UsersService {
     }
   }
 
-  async checkPassword(
-    id: number,
-    password: string,
-    confirmPassword: string,
-  ): Promise<{ message: string; statusCode: number; status?: number }> {
+  async createPassword(
+    token: string,
+    queryParams: ResetPasswordDto,
+  ): Promise<{ message: string; statusCode: number }> {
+    const currentTime: number = new Date().getTime();
+    const { expires, password } = queryParams;
+
     try {
-      const existingUser = await this.userModel.findOne({
-        where: { id: id },
+      const passwordReset = await this.passwordResetTokensModel.findOne({
+        where: { token },
       });
-      if (password === confirmPassword) {
-        const hashedPassword = await hash(password, 10);
-        existingUser.password = hashedPassword;
-        await existingUser.save();
-        existingUser.status = 1;
-        await existingUser.save();
-        const status = 1;
-        return {
-          message: 'Password is correct.',
-          statusCode: 422,
-          status,
-        };
+
+      if (!passwordReset)
+        throw new HttpException(
+          {
+            message:
+              "Apologies, but we couldn't locate the verification link you provided. The verification link appears to be invalid.",
+            statusCode: HttpStatus.NOT_FOUND,
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      if (expires < currentTime) {
+        throw new HttpException(
+          {
+            message: 'Password reset link expired.',
+            statusCode: HttpStatus.GONE,
+          },
+          HttpStatus.GONE,
+        );
       }
-      return {
-        message: 'Password is incorrect.',
-        statusCode: HttpStatus.OK,
-      };
+
+      const { email } = passwordReset;
+      const user = await this.userModel.findOne({
+        where: { email },
+      });
+
+      if (!user) {
+        throw new HttpException(
+          {
+            message: 'No account was found with the provided email.',
+            statusCode: HttpStatus.NOT_FOUND,
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      const hashedPassword = await hash(password, 10);
+      const updatedUser = await this.userModel.update(
+        { password: hashedPassword, status: 1 },
+        { where: { email } },
+      );
+      if (updatedUser[0] === 1) {
+        passwordReset.destroy();
+        return {
+          message: 'Password updated successfully',
+          statusCode: HttpStatus.OK,
+        };
+      } else {
+        throw new HttpException('Error', HttpStatus.BAD_REQUEST);
+      }
     } catch (error) {
       if (error instanceof HttpException) {
         return {
@@ -592,6 +656,48 @@ export class UsersService {
         message: error.message,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         data: {},
+      };
+    }
+  }
+
+  async resendOtp(params: {
+    id: number;
+    email: string;
+    user_name: string;
+    display_name: string;
+    url: string;
+  }) {
+    const { id, email, user_name, display_name, url } = params;
+    try {
+      const user = await Users.findOne({
+        where: { id: id },
+      });
+      const otp = Math.floor(Math.random() * 900000) + 100000;
+      const expiresTime = parseInt(process.env.OTP_EXPIRATION);
+      const expirationTimestamp = Date.now() + expiresTime * 60 * 1000;
+      user.otp = otp;
+      user.otp_expiration = expirationTimestamp;
+      await user.save();
+      const emailSent = await this.mailservice.sendOtpByEmail(
+        email,
+        otp,
+        user_name,
+        display_name,
+        url,
+      );
+      if (emailSent) {
+        return { success: true, message: 'OTP resent successfully' };
+      } else {
+        return {
+          success: false,
+          message: 'Failed to resend OTP. Please try again.',
+        };
+      }
+    } catch (error) {
+      console.error('Error resending OTP:', error);
+      return {
+        success: false,
+        message: 'An error occurred while resending OTP',
       };
     }
   }

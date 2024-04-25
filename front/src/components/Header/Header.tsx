@@ -28,7 +28,7 @@ export default function DrawerAppBar() {
   const pathName = usePathname() || "";
   const [activePage, setActivePage] = useState<string>(pathName);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const showHeader = !["/login", "/two-factor", "/update-password","/forgot-password","/reset-password"].includes(
+  const showHeader = !["/login", "/two-factor", "/create-password","/forgot-password","/reset-password"].includes(
     pathName
   );
   const [navItems, setNavItems] = useState<INavItem[]>([]);

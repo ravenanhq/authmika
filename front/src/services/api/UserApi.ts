@@ -18,6 +18,21 @@ interface IResetPasswordData {
   confirm_password?: string;
 }
 
+interface ICreatePasswordData {
+  key?: string;
+  expires?: string;
+  password?: string;
+  confirm_password?: string;
+}
+
+interface ResendOtpParams {
+  id: number;
+  email: string;
+  user_name: string;
+  display_name: string;
+  url: string;
+}
+
 interface IClientData {
   key: string;
 }
@@ -98,6 +113,22 @@ export class UserApi {
     }
   }
 
+  static async createPassword(
+    data: IResetPasswordData
+  ): Promise<ApiResponseDto> {
+    const { key, ...payload } = data;
+
+    try {
+      const res: any = await axios.get<IResetPasswordData>(
+        `${config.service}/users/create-password/${key}`,
+        { params: payload }
+      );
+
+      return res.data;
+    } catch (error: any) {
+      return error.response.data;
+    }
+  }
   static async createuser(data: IResetPasswordData): Promise<ApiResponseDto> {
     try {
       const res: any = await axios.post<IResetPasswordData>(
@@ -171,14 +202,6 @@ export class UserApi {
     return res.data;
   }
 
-  static async checkPassword(id: number, updatedData: any) {
-    const res = await axios.post(
-      `${config.service}/users/check-password/${id}`,
-      updatedData
-    );
-    return res.data;
-  }
-
   static async verifyCurrentPassword(id: number, updatedData: any) {
     const res = await axios.post(
       `${config.service}/users/verify-current-password/${id}`,
@@ -219,6 +242,18 @@ export class UserApi {
       `${config.service}/users/verify-otp/${id}/${otp}`
     );
     return res.data;
+  }
+
+  static async resendOtp(params: ResendOtpParams) {
+    try {
+      const res = await axios.post(`${config.service}/users/resend-otp`, {
+        ...params,
+      });
+      return res.data;
+    } catch (error) {
+      console.error("Error resending OTP:", error);
+      throw error;
+    }
   }
 
   static async setClientDetails(data: IClientData): Promise<ApiResponseDto> {

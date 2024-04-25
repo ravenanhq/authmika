@@ -8,6 +8,7 @@ import {
   Card,
   CardContent,
   Checkbox,
+  Dialog,
   DialogActions,
   DialogTitle,
   Divider,
@@ -33,6 +34,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import { Container } from "@mui/material";
+import CheckIcon from "@mui/icons-material/Check";
+import SaveIcon from "@mui/icons-material/Save";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 export interface RowData {
   name: string;
@@ -88,6 +92,8 @@ const UserView = ({ params }: { params: IUserView }) => {
   const [existingCheckboxes, setExistingCheckboxes] = useState<
     ICreateListProps[]
   >([]);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     getApplication();
@@ -178,6 +184,10 @@ const UserView = ({ params }: { params: IUserView }) => {
     setSearchTerm(event.target.value);
   };
 
+  const handleConfirmOpen = () => {
+    setConfirmationOpen(true);
+  };
+
   const filteredApplications = applications
     ? applications.filter((application) => {
         if (application.name) {
@@ -239,6 +249,7 @@ const UserView = ({ params }: { params: IUserView }) => {
       await UserApi.deleteUserApplicationMapping(userId!, applicationId);
       getApplicationsByUserId(userId);
       setOpen(false);
+      setConfirmationOpen(false);
     } catch (error) {
       console.error("Error deleting user application mapping:", error);
     }
@@ -385,7 +396,11 @@ const UserView = ({ params }: { params: IUserView }) => {
                     </Grid>
                     <Grid item xs={12} sm={6}>
                       {applications.length > 0 && (
-                        <Box display="flex" justifyContent="flex-end" width="100%">
+                        <Box
+                          display="flex"
+                          justifyContent="flex-end"
+                          width="100%"
+                        >
                           <TextField
                             InputProps={{
                               startAdornment: (
@@ -464,9 +479,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                     }}
                   >
                     <IconButton
-                      onClick={() => {
-                        handleCancel(id, application.id);
-                      }}
+                      onClick={handleConfirmOpen}
                       sx={{
                         fontSize: "4px",
                         color: "#FF9843",
@@ -478,12 +491,57 @@ const UserView = ({ params }: { params: IUserView }) => {
                     >
                       <CloseIcon />
                     </IconButton>
+                    <Modal
+                      open={confirmationOpen}
+                      onClose={() => setConfirmationOpen(false)}
+                    >
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: "50%",
+                          left: "50%",
+                          transform: "translate(-50%, -50%)",
+                          width: isMobile ? "80%" : "auto",
+                          bgcolor: "background.paper",
+                          boxShadow: 24,
+                          p: 4,
+                        }}
+                      >
+                        <div>
+                          <h2>Confirmation</h2>
+                          <p>
+                            Are you sure you want to remove this application?
+                          </p>
+                            <SecondaryButton
+                              variant="contained"
+                              color="primary"
+                              style={{ margin: "15px 15px 0 0" }}
+                              startIcon={<CloseIcon />}
+                              onClick={() => setConfirmationOpen(false)}
+                            >
+                              Cancel
+                            </SecondaryButton>
+                            <PrimaryButton
+                              variant="contained"
+                              color="primary"
+                              style={{ margin: "15px 15px 0 0" }}
+                              startIcon={<CheckIcon />}
+                              onClick={() => {
+                                handleCancel(id, application.id);
+                              }}
+                            >
+                              Confirm
+                            </PrimaryButton>
+                        </div>
+                      </Box>
+                    </Modal>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </TableContainer>
+
         <Box display="flex" justifyContent="flex-end">
           <BackButton
             variant="contained"
@@ -607,11 +665,11 @@ const UserView = ({ params }: { params: IUserView }) => {
                     <Divider color="#265073" />
                     <DialogActions style={{ margin: "0 16px 10px 0" }}>
                       <PrimaryButton
-                        startIcon={<AddIcon />}
+                        startIcon={<SaveIcon />}
                         type="submit"
                         onClick={() => handleSubmit(selectedCheckboxes)}
                       >
-                        Add
+                        Save
                       </PrimaryButton>
                       <SecondaryButton
                         startIcon={<CloseIcon />}

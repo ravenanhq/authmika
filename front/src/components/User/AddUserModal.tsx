@@ -20,7 +20,6 @@ interface Errors {
   display_name?: string;
   email?: string;
   mobile?: string;
-  password?: string;
   role?: string;
 }
 
@@ -28,7 +27,7 @@ interface AddUserModalProps {
   open: boolean;
   onClose: () => void;
   onAddUser: (application: any) => void;
-  uniqueValidation: string;
+  // uniqueValidation: string;
   uniqueEmail: string;
 }
 
@@ -36,13 +35,12 @@ export default function AddUserModal({
   open,
   onClose,
   onAddUser,
-  uniqueValidation,
+  // uniqueValidation,
   uniqueEmail,
 }: AddUserModalProps) {
   const [user_name, setUserName] = useState("");
   const [display_name, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [mobile, setMobile] = useState("");
   const [role, setRole] = useState("");
   const [errors, setErrors] = useState<Errors>({});
@@ -51,12 +49,14 @@ export default function AddUserModal({
     setErrors((prevErrors) => ({ ...prevErrors, email: uniqueEmail }));
   }, [uniqueEmail]);
 
-  useEffect(() => {
-    setErrors((prevErrors) => ({ ...prevErrors, userName: uniqueValidation }));
-  }, [uniqueValidation]);
+  // useEffect(() => {
+  //   setErrors((prevErrors) => ({ ...prevErrors, userName: uniqueValidation }));
+  // }, [uniqueValidation]);
 
   useEffect(() => {
-    setErrors({});
+    if (!open) {
+      setErrors({});
+    }
   }, [open]);
 
   const validateForm = () => {
@@ -76,10 +76,6 @@ export default function AddUserModal({
 
     if (!mobile.trim()) {
       newErrors.mobile = "Mobile is required";
-    }
-
-    if (!password.trim()) {
-      newErrors.password = "Password is required";
     }
 
     if (!role.trim()) {
@@ -109,17 +105,10 @@ export default function AddUserModal({
         display_name: display_name,
         email: email,
         mobile: mobile,
-        password: password,
         role: role,
       };
       onAddUser(newUser);
       setErrors({});
-      setUserName("");
-      setDisplayName("");
-      setEmail("");
-      setMobile("");
-      setPassword("");
-      setRole("");
     }
   };
 
@@ -129,9 +118,9 @@ export default function AddUserModal({
     setDisplayName("");
     setEmail("");
     setMobile("");
-    setPassword("");
     setRole("");
     onClose();
+    setErrors({});
   };
 
   const PrimaryButton = styled(Button)(() => ({
@@ -217,8 +206,9 @@ export default function AddUserModal({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           error={!!errors.email}
-          helperText={errors.email}
+          helperText={errors.email ? errors.email : " "}
           size="small"
+          sx={{ marginBottom: 1 }}
         />
         <TextField
           label="Mobile"
@@ -230,22 +220,10 @@ export default function AddUserModal({
           error={!!errors.mobile}
           helperText={errors.mobile}
           size="small"
-        />
-        <TextField
-          label="Password"
-          fullWidth
-          margin="normal"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          error={!!errors.password}
-          helperText={errors.password}
-          size="small"
-          type="password"
+          sx={{ marginTop: 0 }}
         />
         <TextField
           label="Role"
-          sx={{ marginTop: 1, marginBottom: 2 }}
           size="small"
           required
           fullWidth
@@ -254,6 +232,7 @@ export default function AddUserModal({
           onChange={(e) => setRole(e.target.value)}
           error={!!errors.role}
           helperText={errors.role}
+          sx={{ marginTop: 2 }}
         >
           {Role.map((option) => (
             <MenuItem

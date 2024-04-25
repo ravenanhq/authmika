@@ -27,6 +27,7 @@ import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
 
 export interface RowData {
+  created_at: string | number | Date;
   id: number;
   userName?: string;
   user_name?: string;
@@ -50,7 +51,6 @@ const UserList = () => {
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
-  const [uniqueAlert, setUniqueAlert] = useState("");
   const [invalidEmail, setInvalidEmail] = useState("");
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
 
@@ -191,6 +191,16 @@ const UserList = () => {
       renderCell: (params) => <>{params.value === 1 ? "Active" : "Pending"}</>,
     },
     {
+      field: "created_at",
+      headerName: "Created At",
+      type: "date",
+      flex: 0.5,
+      minWidth: 160,
+      valueGetter: (params) => {
+        return new Date(params.row.created_at);
+      },
+    },
+    {
       field: "actions",
       headerName: "Actions",
       headerClassName: "user-header",
@@ -221,7 +231,12 @@ const UserList = () => {
     try {
       const response = await UserApi.getUsers();
       if (response) {
-        setRows(response);
+        const sortedRows = response.sort((a: RowData, b: RowData) => {
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        });
+        setRows(sortedRows);
         setLoading(false);
       }
     } catch (error: any) {
@@ -232,14 +247,31 @@ const UserList = () => {
   const addUser = async (newUser: RowData) => {
     try {
       const response = await UserApi.create(newUser);
-      setUniqueAlert("");
+      // setUniqueAlert("");
       setInvalidEmail("");
       if (response) {
         if (response.statusCode == 409) {
-          setUniqueAlert(response.message);
+          // setUniqueAlert(response.message);
+          setInvalidEmail(response.message);
         } else if (response.statusCode == 200) {
-          handleCloseAddUserModal();
           setRows(response.data);
+          const newUserId = Math.floor(Math.random() * 1000);
+          const newUserData = {
+            ...newUser,
+            userName: newUser.user_name,
+            displayName: newUser.display_name,
+            id: newUserId,
+          };
+          const currentUsers = [...rows];
+          currentUsers.unshift(newUserData);
+          const sortedUsers = currentUsers.sort((a, b) => {
+            return (
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+            );
+          });
+          setRows(sortedUsers);
+          handleCloseAddUserModal();
           setAlertShow(response.message);
         }
       }
@@ -250,7 +282,7 @@ const UserList = () => {
         error.response.data &&
         error.response.data.statusCode === 422
       ) {
-        setUniqueAlert(response.message.userName);
+        // setUniqueAlert(response.message.userName);
         setInvalidEmail(response.message.email);
       }
       console.log(error);
@@ -260,11 +292,12 @@ const UserList = () => {
   const editUser = async (id: any, updatedData: any) => {
     try {
       const response = await UserApi.update(id, updatedData);
-      setUniqueAlert("");
+      // setUniqueAlert("");
       setInvalidEmail("");
       if (response) {
         if (response.statusCode == 409) {
-          setUniqueAlert(response.message);
+          // setUniqueAlert(response.message);
+          setInvalidEmail(response.message);
         } else if (response.statusCode == 200) {
           handleEditModalClose();
           setRows(response.data);
@@ -278,7 +311,7 @@ const UserList = () => {
         error.response.data &&
         error.response.data.statusCode === 422
       ) {
-        setUniqueAlert(response.message.userName);
+        // setUniqueAlert(response.message.userName);
         setInvalidEmail(response.message.email);
       }
       console.error(error);
@@ -393,7 +426,9 @@ const UserList = () => {
               </Grid>
               <StyledDataGrid
                 rows={rows}
-                columns={columns}
+                columns={columns.filter(
+                  (column) => column.field !== "created_at"
+                )}
                 getRowId={(row) => row.id}
                 autoHeight
                 initialState={{
@@ -430,7 +465,7 @@ const UserList = () => {
           onClose={handleEditModalClose}
           rowData={selectedRow}
           onEdit={handleEditSave}
-          uniqueValidation={uniqueAlert}
+          // uniqueValidation={uniqueAlert}
           uniqueEmail={invalidEmail}
         />
 
@@ -445,7 +480,7 @@ const UserList = () => {
           open={isAddUserModalOpen}
           onClose={handleCloseAddUserModal}
           onAddUser={handleAddUser}
-          uniqueValidation={uniqueAlert}
+          // uniqueValidation={uniqueAlert}
           uniqueEmail={invalidEmail}
         />
       </Card>

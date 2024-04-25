@@ -75,6 +75,9 @@ export default function Home() {
                     </div>
                 ) : (
                     <>
+                     {applications.length === 0 && (
+                   <Typography component="p" align="center">No applications found</Typography>
+              )}
                         <Grid container spacing={3}>
                             {userRole?.toLowerCase() === "admin"
                                 ? applications.map((result, index: number) => (
