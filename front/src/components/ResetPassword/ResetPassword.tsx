@@ -9,6 +9,7 @@ import {
   Link,
   InputAdornment,
   IconButton,
+  styled,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useForm } from "react-hook-form";
@@ -31,8 +32,8 @@ const ResetPassword = () => {
   const [isPasswordReset, setisPasswordReset] = useState<boolean>(false);
   const [isLinkExpired, setIsLinkExpired] = useState(false);
   const searchParams = useSearchParams();
-  const key = searchParams.get("key");
-  const expires = searchParams.get("expires");
+  const key = searchParams ? searchParams.get("key") : null;
+  const expires = searchParams ? searchParams.get("expires") : null;
   const [error, setError] = useState<string>("");
 
   const {
@@ -86,6 +87,18 @@ const ResetPassword = () => {
     }
   };
 
+  const PrimaryButton = styled(Button)(() => ({
+    textTransform: "none",
+    paddingLeft: "10px",
+    paddingRight: "10px",
+    backgroundColor: "#1C658C",
+    color: "#fff",
+    ":hover": {
+      color: "#fff",
+      backgroundColor: "#265073",
+    },
+  }));
+
   return (
     <Box
       sx={{
@@ -121,14 +134,14 @@ const ResetPassword = () => {
               Click below to login.
             </Typography>
             <Link href="/login" color="#FFFFFF">
-              <Button
+              <PrimaryButton
                 type="submit"
                 fullWidth
                 sx={{ mt: 2, mb: 1 }}
                 variant="contained"
               >
                 Login
-              </Button>
+              </PrimaryButton>
             </Link>
           </>
         ) : (
@@ -232,7 +245,7 @@ const ResetPassword = () => {
             <Typography variant="body1" color="red">
               {error ? error : ""}
             </Typography>
-            <Button
+            <PrimaryButton
               type="submit"
               fullWidth
               sx={{ mt: 2, mb: 1 }}
@@ -242,7 +255,7 @@ const ResetPassword = () => {
               }}
             >
               Reset
-            </Button>
+            </PrimaryButton>
             <Typography component="p" variant="h5" align="center">
               <Link href="/login" variant="body2">
                 {"Return to Sign In"}

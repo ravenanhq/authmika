@@ -2,11 +2,11 @@ import { IsNotEmpty, Matches } from 'class-validator';
 
 export class UsersDto {
   @Matches(/^[^\s]+$/, { message: 'Spaces are not allowed in the user' })
-  @IsNotEmpty({ message: 'username cannot be blank' })
-  user_name: string;
+  @IsNotEmpty({ message: 'firstname cannot be blank' })
+  firstName: string;
 
-  @IsNotEmpty({ message: 'displayname cannot be blank' })
-  display_name: string;
+  @IsNotEmpty({ message: 'lastname cannot be blank' })
+  lastName: string;
 
   @Matches(
     /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,

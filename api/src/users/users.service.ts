@@ -106,10 +106,10 @@ export class UsersService {
     return user;
   }
 
-  async findUsername(userName: string): Promise<Users> {
+  async findEmail(email: string): Promise<Users> {
     return this.userModel.findOne({
       where: {
-        userName,
+        email,
       },
     });
   }
@@ -132,10 +132,10 @@ export class UsersService {
     userData: Optional<any, string>,
   ): Promise<{ message: string; statusCode: number }> {
     try {
-      const existingUser = await this.findUsername(userData.userName);
+      const existingUser = await this.findEmail(userData.email);
       if (existingUser) {
         throw new HttpException(
-          'Username is already taken',
+          'Email is already register',
           HttpStatus.CONFLICT,
         );
       }
@@ -164,7 +164,7 @@ export class UsersService {
   ): Promise<{ message: string; statusCode: number; data: object }> {
     const password = randomBytes(10).toString('hex');
 
-    const { user_name, display_name, email, mobile, role } = userDto;
+    const { firstName, lastName, email, mobile, role } = userDto;
     try {
       // const existingUser = await this.userModel.findOne({
       //   where: { userName: user_name },
@@ -178,8 +178,8 @@ export class UsersService {
         throw new NotFoundException('Email already exists.');
       } else {
         const newUser = await this.userModel.create({
-          userName: user_name,
-          displayName: display_name,
+          firstName: firstName,
+          lastName: lastName,
           email: email,
           password: await hash(password, 10),
           mobile: mobile,
@@ -211,7 +211,12 @@ export class UsersService {
           } else {
             await this.passwordResetTokensModel.create({ email, token });
           }
-          await this.mailservice.sendCreatePasswordEmail(email, url);
+          await this.mailservice.sendCreatePasswordEmail(
+            email,
+            url,
+            firstName,
+            lastName,
+          );
         }
       }
       const users = await this.userModel.findAll({
@@ -247,7 +252,6 @@ export class UsersService {
       const existingUser = await this.userModel.findOne({
         where: { id: id },
       });
-
       if (!existingUser || !existingUser.otp || !existingUser.otp_expiration) {
         return { success: false, error: 'OTP not found or expired' };
       }
@@ -277,7 +281,7 @@ export class UsersService {
       id: any;
     },
   ): Promise<{ message: string; statusCode: number }> {
-    const { user_name, display_name, email, password, mobile, role } = userDto;
+    const { firstName, lastName, email, password, mobile, role } = userDto;
     try {
       if (!clientSecretId || !clientSecretKey) {
         throw new BadRequestException('Client secret id and key are required.');
@@ -293,22 +297,51 @@ export class UsersService {
         throw new NotFoundException('Application not found.');
       }
       const existingUser = await this.userModel.findOne({
-        where: { userName: user_name },
+        where: { email: email },
       });
       if (existingUser) {
         throw new UnprocessableEntityException('User already exists.');
       }
       const newUser = await this.userModel.create({
-        userName: user_name,
-        displayName: display_name,
+        firstName: firstName,
+        lastName: lastName,
         email: email,
         password: await hash(password, 10),
         mobile: mobile,
         role: role,
         createdBy: user ? user.id : null,
+        status: 2,
       });
       if (!newUser) {
         throw new InternalServerErrorException('User creation failed');
+      } else {
+        const token = randomBytes(32).toString('hex');
+        const currentDate = new Date();
+        const expires = new Date(
+          currentDate.getTime() +
+            parseInt(process.env.PASSWORD_RESET_EXPIRATION_TIME, 10) * 60000,
+        );
+        const url = `${
+          process.env.BASE_URL
+        }/user-activation/?key=${token}&expires=${expires.getTime()}`;
+
+        const oldToken = await this.passwordResetTokensModel.findOne({
+          where: { email },
+        });
+        if (oldToken) {
+          await this.passwordResetTokensModel.update(
+            { token: token },
+            { where: { email } },
+          );
+        } else {
+          await this.passwordResetTokensModel.create({ email, token });
+        }
+        await this.mailservice.sendUserActivationEmail(
+          email,
+          url,
+          firstName,
+          lastName,
+        );
       }
 
       await this.userApplictionsModel.create({
@@ -372,7 +405,7 @@ export class UsersService {
     user: { id: any },
     id: number,
   ): Promise<{ message: string; statusCode: number; data: object }> {
-    const { user_name, display_name, email, password, mobile, role } = userDto;
+    const { firstName, lastName, email, password, mobile, role } = userDto;
     try {
       const existingUser = await this.userModel.findOne({
         where: { id: id },
@@ -392,8 +425,8 @@ export class UsersService {
         if (existingUsername && existingUsername.id !== id) {
           throw new UnprocessableEntityException('Email already exists.');
         }
-        existingUser.userName = user_name;
-        existingUser.displayName = display_name;
+        existingUser.firstName = firstName;
+        existingUser.lastName = lastName;
         existingUser.email = email;
         existingUser.mobile = mobile;
         existingUser.password = password;
@@ -435,8 +468,6 @@ export class UsersService {
   }
 
   async verifyCurrentPassword(
-    userDto: UsersDto,
-    user: { id: any; password: string | undefined },
     id: number,
     currentPassword: string,
   ): Promise<{ message: string; statusCode: number }> {
@@ -663,11 +694,12 @@ export class UsersService {
   async resendOtp(params: {
     id: number;
     email: string;
-    user_name: string;
-    display_name: string;
+    firstName: string;
+    lastName: string;
     url: string;
   }) {
-    const { id, email, user_name, display_name, url } = params;
+    const { id, email, firstName, lastName, url } = params;
+    console.log('resend', params);
     try {
       const user = await Users.findOne({
         where: { id: id },
@@ -681,8 +713,8 @@ export class UsersService {
       const emailSent = await this.mailservice.sendOtpByEmail(
         email,
         otp,
-        user_name,
-        display_name,
+        firstName,
+        lastName,
         url,
       );
       if (emailSent) {
@@ -699,6 +731,76 @@ export class UsersService {
         success: false,
         message: 'An error occurred while resending OTP',
       };
+    }
+  }
+
+  async acitiveUsers(
+    token: string,
+    expires: number,
+  ): Promise<{ message: string; statusCode: number }> {
+    const currentTime: number = new Date().getTime();
+
+    try {
+      const passwordReset = await this.passwordResetTokensModel.findOne({
+        where: { token },
+      });
+      if (!passwordReset)
+        throw new HttpException(
+          {
+            message: 'Activation link expired',
+            statusCode: HttpStatus.GONE,
+          },
+          HttpStatus.GONE,
+        );
+      if (expires < currentTime) {
+        throw new HttpException(
+          {
+            message: 'Activation link expired.',
+            statusCode: HttpStatus.GONE,
+          },
+          HttpStatus.GONE,
+        );
+      }
+
+      const { email } = passwordReset;
+      const user = await this.userModel.findOne({
+        where: { email },
+      });
+
+      if (!user) {
+        throw new HttpException(
+          {
+            message: 'No account was found with the provided email.',
+            statusCode: HttpStatus.NOT_FOUND,
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      const updatedUser = await this.userModel.update(
+        { status: 1 },
+        { where: { email } },
+      );
+      if (updatedUser[0] === 1) {
+        passwordReset.destroy();
+        return {
+          message: 'User activated successfully',
+          statusCode: HttpStatus.OK,
+        };
+      } else {
+        throw new HttpException('Error', HttpStatus.BAD_REQUEST);
+      }
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.CONFLICT,
+        };
+      } else {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
     }
   }
 }

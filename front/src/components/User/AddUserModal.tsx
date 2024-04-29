@@ -15,9 +15,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import { MenuItem } from "@mui/material";
 
 interface Errors {
-  userName?: string;
-  user_name?: string;
-  display_name?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   mobile?: string;
   role?: string;
@@ -38,8 +37,8 @@ export default function AddUserModal({
   // uniqueValidation,
   uniqueEmail,
 }: AddUserModalProps) {
-  const [user_name, setUserName] = useState("");
-  const [display_name, setDisplayName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
   const [role, setRole] = useState("");
@@ -62,12 +61,12 @@ export default function AddUserModal({
   const validateForm = () => {
     let newErrors: Errors = {};
 
-    if (!user_name.trim()) {
-      newErrors.user_name = "Username is required";
+    if (!firstName.trim()) {
+      newErrors.firstName = "firstName is required";
     }
 
-    if (!display_name.trim()) {
-      newErrors.display_name = "Display Name is required";
+    if (!lastName.trim()) {
+      newErrors.lastName = "lastName is required";
     }
 
     if (!email.trim()) {
@@ -101,8 +100,8 @@ export default function AddUserModal({
   const handleAddUser = () => {
     if (validateForm()) {
       const newUser = {
-        user_name: user_name,
-        display_name: display_name,
+        firstName: firstName,
+        lastName: lastName,
         email: email,
         mobile: mobile,
         role: role,
@@ -113,9 +112,8 @@ export default function AddUserModal({
   };
 
   const handleClose = () => {
-    setErrors({});
-    setUserName("");
-    setDisplayName("");
+    setFirstName("");
+    setLastName("");
     setEmail("");
     setMobile("");
     setRole("");
@@ -177,25 +175,25 @@ export default function AddUserModal({
       <Divider color="#265073"></Divider>
       <DialogContent>
         <TextField
-          label="Username"
+          label="First Name"
           fullWidth
           margin="normal"
           required
-          value={user_name}
-          onChange={(e) => setUserName(e.target.value)}
-          error={!!errors.user_name}
-          helperText={errors.user_name}
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          error={!!errors.firstName}
+          helperText={errors.firstName}
           size="small"
         />
         <TextField
-          label="Display Name"
+          label="Last Name"
           fullWidth
           margin="normal"
           required
-          value={display_name}
-          onChange={(e) => setDisplayName(e.target.value)}
-          error={!!errors.display_name}
-          helperText={errors.display_name}
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          error={!!errors.lastName}
+          helperText={errors.lastName}
           size="small"
         />
         <TextField

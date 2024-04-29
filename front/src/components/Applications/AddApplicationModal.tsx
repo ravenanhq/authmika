@@ -98,6 +98,10 @@ export default function AddApplicationModal({
       };
       onAddApplication(newApplication);
       setErrors({});
+      setName("");
+      setApplication("");
+      setBaseUrl("");
+      setCallBackUrl("");
     }
   };
 

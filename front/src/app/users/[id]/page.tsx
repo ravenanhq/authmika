@@ -72,8 +72,8 @@ interface ExtractedDataItem {
 }
 
 interface UserData {
-  userName: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   role: string;
 }
@@ -326,22 +326,22 @@ const UserView = ({ params }: { params: IUserView }) => {
               <TableBody>
                 <TableRow>
                   <TableCell>
-                    <strong>Username:</strong>
+                    <strong>First Name:</strong>
                   </TableCell>
                   <TableCell
                     style={{ whiteSpace: "unset", wordBreak: "break-all" }}
                   >
-                    {userData.userName}
+                    {userData.firstName}
                   </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>
-                    <strong>Display Name:</strong>
+                    <strong>Last Name:</strong>
                   </TableCell>
                   <TableCell
                     style={{ whiteSpace: "unset", wordBreak: "break-all" }}
                   >
-                    {userData.displayName}
+                    {userData.lastName}
                   </TableCell>
                 </TableRow>
                 <TableRow>

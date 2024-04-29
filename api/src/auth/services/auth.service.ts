@@ -19,13 +19,13 @@ export class AuthService {
 
   async signIn(username: string, pass: string, clientId: string) {
     let apiToken = '';
-    const user = await this.usersService.findUsername(username);
+    const user = await this.usersService.findEmail(username);
     if (
       !user ||
       !(await bcrypt.compare(pass, user?.password)) ||
       user.status === 0
     ) {
-      throw new UnauthorizedException('Incorrect username or password.');
+      throw new UnauthorizedException('Incorrect email or password.');
     }
 
     if (clientId) {
@@ -54,8 +54,8 @@ export class AuthService {
 
       const userdetails = {
         id: user.id,
-        username: user.userName,
-        displayName: user.displayName,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         role: user.role,
       };
@@ -77,13 +77,13 @@ export class AuthService {
       await this.mailService.sendOtpByEmail(
         user.email,
         otp,
-        user.userName,
-        user.displayName,
+        user.firstName,
+        user.lastName,
         url,
       );
     }
 
-    const payload = { sub: user.id, username: user.userName };
+    const payload = { sub: user.id, firstName: user.firstName };
     return {
       access_token: await this.jwtService.signAsync(payload),
       token_type: 'Bearer',
@@ -108,8 +108,8 @@ export class AuthService {
     if (user && application) {
       const userdetails = {
         id: user.id,
-        username: user.userName,
-        displayName: user.displayName,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         role: user.role,
         clientSecretId: application.clientSecretId,

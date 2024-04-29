@@ -5,8 +5,8 @@ import { hash } from 'bcrypt';
 import { prompt } from 'enquirer';
 
 interface IUserInput {
-  userName: string;
-  displayName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   mobile: string;
   password: string;
@@ -30,8 +30,8 @@ export class UsersCommand {
         users.forEach((application) => {
           userList.push({
             id: application.dataValues.id,
-            user_name: application.dataValues.userName,
-            name: application.dataValues.displayName,
+            firstName: application.dataValues.firstName,
+            name: application.dataValues.lastName,
             email: application.dataValues.email,
             role: application.dataValues.role,
             is_active: application.dataValues.isActive ? 'Yes' : 'No',
@@ -59,8 +59,8 @@ export class UsersCommand {
   })
   async createUser() {
     let userData: {
-      userName: string;
-      displayName: string;
+      firstName: string;
+      lastName: string;
       email: string;
       password: string;
       mobile: string;
@@ -69,23 +69,23 @@ export class UsersCommand {
     await prompt([
       {
         type: 'input',
-        name: 'userName',
-        message: 'Enter the username:',
+        name: 'firstName',
+        message: 'Enter the firstName:',
         validate: (input) => {
           if (!input) {
-            return 'Username is required';
+            return 'firstName is required';
           }
           if (!/^[a-z_]+$/.test(input)) {
-            return 'Username must contain only lowercase letters and underscores';
+            return 'firstName must contain only lowercase letters and underscores';
           }
           return true;
         },
       },
       {
         type: 'input',
-        name: 'displayName',
-        message: 'Enter the display name:',
-        validate: (input) => (input ? true : 'Display name is required'),
+        name: 'lastName',
+        message: 'Enter the lastName:',
+        validate: (input) => (input ? true : 'lastName is required'),
       },
       {
         type: 'input',
@@ -127,8 +127,8 @@ export class UsersCommand {
       },
     ]).then(async (userInput: IUserInput) => {
       userData = {
-        userName: userInput.userName,
-        displayName: userInput.displayName,
+        firstName: userInput.firstName,
+        lastName: userInput.lastName,
         email: userInput.email,
         password: await hash(userInput.password, 10),
         mobile: userInput.mobile,

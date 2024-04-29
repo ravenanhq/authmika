@@ -19,11 +19,11 @@ export class Users extends Model {
   @Column({ type: DataType.INTEGER })
   id: number;
 
-  @Column({ field: 'user_name', type: DataType.STRING })
-  userName: string;
+  @Column({ field: 'first_name', type: DataType.STRING })
+  firstName: string;
 
-  @Column({ field: 'display_name', type: DataType.STRING })
-  displayName: string;
+  @Column({ field: 'last_name', type: DataType.STRING })
+  lastName: string;
 
   @Column({ type: DataType.STRING })
   email: string;

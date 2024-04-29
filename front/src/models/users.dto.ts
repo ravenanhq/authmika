@@ -1,7 +1,7 @@
 export class UserDto {
     id?: string;
     username?: string;
-    firstname?: string;
+    firstName?: string;
     lastname?: string;
     email?: string;
     emailVerifiedAt?: string;
@@ -21,7 +21,7 @@ export class UsersDto {
 }
 
 export class SignInDto {
-    username?: string;
+    email?: string;
     password?: string;
 }
 

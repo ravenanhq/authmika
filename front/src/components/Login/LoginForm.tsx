@@ -11,9 +11,10 @@ import {
   InputAdornment,
   IconButton,
   Skeleton,
+  styled,
 } from "@mui/material";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { AccountCircle, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { UserApi } from "@/services/api/UserApi";
 import { getSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
@@ -21,12 +22,12 @@ import { signOut } from "next-auth/react";
 import * as dotenv from "dotenv";
 import { ApplicationApi } from "@/services/api/ApplicationApi";
 import { Session } from "next-auth";
+import EmailIcon from "@mui/icons-material/Email";
 
 dotenv.config();
 
 interface ISignInFormProp {
-  user_name?: string;
-  display_name?: string;
+  email?: string;
   password?: string;
 }
 
@@ -41,7 +42,7 @@ const Login = () => {
     setValue,
     clearErrors,
   } = useForm<ISignInFormProp>();
-  const [user_name, setUsername] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<Boolean>(false);
   const [error, setError] = useState<string>("");
@@ -114,8 +115,9 @@ const Login = () => {
 
   const onSubmit: SubmitHandler<ISignInFormProp> = async () => {
     setError("");
+    const user = { email, password };
     const res = await signIn("credentials", {
-      username: user_name,
+      email: email,
       password: password,
       redirect: false,
       clientId: clientId,
@@ -150,9 +152,9 @@ const Login = () => {
     setPassword(e);
   };
 
-  const handleUserNameChange = (e: string) => {
-    setValue("user_name", e);
-    setUsername(e);
+  const handleEmailChange = (e: string) => {
+    setValue("email", e);
+    setEmail(e);
   };
 
   const logOut = async () => {
@@ -161,6 +163,18 @@ const Login = () => {
       window.location.href = data.url;
     }
   };
+
+  const PrimaryButton = styled(Button)(() => ({
+    textTransform: "none",
+    paddingLeft: "10px",
+    paddingRight: "10px",
+    backgroundColor: "#1C658C",
+    color: "#fff",
+    ":hover": {
+      color: "#fff",
+      backgroundColor: "#265073",
+    },
+  }));
 
   return (
     <Box
@@ -231,28 +245,26 @@ const Login = () => {
                     fullWidth
                     required
                     size="small"
-                    id="username"
-                    label="Username"
-                    autoComplete="username"
+                    id="email"
+                    label="Email"
+                    autoComplete="email"
                     autoFocus
-                    {...register("user_name", {
-                      required: "Username is required.",
+                    {...register("email", {
+                      required: "Email is required.",
                     })}
                     onChange={(e) => {
-                      handleUserNameChange(e.target.value);
-                      clearErrors("user_name");
+                      handleEmailChange(e.target.value);
+                      clearErrors("email");
                     }}
                     variant="outlined"
-                    error={Boolean(errors.user_name)}
+                    error={Boolean(errors.email)}
                     helperText={
-                      errors.user_name
-                        ? errors.user_name.message?.toString()
-                        : null
+                      errors.email ? errors.email.message?.toString() : null
                     }
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">
-                          <AccountCircle />
+                          <EmailIcon />
                         </InputAdornment>
                       ),
                     }}
@@ -296,7 +308,7 @@ const Login = () => {
                   <Typography variant="body1" color="error">
                     {error}
                   </Typography>
-                  <Button
+                  <PrimaryButton
                     type="submit"
                     fullWidth
                     variant="contained"
@@ -307,7 +319,7 @@ const Login = () => {
                     }}
                   >
                     Sign In
-                  </Button>
+                  </PrimaryButton>
                   <Grid container>
                     <Grid item xs textAlign="right" sx={{ mt: 1 }}>
                       <Link href="/forgot-password" variant="body2">

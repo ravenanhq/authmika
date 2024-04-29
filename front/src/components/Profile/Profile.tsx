@@ -33,8 +33,8 @@ import DoneIcon from "@mui/icons-material/Done";
 interface Errors {
   Email?: string;
   Mobile?: string;
-  user_name?: string;
-  display_name?: string;
+  firstName?: string;
+  lastName?: string;
   role?: string;
   newPassword?: string;
   confirmPassword?: string;
@@ -47,8 +47,8 @@ interface RowData {
   id: number;
   email: string;
   mobile: string;
-  user_name: string;
-  display_name: string;
+  firstName?: string;
+  lastName?: string;
   role: string;
   password?: string;
 }
@@ -57,8 +57,8 @@ const InitialRowData: RowData = {
   id: 0,
   email: "",
   mobile: "",
-  user_name: "",
-  display_name: "",
+  firstName: "",
+  lastName: "",
   role: "",
   password: "",
 };
@@ -74,15 +74,15 @@ const ProfilePage = () => {
     id?: number;
     email: string;
     mobile: string;
-    user_name: string;
-    display_name: string;
+    firstName?: string;
+    lastName?: string;
     role: string;
     password: string;
   }>({
     email: "",
     mobile: "",
-    user_name: "",
-    display_name: "",
+    firstName: "",
+    lastName: "",
     role: "",
     password: "",
   });
@@ -120,12 +120,12 @@ const ProfilePage = () => {
       if (session) {
         const { email, mobile, id, role, password, is_two_factor_enabled } =
           session.user;
-        const user_name = session.user.userName;
-        const display_name = session.user.displayName;
+        const firstName = session.user.firstName;
+        const lastName = session.user.lastName;
         setEnable(is_two_factor_enabled);
         setUserDetails({
-          display_name,
-          user_name,
+          lastName,
+          firstName,
           email,
           mobile,
           role,
@@ -133,8 +133,8 @@ const ProfilePage = () => {
         });
         setEditedData((prevEditedData) => ({
           ...prevEditedData,
-          display_name,
-          user_name,
+          lastName,
+          firstName,
           email,
           mobile,
           id,
@@ -216,12 +216,12 @@ const ProfilePage = () => {
   const validateProfile = () => {
     let newErrors: Errors = {};
 
-    if (!editedData.user_name?.trim()) {
-      newErrors.user_name = "Username is required";
+    if (!editedData.firstName?.trim()) {
+      newErrors.firstName = "firstName is required";
     }
 
-    if (!editedData.display_name?.trim()) {
-      newErrors.display_name = "Display Name is required";
+    if (!editedData.lastName?.trim()) {
+      newErrors.lastName = " lastName is required";
     }
 
     if (!editedData.email?.trim()) {
@@ -359,14 +359,14 @@ const ProfilePage = () => {
       try {
         const session: Session | null = await getSession();
         if (session) {
-          const { email, userName, displayName, mobile, role } = session.user;
+          const { email, firstName, lastName, mobile, role } = session.user;
           const updatedData = {
             id: id,
             password: newPassword,
             currentPassword: currentPassword,
             email: email,
-            user_name: userName,
-            display_name: displayName,
+            firstName: firstName,
+            lastName: lastName,
             mobile: mobile,
             role: role,
           };
@@ -469,17 +469,17 @@ const ProfilePage = () => {
         <CardContent>
           <form>
             <TextField
-              label="Username"
+              label="First Name"
               fullWidth
-              name="user_name"
+              name="firstName"
               margin="normal"
               required
-              value={editedData.user_name}
+              value={editedData.firstName}
               onChange={handleChange}
-              error={!!errors.user_name}
+              error={!!errors.firstName}
               helperText={
-                errors.user_name
-                  ? errors.user_name
+                errors.firstName
+                  ? errors.firstName
                   : uniqueValidation
                   ? "User already exists"
                   : ""
@@ -489,7 +489,7 @@ const ProfilePage = () => {
                 marginBottom: 2,
                 "& .MuiFormHelperText-root": {
                   color:
-                    errors.user_name || uniqueValidation
+                    errors.firstName || uniqueValidation
                       ? "#e33241"
                       : "inherit",
                 },
@@ -497,15 +497,15 @@ const ProfilePage = () => {
             />
 
             <TextField
-              label="Display Name"
-              name="display_name"
+              label="Last Name"
+              name="lastName"
               required
-              value={editedData.display_name || ""}
+              value={editedData.lastName || ""}
               onChange={handleChange}
               fullWidth
               margin="normal"
-              error={!!errors.display_name}
-              helperText={errors.display_name ? errors.display_name : " "}
+              error={!!errors.lastName}
+              helperText={errors.lastName ? errors.lastName : " "}
               sx={{ marginBottom: 0.5 }}
             />
 

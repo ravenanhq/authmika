@@ -22,8 +22,8 @@ import { ResetPasswordDto } from 'src/auth/dto/reset-password.dto';
 interface ResendOtpParams {
   id: number;
   email: string;
-  user_name: string;
-  display_name: string;
+  firstName: string;
+  lastName: string;
   url: string;
 }
 
@@ -95,17 +95,11 @@ export class UsersController {
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
   async verifyCurrentPassword(
-    @Body() usersDto: UsersDto,
     @Request() req,
     @Param('id') id: number,
   ): Promise<{ message: string; statusCode: number }> {
     const { currentPassword } = req.body;
-    return this.userService.verifyCurrentPassword(
-      usersDto,
-      req.user,
-      id,
-      currentPassword,
-    );
+    return this.userService.verifyCurrentPassword(id, currentPassword);
   }
 
   @Get('create-password/:token')
@@ -116,6 +110,17 @@ export class UsersController {
   ) {
     try {
       const result = await this.userService.createPassword(token, queryParams);
+      return result;
+    } catch (error) {
+      return { message: 'An error occurred', statusCode: 500 };
+    }
+  }
+
+  @Get('active-users/:token')
+  @HttpCode(HttpStatus.OK)
+  async aciveUsers(@Param('token') token: string, @Query() expires: number) {
+    try {
+      const result = await this.userService.acitiveUsers(token, expires);
       return result;
     } catch (error) {
       return { message: 'An error occurred', statusCode: 500 };

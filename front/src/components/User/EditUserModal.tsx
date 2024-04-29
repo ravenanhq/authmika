@@ -16,8 +16,8 @@ import { RowData } from "./UserList";
 import { MenuItem } from "@mui/material";
 
 interface Errors {
-  userName?: string;
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   mobile?: string;
   role?: string;
@@ -25,10 +25,8 @@ interface Errors {
 
 const InitialRowData = {
   id: 0,
-  userName: "",
-  user_name: "",
-  display_name: "",
-  displayName: "",
+  firstName: "",
+  lastName: "",
   email: "",
   mobile: "",
   role: "",
@@ -60,7 +58,6 @@ export default function EditUserModal({
   onClose,
   rowData,
   onEdit,
-  // uniqueValidation,
   uniqueEmail,
 }: EditModalProps) {
   const [editedData, setEditedData] = useState<RowData>(InitialRowData);
@@ -86,9 +83,6 @@ export default function EditUserModal({
     };
   }, [uniqueEmail]);
 
-  // useEffect(() => {
-  //   setErrors((prevErrors) => ({ ...prevErrors, userName: uniqueValidation }));
-  // }, [uniqueValidation]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -98,12 +92,12 @@ export default function EditUserModal({
   const validateForm = () => {
     let newErrors: Errors = {};
 
-    if (!editedData.userName?.trim()) {
-      newErrors.userName = "Username is required";
+    if (!editedData.firstName?.trim()) {
+      newErrors.firstName = "firstName is required";
     }
 
-    if (!editedData.displayName?.trim()) {
-      newErrors.displayName = "Display Name is required";
+    if (!editedData.lastName?.trim()) {
+      newErrors.lastName = "lastName is required";
     }
 
     if (!editedData.email?.trim()) {
@@ -189,30 +183,28 @@ export default function EditUserModal({
       </DialogTitle>
       <Divider color="#265073"></Divider>
       <DialogContent>
-        <TextField
-          label="Username"
-          name="userName"
-          value={editedData.userName || ""}
+      <TextField
+          label="First Name"
+          name="firstName"
+          value={editedData.firstName || ""}
           onChange={handleChange}
           required
           fullWidth
           margin="normal"
-          size="small"
-          error={!!errors.userName}
-          helperText={errors.userName && <span>{errors.userName}</span>}
+          error={!!errors.firstName}
+          helperText={errors.firstName && <span>{errors.firstName}</span>}
         />
 
         <TextField
-          label="Display Name"
-          name="displayName"
+          label="Last Name"
+          name="lastName"
           required
-          value={editedData.displayName || ""}
+          value={editedData.lastName || ""}
           onChange={handleChange}
           fullWidth
           margin="normal"
-          size="small"
-          error={!!errors.displayName}
-          helperText={errors.displayName ? errors.displayName : " "}
+          error={!!errors.lastName}
+          helperText={errors.lastName ? errors.lastName : " "}
         />
 
         <TextField

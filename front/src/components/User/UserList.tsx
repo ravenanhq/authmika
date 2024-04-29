@@ -29,10 +29,8 @@ import { getSession } from "next-auth/react";
 export interface RowData {
   created_at: string | number | Date;
   id: number;
-  userName?: string;
-  user_name?: string;
-  display_name?: string;
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   mobile?: string;
   role?: string;
@@ -111,10 +109,6 @@ const UserList = () => {
   const handleEditSave = async (editedData: RowData) => {
     if ("id" in editedData) {
       const updatedData = { ...editedData };
-      updatedData.user_name = updatedData.userName;
-      delete updatedData.userName;
-      updatedData.display_name = updatedData.displayName;
-      delete updatedData.displayName;
       try {
         await editUser(updatedData.id, updatedData);
       } catch (error) {
@@ -148,15 +142,15 @@ const UserList = () => {
 
   const columns: GridColDef[] = [
     {
-      field: "userName",
-      headerName: "Username",
+      field: "firstName",
+      headerName: "First Name",
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 140,
     },
     {
-      field: "displayName",
-      headerName: "Display Name",
+      field: "lastName",
+      headerName: "Last Name",
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 160,
@@ -247,19 +241,17 @@ const UserList = () => {
   const addUser = async (newUser: RowData) => {
     try {
       const response = await UserApi.create(newUser);
-      // setUniqueAlert("");
       setInvalidEmail("");
       if (response) {
         if (response.statusCode == 409) {
-          // setUniqueAlert(response.message);
           setInvalidEmail(response.message);
         } else if (response.statusCode == 200) {
           setRows(response.data);
           const newUserId = Math.floor(Math.random() * 1000);
           const newUserData = {
             ...newUser,
-            userName: newUser.user_name,
-            displayName: newUser.display_name,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
             id: newUserId,
           };
           const currentUsers = [...rows];
@@ -282,7 +274,6 @@ const UserList = () => {
         error.response.data &&
         error.response.data.statusCode === 422
       ) {
-        // setUniqueAlert(response.message.userName);
         setInvalidEmail(response.message.email);
       }
       console.log(error);
@@ -292,11 +283,9 @@ const UserList = () => {
   const editUser = async (id: any, updatedData: any) => {
     try {
       const response = await UserApi.update(id, updatedData);
-      // setUniqueAlert("");
       setInvalidEmail("");
       if (response) {
         if (response.statusCode == 409) {
-          // setUniqueAlert(response.message);
           setInvalidEmail(response.message);
         } else if (response.statusCode == 200) {
           handleEditModalClose();
@@ -311,7 +300,6 @@ const UserList = () => {
         error.response.data &&
         error.response.data.statusCode === 422
       ) {
-        // setUniqueAlert(response.message.userName);
         setInvalidEmail(response.message.email);
       }
       console.error(error);

@@ -53,11 +53,12 @@ export class ForgotPasswordService {
     } else {
       await this.passwordResetTokensModel.create({ email, token });
     }
-
+    const { firstName, lastName } = user;
     return this.mailservice
-      .sendForgotPasswordEmail(email, url)
+      .sendForgotPasswordEmail(email, url, firstName, lastName)
       .then((isMailSend) => {
         if (isMailSend) {
+          console.log('aa', firstName, lastName);
           throw new HttpException(
             {
               message: `Password reset link has sent to ${email}`,
