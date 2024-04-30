@@ -18,18 +18,16 @@ interface IResetPasswordData {
   confirm_password?: string;
 }
 
-interface ICreatePasswordData {
+interface IActivateUserData {
   key?: string;
   expires?: string;
-  password?: string;
-  confirm_password?: string;
 }
 
 interface ResendOtpParams {
   id: number;
   email: string;
-  user_name: string;
-  display_name: string;
+  firstName: string;
+  lastName: string;
   url: string;
 }
 
@@ -129,6 +127,26 @@ export class UserApi {
       return error.response.data;
     }
   }
+
+  static async activeUsers(data: IActivateUserData): Promise<{
+    statusCode: number;
+    success: boolean;
+    message: string;
+  }> {
+    const { key, ...payload } = data;
+
+    try {
+      const res: any = await axios.get<IActivateUserData>(
+        `${config.service}/users/active-users/${key}`,
+        { params: payload }
+      );
+
+      return res.data;
+    } catch (error: any) {
+      return error.response.data;
+    }
+  }
+
   static async createuser(data: IResetPasswordData): Promise<ApiResponseDto> {
     try {
       const res: any = await axios.post<IResetPasswordData>(

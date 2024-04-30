@@ -9,9 +9,11 @@ import {
   Button,
   Link,
   InputAdornment,
+  styled,
 } from "@mui/material";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import SendIcon from '@mui/icons-material/Send';
 
 interface IForgotPasswordProps {
   email?: string;
@@ -42,6 +44,18 @@ const ForgotPassword = () => {
       setError(error.response.data.message);
     }
   };
+
+  const PrimaryButton = styled(Button)(() => ({
+    textTransform: "none",
+    paddingLeft: "10px",
+    paddingRight: "10px",
+    backgroundColor: "#1C658C",
+    color: "#fff",
+    ":hover": {
+      color: "#fff",
+      backgroundColor: "#265073",
+    },
+  }));
 
   return (
     <Box
@@ -114,17 +128,18 @@ const ForgotPassword = () => {
               <Typography variant="body1" color="red">
                 {error ? error : ""}
               </Typography>
-              <Button
+              <PrimaryButton
                 type="submit"
                 fullWidth
                 sx={{ mt: 2, mb: 1 }}
                 variant="contained"
+                startIcon={<SendIcon/>}
                 onClick={() => {
                   setError("");
                 }}
               >
                 Send Link
-              </Button>
+              </PrimaryButton>
             </>
           )}
 

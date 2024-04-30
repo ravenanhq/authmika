@@ -30,7 +30,12 @@ export class MailService {
     }
   }
 
-  async sendCreatePasswordEmail(email: string, url: string) {
+  async sendCreatePasswordEmail(
+    email: string,
+    url: string,
+    firstName: string,
+    lastName: string,
+  ) {
     try {
       await this.mailerService.sendMail({
         to: email,
@@ -38,6 +43,8 @@ export class MailService {
         template: './create-password',
         context: {
           email: email,
+          firstName: firstName,
+          lastName: lastName,
           url: url,
         },
       });
@@ -47,7 +54,12 @@ export class MailService {
     }
   }
 
-  async sendForgotPasswordEmail(email: string, url: string) {
+  async sendForgotPasswordEmail(
+    email: string,
+    url: string,
+    firstName: string,
+    lastName: string,
+  ) {
     try {
       await this.mailerService.sendMail({
         to: email,
@@ -55,6 +67,8 @@ export class MailService {
         template: './forgot-password',
         context: {
           email: email,
+          firstName: firstName,
+          lastName: lastName,
           url: url,
         },
       });
@@ -67,8 +81,8 @@ export class MailService {
   async sendOtpByEmail(
     email: string,
     otp: number,
-    user_name: string,
-    display_name: string,
+    firstName: string,
+    lastName: string,
     url: string,
   ) {
     try {
@@ -77,9 +91,34 @@ export class MailService {
         subject: 'One Time Password (OTP) - AUTHMIKA',
         template: './otp-email-template',
         context: {
-          userName: user_name,
-          displayName: display_name,
+          email: email,
+          firstName: firstName,
+          lastName: lastName,
           otp: otp,
+          url: url,
+        },
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async sendUserActivationEmail(
+    email: string,
+    url: string,
+    firstName: string,
+    lastName: string,
+  ) {
+    try {
+      await this.mailerService.sendMail({
+        to: email,
+        subject: 'User Activation - Authmika',
+        template: './user-activation',
+        context: {
+          email: email,
+          firstName: firstName,
+          lastName: lastName,
           url: url,
         },
       });

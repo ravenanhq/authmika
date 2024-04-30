@@ -128,7 +128,7 @@ export default function User() {
         )}
         {isLinkExpired ? (
           <Typography component="p" align="center">
-            Sorry, the create password link has expired. Please contact admin.
+            Sorry the create password link has expired. Please contact admin.
           </Typography>
         ) : isPasswordReset ? (
           <>
@@ -136,11 +136,12 @@ export default function User() {
               Your password created successfully.
             </Typography>
             <Typography component="p" align="center">
-              Click <Link href="/login"  variant="body2">
-          {"here "}
-          </Link>
+          Click{" "}
+          <Link href="/login" variant="body2">
+            here
+          </Link>{" "}
           to login.
-            </Typography>
+        </Typography>
           </>
         ) : (
           <Box

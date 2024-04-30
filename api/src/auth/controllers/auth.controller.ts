@@ -23,7 +23,7 @@ export class AuthController {
   @UsePipes(new ValidationPipe())
   signIn(@Body() loginDto: LoginDto) {
     return this.authService.signIn(
-      loginDto.username,
+      loginDto.email,
       loginDto.password,
       loginDto.clientId,
     );

@@ -13,9 +13,8 @@ interface DeleteModalProps {
 }
 interface RowData {
   id: number;
-  userName?: string;
-  display_name?: string;
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   mobile?: string;
   role?: string;
@@ -30,11 +29,11 @@ export default function EditUserModal({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [deleteName, setDeleteName] = useState<string | undefined>(
-    rowData?.userName
+    rowData?.firstName
   );
 
   useEffect(() => {
-    setDeleteName(rowData?.userName);
+    setDeleteName(rowData?.firstName);
   }, [rowData]);
 
   const PrimaryButton = styled(Button)(() => ({

@@ -28,10 +28,19 @@ export default function DrawerAppBar() {
   const pathName = usePathname() || "";
   const [activePage, setActivePage] = useState<string>(pathName);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const showHeader = !["/login", "/two-factor", "/create-password","/forgot-password","/reset-password"].includes(
-    pathName
-  );
-  const [navItems, setNavItems] = useState<INavItem[]>([]);
+  const showHeader = ![
+    "/login",
+    "/two-factor",
+    "/create-password",
+    "/forgot-password",
+    "/reset-password",
+    "/user-activation",
+  ].includes(pathName);
+  const [navItems, setNavItems] = useState<INavItem[]>([
+    { label: "Dashboard", route: "/dashboard" },
+    { label: "Users", route: "/users" },
+    { label: "Applications", route: "/applications" },
+  ]);
 
   useEffect(() => {
     getUserSession();
@@ -42,12 +51,6 @@ export default function DrawerAppBar() {
     if (session && session.user) {
       if (session.user.role.toLowerCase() == "client") {
         setNavItems([{ label: "Dashboard", route: "/dashboard" }]);
-      } else {
-        setNavItems([
-          { label: "Dashboard", route: "/dashboard" },
-          { label: "Users", route: "/users" },
-          { label: "Applications", route: "/applications" },
-        ]);
       }
     }
   };
