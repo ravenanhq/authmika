@@ -166,11 +166,6 @@ export class UsersService {
 
     const { firstName, lastName, email, mobile, role } = userDto;
     try {
-      // const existingUser = await this.userModel.findOne({
-      //   where: { userName: user_name },
-      // });
-      // if (existingUser) {
-      //   throw new NotFoundException('User already exists.');
       const existingUser = await this.userModel.findOne({
         where: { email: email },
       });
@@ -411,13 +406,6 @@ export class UsersService {
         where: { id: id },
       });
       if (existingUser) {
-        // const existingUsername = await this.userModel.findOne({
-        //   where: { userName: user_name },
-        // });
-
-        // if (existingUsername && existingUsername.id !== id) {
-        //   throw new UnprocessableEntityException('User already exists.');
-        // }
         const existingUsername = await this.userModel.findOne({
           where: { email: email },
         });
@@ -699,7 +687,6 @@ export class UsersService {
     url: string;
   }) {
     const { id, email, firstName, lastName, url } = params;
-    console.log('resend', params);
     try {
       const user = await Users.findOne({
         where: { id: id },

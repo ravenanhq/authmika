@@ -75,9 +75,6 @@ export class UsersCommand {
           if (!input) {
             return 'firstName is required';
           }
-          if (!/^[a-z_]+$/.test(input)) {
-            return 'firstName must contain only lowercase letters and underscores';
-          }
           return true;
         },
       },

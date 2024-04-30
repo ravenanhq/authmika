@@ -28,9 +28,14 @@ export default function DrawerAppBar() {
   const pathName = usePathname() || "";
   const [activePage, setActivePage] = useState<string>(pathName);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const showHeader = !["/login", "/two-factor", "/create-password","/forgot-password","/reset-password","/user-activation"].includes(
-    pathName
-  );
+  const showHeader = ![
+    "/login",
+    "/two-factor",
+    "/create-password",
+    "/forgot-password",
+    "/reset-password",
+    "/user-activation",
+  ].includes(pathName);
   const [navItems, setNavItems] = useState<INavItem[]>([
     { label: "Dashboard", route: "/dashboard" },
     { label: "Users", route: "/users" },
@@ -42,7 +47,6 @@ export default function DrawerAppBar() {
   }, []);
 
   const getUserSession = async () => {
-    console.log("aaa");
     const session = await getSession();
     if (session && session.user) {
       if (session.user.role.toLowerCase() == "client") {

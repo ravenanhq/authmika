@@ -8,7 +8,6 @@ import {
   Card,
   CardContent,
   Checkbox,
-  Dialog,
   DialogActions,
   DialogTitle,
   Divider,
@@ -76,6 +75,7 @@ interface UserData {
   lastName: string;
   email: string;
   role: string;
+  status: number;
 }
 
 const UserView = ({ params }: { params: IUserView }) => {
@@ -364,6 +364,16 @@ const UserView = ({ params }: { params: IUserView }) => {
                     {userData.role}
                   </TableCell>
                 </TableRow>
+                <TableRow>
+                  <TableCell>
+                    <strong>Status:</strong>
+                  </TableCell>
+                  <TableCell
+                    style={{ whiteSpace: "unset", wordBreak: "break-all" }}
+                  >
+                    {userData.status === 1 ? "Active" : "Pending"}
+                  </TableCell>
+                </TableRow>
               </TableBody>
             </Table>
           </CardContent>
@@ -390,6 +400,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                         variant="contained"
                         onClick={handleOpen}
                         startIcon={<AddIcon />}
+                        disabled={userData.status === 2}
                       >
                         Assign Applications
                       </PrimaryButton>
@@ -512,26 +523,26 @@ const UserView = ({ params }: { params: IUserView }) => {
                           <p>
                             Are you sure you want to remove this application?
                           </p>
-                            <SecondaryButton
-                              variant="contained"
-                              color="primary"
-                              style={{ margin: "15px 15px 0 0" }}
-                              startIcon={<CloseIcon />}
-                              onClick={() => setConfirmationOpen(false)}
-                            >
-                              Cancel
-                            </SecondaryButton>
-                            <PrimaryButton
-                              variant="contained"
-                              color="primary"
-                              style={{ margin: "15px 15px 0 0" }}
-                              startIcon={<CheckIcon />}
-                              onClick={() => {
-                                handleCancel(id, application.id);
-                              }}
-                            >
-                              Confirm
-                            </PrimaryButton>
+                          <SecondaryButton
+                            variant="contained"
+                            color="primary"
+                            style={{ margin: "15px 15px 0 0" }}
+                            startIcon={<CloseIcon />}
+                            onClick={() => setConfirmationOpen(false)}
+                          >
+                            Cancel
+                          </SecondaryButton>
+                          <PrimaryButton
+                            variant="contained"
+                            color="primary"
+                            style={{ margin: "15px 15px 0 0" }}
+                            startIcon={<CheckIcon />}
+                            onClick={() => {
+                              handleCancel(id, application.id);
+                            }}
+                          >
+                            Confirm
+                          </PrimaryButton>
                         </div>
                       </Box>
                     </Modal>

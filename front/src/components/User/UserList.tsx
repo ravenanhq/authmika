@@ -453,7 +453,6 @@ const UserList = () => {
           onClose={handleEditModalClose}
           rowData={selectedRow}
           onEdit={handleEditSave}
-          // uniqueValidation={uniqueAlert}
           uniqueEmail={invalidEmail}
         />
 
@@ -468,7 +467,6 @@ const UserList = () => {
           open={isAddUserModalOpen}
           onClose={handleCloseAddUserModal}
           onAddUser={handleAddUser}
-          // uniqueValidation={uniqueAlert}
           uniqueEmail={invalidEmail}
         />
       </Card>

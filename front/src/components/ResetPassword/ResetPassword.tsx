@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { ApiResponseDto } from "@/models/users.dto";
 import { UserApi } from "@/services/api/UserApi";
 import { useSearchParams } from "next/navigation";
+import ResetTvIcon from '@mui/icons-material/ResetTv';
 
 interface IResetPasswordProps {
   password?: string | undefined;
@@ -250,6 +251,7 @@ const ResetPassword = () => {
               fullWidth
               sx={{ mt: 2, mb: 1 }}
               variant="contained"
+              startIcon={<ResetTvIcon/>}
               onClick={() => {
                 setError("");
               }}

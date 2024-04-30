@@ -38,7 +38,6 @@ interface EditModalProps {
   onClose: () => void;
   rowData: RowData | null;
   onEdit: (editedData: RowData) => void;
-  // uniqueValidation: string;
   uniqueEmail: string;
 }
 

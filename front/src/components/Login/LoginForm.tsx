@@ -23,6 +23,7 @@ import * as dotenv from "dotenv";
 import { ApplicationApi } from "@/services/api/ApplicationApi";
 import { Session } from "next-auth";
 import EmailIcon from "@mui/icons-material/Email";
+import LoginIcon from '@mui/icons-material/Login';
 
 dotenv.config();
 
@@ -314,6 +315,7 @@ const Login = () => {
                     variant="contained"
                     sx={{ mt: 2, mb: 1 }}
                     size="medium"
+                    startIcon={<LoginIcon/>}
                     onClick={() => {
                       setError("");
                     }}

@@ -33,7 +33,7 @@ const Twofactor = () => {
       try {
         const session = await getSession();
         const user = session?.user;
-        if (user && user.id ) {
+        if (user && user.id) {
           setId(user.id);
           setUserData({
             id: user.id,
@@ -45,7 +45,6 @@ const Twofactor = () => {
             otp: user.otp,
           });
         }
-        console.log("ll",session?.user.firstName);
       } catch (error) {
         console.error("Error fetching user details:", error);
       }
@@ -84,12 +83,18 @@ const Twofactor = () => {
     }
   };
 
-  const handleResendOTP = async (id:number, userData:any) => {
+  const handleResendOTP = async (id: number, userData: any) => {
     const { email, firstName, lastName, url } = userData;
     try {
-      const result = await UserApi.resendOtp({ id, email, firstName, lastName, url });
+      const result = await UserApi.resendOtp({
+        id,
+        email,
+        firstName,
+        lastName,
+        url,
+      });
     } catch (error) {
-      console.error('Error while resending OTP:', error);
+      console.error("Error while resending OTP:", error);
     }
   };
 
@@ -146,15 +151,19 @@ const Twofactor = () => {
         />
         {tokenAlert && <p style={{ color: "#d10007" }}>{tokenAlert}</p>}
         <Typography component="p" variant="h5" align="center">
-          <Link href="/two-factor" variant="body2"  onClick={() => handleResendOTP(id,userData)}>
+          <Link
+            href="/two-factor"
+            variant="body2"
+            onClick={() => handleResendOTP(id, userData)}
+          >
             {"Resend OTP"}
           </Link>
         </Typography>
         <Typography component="p" variant="h5" align="center">
-          <Link href="/login"  variant="body2">
-          {"Return to Login"}
+          <Link href="/login" variant="body2">
+            {"Return to Login"}
           </Link>
-          </Typography>
+        </Typography>
         <Grid
           container
           justifyContent="flex-end"

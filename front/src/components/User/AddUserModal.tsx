@@ -26,7 +26,6 @@ interface AddUserModalProps {
   open: boolean;
   onClose: () => void;
   onAddUser: (application: any) => void;
-  // uniqueValidation: string;
   uniqueEmail: string;
 }
 
@@ -34,7 +33,6 @@ export default function AddUserModal({
   open,
   onClose,
   onAddUser,
-  // uniqueValidation,
   uniqueEmail,
 }: AddUserModalProps) {
   const [firstName, setFirstName] = useState("");
@@ -47,10 +45,6 @@ export default function AddUserModal({
   useEffect(() => {
     setErrors((prevErrors) => ({ ...prevErrors, email: uniqueEmail }));
   }, [uniqueEmail]);
-
-  // useEffect(() => {
-  //   setErrors((prevErrors) => ({ ...prevErrors, userName: uniqueValidation }));
-  // }, [uniqueValidation]);
 
   useEffect(() => {
     if (!open) {

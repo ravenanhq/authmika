@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import SendIcon from '@mui/icons-material/Send';
 
 interface IForgotPasswordProps {
   email?: string;
@@ -132,6 +133,7 @@ const ForgotPassword = () => {
                 fullWidth
                 sx={{ mt: 2, mb: 1 }}
                 variant="contained"
+                startIcon={<SendIcon/>}
                 onClick={() => {
                   setError("");
                 }}
