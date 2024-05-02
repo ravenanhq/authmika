@@ -274,6 +274,27 @@ export class UserApi {
     }
   }
 
+  static async checkPassword(data: any) {
+    const res = await axios.post(
+      `${config.service}/users/check-password`,
+      data
+    );
+    return res.data;
+  }
+
+  static async sentResendLinkToUser(data: any): Promise<any> {
+    try {
+      const res = await axios.post(
+        `${config.service}/users/sent-resend-link`,
+        data
+      );
+
+      return res.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   static async setClientDetails(data: IClientData): Promise<ApiResponseDto> {
     const res = await axios.post(`${config.service}/auth-clients/create`, data);
     return res.data;

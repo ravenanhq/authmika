@@ -204,6 +204,44 @@ export class UsersController {
     }
   }
 
+  @Post('sent-resend-link')
+  @UsePipes(new ValidationPipe())
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe())
+  async sentResendLinkToUser(
+    @Body('email') email: string,
+    @Body('firstName') firstName: string,
+    @Body('lastName') lastName: string,
+  ): Promise<{
+    message: string;
+    statusCode: number;
+  }> {
+    return this.userService.sentResendLinkToUser(email, firstName, lastName);
+  }
+
+  @Post('check-password')
+  async checkPassword(
+    @Body('email') email: string,
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ): Promise<{ message: string; error?: string }> {
+    try {
+      const result = await this.userService.checkPassword(
+        email,
+        resetPasswordDto,
+      );
+      return result;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return {
+          message: 'Failed to verify password',
+          error: error.message || 'An error occurred while verifying password',
+        };
+      } else {
+        throw error;
+      }
+    }
+  }
+
   @Delete(':id')
   async remove(
     @Param('id') id: number,

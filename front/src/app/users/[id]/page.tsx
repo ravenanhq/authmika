@@ -8,13 +8,16 @@ import {
   Card,
   CardContent,
   Checkbox,
+  Dialog,
   DialogActions,
+  DialogContent,
   DialogTitle,
   Divider,
   FormControlLabel,
   FormGroup,
   Grid,
   IconButton,
+  InputAdornment,
   Paper,
   Table,
   TableBody,
@@ -36,6 +39,10 @@ import { Container } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import SaveIcon from "@mui/icons-material/Save";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useForm } from "react-hook-form";
+import HowToRegIcon from "@mui/icons-material/HowToReg";
+import LocalPostOfficeIcon from "@mui/icons-material/LocalPostOffice";
 
 export interface RowData {
   name: string;
@@ -76,6 +83,15 @@ interface UserData {
   email: string;
   role: string;
   status: number;
+  id: number | undefined;
+}
+
+interface ICreatePasswordProps {
+  password?: string | undefined;
+  confirmPassword?: string | undefined;
+  showPassword: boolean;
+  showConfirmPassword: boolean;
+  id?: number;
 }
 
 const UserView = ({ params }: { params: IUserView }) => {
@@ -94,6 +110,22 @@ const UserView = ({ params }: { params: IUserView }) => {
   >([]);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [openModal, setOpenModal] = React.useState(false);
+  const [isVisible, setIsVisible] = useState<ICreatePasswordProps>({
+    showPassword: false,
+    showConfirmPassword: false,
+  });
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [password, setPassword] = useState<string>("");
+
+  const {
+    register,
+    watch,
+    clearErrors,
+    formState: { errors },
+    handleSubmit,
+    setValue,
+  } = useForm<ICreatePasswordProps>();
 
   useEffect(() => {
     getApplication();
@@ -130,12 +162,20 @@ const UserView = ({ params }: { params: IUserView }) => {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const application = localStorage.getItem("user-data");
-      if (application) {
-        setUserData(JSON.parse(application));
+      const user = localStorage.getItem("user-data");
+      if (user) {
+        setUserData(JSON.parse(user));
       }
     }
   }, []);
+
+  const handlePasswordChange = (e: string) => {
+    setValue("password", e);
+  };
+
+  const handleConfirmPasswordChange = (e: string) => {
+    setValue("confirmPassword", e);
+  };
 
   const getApplicationsByUserId = async (id: number | undefined) => {
     try {
@@ -199,12 +239,14 @@ const UserView = ({ params }: { params: IUserView }) => {
       })
     : [];
 
-  const handleSubmit = async (selectedCheckboxes: ICreateListProps[]) => {
-    await onSubmit(selectedCheckboxes);
+  const handleSubmitModal = async (selectedCheckboxes: ICreateListProps[]) => {
+    await onSubmitModal(selectedCheckboxes);
     setOpen(false);
   };
 
-  const onSubmit = async (formData: ICreateListProps | ICreateListProps[]) => {
+  const onSubmitModal = async (
+    formData: ICreateListProps | ICreateListProps[]
+  ) => {
     const formDataArray = Array.isArray(formData) ? formData : [formData];
     const applicationIds: string[] = formDataArray.map((formDataItem) => {
       return formDataItem.id.toString();
@@ -260,6 +302,70 @@ const UserView = ({ params }: { params: IUserView }) => {
     window.location.href = "/users";
   };
 
+  const resendLink = async () => {
+    if (userData !== null) {
+      const email = userData.email;
+      const id = userData.id;
+      const data = {
+        email: email,
+        id: id,
+      };
+      try {
+        const res = await UserApi.sentResendLinkToUser(data);
+        return res;
+      } catch (error) {
+        console.error("Error submitting data:", error);
+      }
+    } else {
+      console.error("Error: userData is null");
+    }
+  };
+
+  const handlePasswordVisibility = (field: keyof ICreatePasswordProps) => {
+    setIsVisible((prevIsVisible) => ({
+      ...prevIsVisible,
+      [field]: !prevIsVisible[field],
+    }));
+  };
+
+  const handleOpenModal = () => {
+    setOpenModal(true);
+  };
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setValue("password", "");
+    setValue("confirmPassword", "");
+    clearErrors("password");
+    clearErrors("confirmPassword");
+  };
+
+  const onSubmit = async () => {
+    const formData = watch();
+    if (userData !== null) {
+      const email = userData.email;
+      const id = userData.id;
+      const password = formData.password;
+      const confirmPassword = formData.confirmPassword;
+      const data = {
+        email: email,
+        id: id,
+        password: password!,
+        confirmPassword: confirmPassword!,
+      };
+      try {
+        const res = await UserApi.checkPassword(data);
+        handleCloseModal();
+        return res;
+      } catch (error) {
+        console.error("Error submitting data:", error);
+      }
+      setPassword("");
+      setConfirmPassword("");
+    } else {
+      console.error("Error: userData is null");
+    }
+  };
+
   const PrimaryButton = styled(Button)(() => ({
     textTransform: "none",
     paddingLeft: "10px",
@@ -302,150 +408,333 @@ const UserView = ({ params }: { params: IUserView }) => {
 
   return (
     <Container maxWidth="xl">
-      <Box sx={{ p: 2 }}>
-        <Typography
-          variant="h5"
-          component="h2"
-          sx={{ marginBottom: 1, marginTop: 2 }}
-        >
-          User Details
-        </Typography>
-        <Divider sx={{ marginBottom: 1, flexGrow: 1 }} color="#265073" />
-        <Card
-          sx={{
-            width: "60%",
-            margin: "auto",
-            mt: "30px",
-            [theme.breakpoints.down("md")]: {
-              width: "100%",
-            },
-          }}
-        >
-          <CardContent>
-            <Table>
-              <TableBody>
-                <TableRow>
-                  <TableCell>
-                    <strong>First Name:</strong>
-                  </TableCell>
-                  <TableCell
-                    style={{ whiteSpace: "unset", wordBreak: "break-all" }}
-                  >
-                    {userData.firstName}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <strong>Last Name:</strong>
-                  </TableCell>
-                  <TableCell
-                    style={{ whiteSpace: "unset", wordBreak: "break-all" }}
-                  >
-                    {userData.lastName}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <strong>Email:</strong>
-                  </TableCell>
-                  <TableCell
-                    style={{ whiteSpace: "unset", wordBreak: "break-all" }}
-                  >
-                    {userData.email}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <strong>Role:</strong>
-                  </TableCell>
-                  <TableCell
-                    style={{ whiteSpace: "unset", wordBreak: "break-all" }}
-                  >
-                    {userData.role}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <strong>Status:</strong>
-                  </TableCell>
-                  <TableCell
-                    style={{ whiteSpace: "unset", wordBreak: "break-all" }}
-                  >
-                    {userData.status === 1 ? "Active" : "Pending"}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-        <Typography
-          variant="h5"
-          component="h2"
-          sx={{ marginBottom: 1, marginTop: 7 }}
-        >
-          Assigned Applications
-        </Typography>
-        <Divider sx={{ marginBottom: 1, flexGrow: 2 }} color="#265073" />
-        <TableContainer
-          component={Paper}
-          sx={{ width: "100%", maxHeight: 400, overflow: "auto" }}
-        >
-          <Table stickyHeader style={{ maxWidth: "100%" }}>
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} sm={6}>
-                      <PrimaryButton
-                        variant="contained"
-                        onClick={handleOpen}
-                        startIcon={<AddIcon />}
-                        disabled={userData.status === 2}
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <Box sx={{ p: 2 }}>
+            <Typography
+              variant="h5"
+              component="h2"
+              sx={{ marginBottom: 1, marginTop: 2 }}
+            >
+              User Details
+            </Typography>
+            <Divider sx={{ marginBottom: 1, flexGrow: 1 }} color="#265073" />
+            <PrimaryButton
+              variant="contained"
+              color="primary"
+              style={{ margin: "17px 15px 0 0" }}
+              onClick={handleOpenModal}
+              startIcon={<HowToRegIcon />}
+            >
+              Set Password & Activate
+            </PrimaryButton>
+            <Dialog open={openModal} onClose={handleClose}>
+              <DialogTitle
+                sx={{
+                  backgroundColor: "#265073",
+                  color: "#fff",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "100%",
+                }}
+              >
+                Create Password
+                <IconButton
+                  onClick={handleCloseModal}
+                  sx={{
+                    backgroundColor: "#FF9843",
+                    color: "#fff",
+                    ":hover": {
+                      color: "#fff",
+                      backgroundColor: "#FE7A36",
+                    },
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </DialogTitle>
+              <Divider color="#265073"></Divider>
+              <DialogContent>
+                <Box component="form" noValidate sx={{ mt: 1 }}>
+                  <TextField
+                    label="Password"
+                    required
+                    fullWidth
+                    value={isVisible.password}
+                    type={isVisible.showPassword ? "text" : "password"}
+                    {...register("password", {
+                      required: "Password is required.",
+                      pattern: {
+                        value:
+                          /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~`!@#$%^&*()-_+={}[\]|\\:;"'<>,.?/]).{8,}$/,
+                        message:
+                          "Must contain: 8 or more characters, 1 uppercase, 1 lowercase, 1 number, 1 special character.",
+                      },
+                    })}
+                    onChange={(e) => {
+                      handlePasswordChange(e.target.value);
+                    }}
+                    margin="normal"
+                    variant="outlined"
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() =>
+                              handlePasswordVisibility("showPassword")
+                            }
+                            onMouseDown={(e) => e.preventDefault()}
+                            edge="end"
+                          >
+                            {isVisible.showPassword ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                    error={Boolean(errors.password)}
+                    helperText={
+                      errors.password
+                        ? errors.password.message?.toString()
+                        : null
+                    }
+                    size="small"
+                  />
+                  <TextField
+                    label="Confirm Password"
+                    fullWidth
+                    {...register("confirmPassword", {
+                      required: "Confirm password is required.",
+                      validate: (val: string | undefined) => {
+                        if (watch("password") != val) {
+                          return "Confirm password does not match";
+                        }
+                      },
+                    })}
+                    value={isVisible.confirmPassword}
+                    type={isVisible.showConfirmPassword ? "text" : "password"}
+                    onChange={(e) => {
+                      clearErrors("confirmPassword");
+                      handleConfirmPasswordChange(e.target.value);
+                    }}
+                    margin="normal"
+                    variant="outlined"
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() =>
+                              handlePasswordVisibility("showConfirmPassword")
+                            }
+                            onMouseDown={(e) => e.preventDefault()}
+                            edge="end"
+                          >
+                            {isVisible.showConfirmPassword ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                    error={Boolean(errors.confirmPassword)}
+                    helperText={
+                      errors.confirmPassword
+                        ? errors.confirmPassword.message?.toString()
+                        : null
+                    }
+                    size="small"
+                  />
+                </Box>
+              </DialogContent>
+              <Divider
+                color="#265073"
+                sx={{ marginBottom: "2%", marginTop: "2%" }}
+              ></Divider>
+              <DialogActions style={{ margin: "0 16px 10px 0" }}>
+                <PrimaryButton
+                  type="submit"
+                  variant="contained"
+                  startIcon={<SaveIcon />}
+                  onClick={handleSubmit(onSubmit)}
+                >
+                  Save
+                </PrimaryButton>
+              </DialogActions>
+            </Dialog>
+            <PrimaryButton
+              variant="contained"
+              color="primary"
+              style={{ margin: "15px 15px 0 0" }}
+              onClick={() => resendLink()}
+              startIcon={<LocalPostOfficeIcon />}
+            >
+              Resend Activation Email
+            </PrimaryButton>
+            <Card
+              sx={{
+                width: "100%",
+                height: "120%",
+                margin: "auto",
+                mt: "30px",
+                [theme.breakpoints.down("md")]: {
+                  width: "100%",
+                },
+              }}
+            >
+              <CardContent>
+                <Table
+                  stickyHeader
+                  style={{ maxWidth: "100%", height: "120%" }}
+                >
+                  <TableBody sx={{ height: "100%" }}>
+                    <TableRow>
+                      <TableCell>
+                        <strong>First Name:</strong>
+                      </TableCell>
+                      <TableCell
+                        style={{ whiteSpace: "unset", wordBreak: "break-all" }}
                       >
-                        Assign Applications
-                      </PrimaryButton>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      {applications.length > 0 && (
-                        <Box
-                          display="flex"
-                          justifyContent="flex-end"
-                          width="100%"
-                        >
-                          <TextField
-                            InputProps={{
-                              startAdornment: (
-                                <SearchIcon
-                                  sx={{
-                                    color: "grey",
-                                  }}
-                                />
-                              ),
-                            }}
-                            placeholder="Search applications"
-                            variant="outlined"
-                            value={searchTerm}
-                            onChange={handleSearchChange}
-                            size="small"
-                          />
-                        </Box>
+                        {userData.firstName}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <strong>Last Name:</strong>
+                      </TableCell>
+                      <TableCell
+                        style={{ whiteSpace: "unset", wordBreak: "break-all" }}
+                      >
+                        {userData.lastName}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <strong>Email:</strong>
+                      </TableCell>
+                      <TableCell
+                        style={{ whiteSpace: "unset", wordBreak: "break-all" }}
+                      >
+                        {userData.email}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <strong>Role:</strong>
+                      </TableCell>
+                      <TableCell
+                        style={{ whiteSpace: "unset", wordBreak: "break-all" }}
+                      >
+                        {userData.role}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
+                        <strong>Status:</strong>
+                      </TableCell>
+                      <TableCell
+                        style={{ whiteSpace: "unset", wordBreak: "break-all" }}
+                      >
+                        {userData.status === 1 ? "Active" : "Pending"}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </Box>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Box sx={{ p: 2, height: "85%", position: "sticky" }}>
+            <Typography
+              variant="h5"
+              component="h2"
+              sx={{ marginBottom: 1, marginTop: 2 }}
+            >
+              Assigned Applications
+            </Typography>
+            <Divider sx={{ marginBottom: 4, flexGrow: 2 }} color="#265073" />
+            <Card
+              sx={{
+                width: "100%",
+                height: "95%",
+                margin: "auto",
+                mt: "30px",
+                position: "sticky",
+                [theme.breakpoints.down("md")]: {
+                  width: "100%",
+                },
+              }}
+            >
+              <CardContent>
+                <TableContainer
+                  component={Paper}
+                  sx={{ width: "100%", maxHeight: 300, overflow: "auto" }}
+                >
+                  <Table stickyHeader style={{ maxWidth: "100%" }}>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>
+                          <Grid container spacing={2} alignItems="center">
+                            <Grid item xs={12} sm={6}>
+                              <PrimaryButton
+                                variant="contained"
+                                onClick={handleOpen}
+                                startIcon={<AddIcon />}
+                                disabled={userData.status === 2}
+                              >
+                                Assign Applications
+                              </PrimaryButton>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                              {applications.length > 0 && (
+                                <Box
+                                  display="flex"
+                                  justifyContent="flex-end"
+                                  width="100%"
+                                >
+                                  <TextField
+                                    InputProps={{
+                                      startAdornment: (
+                                        <SearchIcon
+                                          sx={{
+                                            color: "grey",
+                                          }}
+                                        />
+                                      ),
+                                    }}
+                                    placeholder="Search applications"
+                                    variant="outlined"
+                                    value={searchTerm}
+                                    onChange={handleSearchChange}
+                                    size="small"
+                                  />
+                                </Box>
+                              )}
+                            </Grid>
+                          </Grid>
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {filteredApplications.length < 1 && (
+                        <TableRow>
+                          <TableCell>
+                            <Typography>No results found</Typography>
+                          </TableCell>
+                        </TableRow>
                       )}
-                    </Grid>
-                  </Grid>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredApplications.length < 1 && (
-                <TableRow>
-                  <TableCell>
-                    <Typography>No results found</Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-              {filteredApplications.map((application) => (
-                <TableRow key={application.id} style={{ display: "flex" }}>
-                  {/* <TableCell style={{ width: "6%" }}>
+                      {filteredApplications.map((application) => (
+                        <TableRow
+                          key={application.id}
+                          style={{ display: "flex" }}
+                        >
+                          {/* <TableCell style={{ width: "6%" }}>
                     {application.logoPath !== undefined &&
                     application.logoPath !== "" &&
                     application.logoPath !== null ? (
@@ -464,104 +753,110 @@ const UserView = ({ params }: { params: IUserView }) => {
                       />
                     )}
                   </TableCell> */}
-                  <TableCell style={{ width: "100%" }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        padding: "10px",
-                      }}
-                    >
-                      <Typography
-                        style={{
-                          marginRight: "auto",
-                          display: "inline",
-                          textAlign: "left",
-                        }}
-                      >
-                        {application.name}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell
-                    style={{
-                      width: "10%",
-                      display: "flex",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <IconButton
-                      onClick={handleConfirmOpen}
-                      sx={{
-                        fontSize: "4px",
-                        color: "#FF9843",
-                        filled: "none",
-                        padding: 0,
-                        display: "inline",
-                        width: "100",
-                      }}
-                    >
-                      <CloseIcon />
-                    </IconButton>
-                    <Modal
-                      open={confirmationOpen}
-                      onClose={() => setConfirmationOpen(false)}
-                    >
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          top: "50%",
-                          left: "50%",
-                          transform: "translate(-50%, -50%)",
-                          width: isMobile ? "80%" : "auto",
-                          bgcolor: "background.paper",
-                          boxShadow: 24,
-                          p: 4,
-                        }}
-                      >
-                        <div>
-                          <h2>Confirmation</h2>
-                          <p>
-                            Are you sure you want to remove this application?
-                          </p>
-                          <SecondaryButton
-                            variant="contained"
-                            color="primary"
-                            style={{ margin: "15px 15px 0 0" }}
-                            startIcon={<CloseIcon />}
-                            onClick={() => setConfirmationOpen(false)}
-                          >
-                            Cancel
-                          </SecondaryButton>
-                          <PrimaryButton
-                            variant="contained"
-                            color="primary"
-                            style={{ margin: "15px 15px 0 0" }}
-                            startIcon={<CheckIcon />}
-                            onClick={() => {
-                              handleCancel(id, application.id);
+                          <TableCell style={{ width: "100%", height: "50%" }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                padding: "10px",
+                                position: "sticky",
+                              }}
+                            >
+                              <Typography
+                                style={{
+                                  marginRight: "auto",
+                                  display: "inline",
+                                  textAlign: "left",
+                                }}
+                              >
+                                {application.name}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell
+                            style={{
+                              width: "10%",
+                              display: "flex",
+                              justifyContent: "flex-end",
                             }}
                           >
-                            Confirm
-                          </PrimaryButton>
-                        </div>
-                      </Box>
-                    </Modal>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                            <IconButton
+                              onClick={handleConfirmOpen}
+                              sx={{
+                                fontSize: "4px",
+                                color: "#FF9843",
+                                filled: "none",
+                                padding: 0,
+                                display: "inline",
+                                width: "100",
+                              }}
+                            >
+                              <CloseIcon />
+                            </IconButton>
+                            <Modal
+                              open={confirmationOpen}
+                              onClose={() => setConfirmationOpen(false)}
+                            >
+                              <Box
+                                sx={{
+                                  position: "absolute",
+                                  top: "50%",
+                                  left: "50%",
+                                  transform: "translate(-50%, -50%)",
+                                  width: isMobile ? "80%" : "auto",
+                                  bgcolor: "background.paper",
+                                  boxShadow: 24,
+                                  p: 4,
+                                }}
+                              >
+                                <div>
+                                  <h2>Confirmation</h2>
+                                  <p>
+                                    Are you sure you want to remove this
+                                    application?
+                                  </p>
+                                  <SecondaryButton
+                                    variant="contained"
+                                    color="primary"
+                                    style={{ margin: "15px 15px 0 0" }}
+                                    startIcon={<CloseIcon />}
+                                    onClick={() => setConfirmationOpen(false)}
+                                  >
+                                    Cancel
+                                  </SecondaryButton>
+                                  <PrimaryButton
+                                    variant="contained"
+                                    color="primary"
+                                    style={{ margin: "15px 15px 0 0" }}
+                                    startIcon={<CheckIcon />}
+                                    onClick={() => {
+                                      handleCancel(id, application.id);
+                                    }}
+                                  >
+                                    Confirm
+                                  </PrimaryButton>
+                                </div>
+                              </Box>
+                            </Modal>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
+          </Box>
+        </Grid>
+      </Grid>
+      <Box display="flex" justifyContent="flex-end" sx={{ paddingBottom: 2 }}>
+        <BackButton
+          variant="contained"
+          onClick={handleBackButtonClick}
+          startIcon={<ArrowBackIcon />}
+        >
+          Back
+        </BackButton>
 
-        <Box display="flex" justifyContent="flex-end">
-          <BackButton
-            variant="contained"
-            onClick={handleBackButtonClick}
-            startIcon={<ArrowBackIcon />}
-          >
-            Back
-          </BackButton>
-        </Box>
         {options && options.length > 0 && (
           <Modal
             open={open && options.length > 0}
@@ -678,7 +973,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                       <PrimaryButton
                         startIcon={<SaveIcon />}
                         type="submit"
-                        onClick={() => handleSubmit(selectedCheckboxes)}
+                        onClick={() => handleSubmitModal(selectedCheckboxes)}
                       >
                         Save
                       </PrimaryButton>
