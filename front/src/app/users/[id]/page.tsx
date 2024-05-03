@@ -3,6 +3,7 @@ import Application from "@/app/applications/page";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { UserApi } from "@/services/api/UserApi";
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -117,6 +118,8 @@ const UserView = ({ params }: { params: IUserView }) => {
   });
   const [confirmPassword, setConfirmPassword] = useState("");
   const [password, setPassword] = useState<string>("");
+  const [savepasswordAlert, setSavePasswordAlert] = useState("");
+  const [resendlinkAlert, setResendLinkAlert] = useState("");
 
   const {
     register,
@@ -311,7 +314,10 @@ const UserView = ({ params }: { params: IUserView }) => {
         id: id,
       };
       try {
-        const res = await UserApi.sentResendLinkToUser(data);
+        const res = await UserApi.sendResendLinkToUser(data);
+        setResendLinkAlert("");
+        setSavePasswordAlert("");
+        setResendLinkAlert(res.message);
         return res;
       } catch (error) {
         console.error("Error submitting data:", error);
@@ -353,8 +359,10 @@ const UserView = ({ params }: { params: IUserView }) => {
         confirmPassword: confirmPassword!,
       };
       try {
-        const res = await UserApi.checkPassword(data);
+        const res = await UserApi.savePassword(data);
+        setSavePasswordAlert("");
         handleCloseModal();
+        setSavePasswordAlert(res.message);
         return res;
       } catch (error) {
         console.error("Error submitting data:", error);
@@ -408,6 +416,42 @@ const UserView = ({ params }: { params: IUserView }) => {
 
   return (
     <Container maxWidth="xl">
+      {savepasswordAlert && (
+        <Alert
+          sx={{
+            width: "60%",
+            margin: "0px",
+            mt: "30px",
+            [theme.breakpoints.down("md")]: {
+              width: "100%",
+            },
+          }}
+          severity="success"
+          onClose={() => {
+            setSavePasswordAlert("");
+          }}
+        >
+          {savepasswordAlert}
+        </Alert>
+      )}
+      {resendlinkAlert && (
+        <Alert
+          sx={{
+            width: "60%",
+            margin: "0px",
+            mt: "30px",
+            [theme.breakpoints.down("md")]: {
+              width: "100%",
+            },
+          }}
+          severity="success"
+          onClose={() => {
+            setResendLinkAlert("");
+          }}
+        >
+          {resendlinkAlert}
+        </Alert>
+      )}
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Box sx={{ p: 2 }}>
@@ -425,6 +469,7 @@ const UserView = ({ params }: { params: IUserView }) => {
               style={{ margin: "17px 15px 0 0" }}
               onClick={handleOpenModal}
               startIcon={<HowToRegIcon />}
+              disabled={userData.status === 1}
             >
               Set Password & Activate
             </PrimaryButton>
@@ -573,6 +618,7 @@ const UserView = ({ params }: { params: IUserView }) => {
               style={{ margin: "15px 15px 0 0" }}
               onClick={() => resendLink()}
               startIcon={<LocalPostOfficeIcon />}
+              disabled={userData.status === 1}
             >
               Resend Activation Email
             </PrimaryButton>

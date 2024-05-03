@@ -204,11 +204,11 @@ export class UsersController {
     }
   }
 
-  @Post('sent-resend-link')
+  @Post('send-resend-link')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe())
-  async sentResendLinkToUser(
+  async sendResendLinkToUser(
     @Body('email') email: string,
     @Body('firstName') firstName: string,
     @Body('lastName') lastName: string,
@@ -216,16 +216,16 @@ export class UsersController {
     message: string;
     statusCode: number;
   }> {
-    return this.userService.sentResendLinkToUser(email, firstName, lastName);
+    return this.userService.sendResendLinkToUser(email, firstName, lastName);
   }
 
-  @Post('check-password')
-  async checkPassword(
+  @Post('save-password')
+  async savePassword(
     @Body('email') email: string,
     @Body() resetPasswordDto: ResetPasswordDto,
   ): Promise<{ message: string; error?: string }> {
     try {
-      const result = await this.userService.checkPassword(
+      const result = await this.userService.savePassword(
         email,
         resetPasswordDto,
       );

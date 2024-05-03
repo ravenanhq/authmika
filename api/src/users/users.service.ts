@@ -363,7 +363,7 @@ export class UsersService {
     }
   }
 
-  async checkPassword(
+  async savePassword(
     email: string,
     queryParams: ResetPasswordDto,
   ): Promise<{ message: string; statusCode: number }> {
@@ -409,7 +409,7 @@ export class UsersService {
       }
     }
   }
-  async sentResendLinkToUser(
+  async sendResendLinkToUser(
     email: string,
     firstName: string,
     lastName: string,

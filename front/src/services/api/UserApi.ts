@@ -274,18 +274,18 @@ export class UserApi {
     }
   }
 
-  static async checkPassword(data: any) {
+  static async savePassword(data: any) {
     const res = await axios.post(
-      `${config.service}/users/check-password`,
+      `${config.service}/users/save-password`,
       data
     );
     return res.data;
   }
 
-  static async sentResendLinkToUser(data: any): Promise<any> {
+  static async sendResendLinkToUser(data: any): Promise<any> {
     try {
       const res = await axios.post(
-        `${config.service}/users/sent-resend-link`,
+        `${config.service}/users/send-resend-link`,
         data
       );
 
