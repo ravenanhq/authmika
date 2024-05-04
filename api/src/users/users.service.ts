@@ -363,6 +363,108 @@ export class UsersService {
     }
   }
 
+  async savePassword(
+    email: string,
+    queryParams: ResetPasswordDto,
+  ): Promise<{ message: string; statusCode: number }> {
+    const { password } = queryParams;
+    try {
+      const user = await this.userModel.findOne({
+        where: { email },
+      });
+
+      if (!user) {
+        throw new HttpException(
+          {
+            message: 'No account was found with the provided email.',
+            statusCode: HttpStatus.NOT_FOUND,
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      }
+      const hashedPassword = await hash(password, 10);
+      const updatedUser = await this.userModel.update(
+        { password: hashedPassword, status: 1 },
+        { where: { email } },
+      );
+      if (updatedUser[0] === 1) {
+        return {
+          message: 'Password updated successfully',
+          statusCode: HttpStatus.OK,
+        };
+      } else {
+        throw new HttpException('Error', HttpStatus.BAD_REQUEST);
+      }
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.CONFLICT,
+        };
+      } else {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
+    }
+  }
+  async sendResendLinkToUser(
+    email: string,
+    firstName: string,
+    lastName: string,
+  ): Promise<{ message: string; statusCode: number }> {
+    try {
+      const user = await this.userModel.findOne({ where: { email } });
+
+      if (user) {
+        const token = randomBytes(32).toString('hex');
+        const currentDate = new Date();
+        const expires = new Date(
+          currentDate.getTime() +
+            parseInt(process.env.PASSWORD_RESET_EXPIRATION_TIME, 10) * 60000,
+        );
+        const url = `${
+          process.env.BASE_URL
+        }/user-activation/?key=${token}&expires=${expires.getTime()}`;
+
+        const oldToken = await this.passwordResetTokensModel.findOne({
+          where: { email },
+        });
+        if (oldToken) {
+          await this.passwordResetTokensModel.update(
+            { token: token },
+            { where: { email } },
+          );
+        } else {
+          await this.passwordResetTokensModel.create({ email, token });
+        }
+        await this.mailservice.sendUserActivationEmail(
+          email,
+          url,
+          firstName,
+          lastName,
+        );
+      }
+      return {
+        message: 'User link sent successfully',
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.CONFLICT,
+        };
+      } else {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
+    }
+  }
+
   async show(
     id: number,
   ): Promise<{ data: object; message: string; statusCode: number }> {
