@@ -222,11 +222,13 @@ export class UsersController {
   @Post('save-password')
   async savePassword(
     @Body('email') email: string,
+    @Body('id') id: number,
     @Body() resetPasswordDto: ResetPasswordDto,
   ): Promise<{ message: string; error?: string }> {
     try {
       const result = await this.userService.savePassword(
         email,
+        id,
         resetPasswordDto,
       );
       return result;
