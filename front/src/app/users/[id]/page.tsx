@@ -349,7 +349,6 @@ const UserView = ({ params }: { params: IUserView }) => {
   const onSubmit = async () => {
     const formData = watch();
     if (userData !== null) {
-      const status = userData.status;
       const email = userData.email;
       const id = userData.id;
       const password = formData.password;
@@ -359,7 +358,6 @@ const UserView = ({ params }: { params: IUserView }) => {
         id: id,
         password: password!,
         confirmPassword: confirmPassword!,
-        status: status,
       };
       try {
         const res = await UserApi.savePassword(data);
