@@ -365,8 +365,9 @@ export class UsersService {
 
   async savePassword(
     email: string,
+    id: number,
     queryParams: ResetPasswordDto,
-  ): Promise<{ message: string; statusCode: number }> {
+  ): Promise<{ message: string; statusCode: number; user: object }> {
     const { password } = queryParams;
     try {
       const user = await this.userModel.findOne({
@@ -382,15 +383,20 @@ export class UsersService {
           HttpStatus.NOT_FOUND,
         );
       }
+
       const hashedPassword = await hash(password, 10);
       const updatedUser = await this.userModel.update(
         { password: hashedPassword, status: 1 },
         { where: { email } },
       );
+      const users = await this.userModel.findOne({
+        where: { id: id },
+      });
       if (updatedUser[0] === 1) {
         return {
           message: 'Password updated successfully',
           statusCode: HttpStatus.OK,
+          user: users,
         };
       } else {
         throw new HttpException('Error', HttpStatus.BAD_REQUEST);
@@ -399,11 +405,13 @@ export class UsersService {
       if (error instanceof HttpException) {
         return {
           message: error.message,
+          user: [],
           statusCode: HttpStatus.CONFLICT,
         };
       } else {
         return {
           message: error.message,
+          user: [],
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         };
       }

@@ -84,6 +84,7 @@ interface UserData {
   email: string;
   role: string;
   status: number;
+  mobile: number;
   id: number | undefined;
 }
 
@@ -360,6 +361,9 @@ const UserView = ({ params }: { params: IUserView }) => {
       };
       try {
         const res = await UserApi.savePassword(data);
+        if (res.user) {
+          userData.status = res.user.status;
+        }
         setSavePasswordAlert("");
         handleCloseModal();
         setSavePasswordAlert(res.message);
@@ -551,6 +555,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                   />
                   <TextField
                     label="Confirm Password"
+                    required
                     fullWidth
                     {...register("confirmPassword", {
                       required: "Confirm password is required.",
@@ -671,6 +676,16 @@ const UserView = ({ params }: { params: IUserView }) => {
                     </TableRow>
                     <TableRow>
                       <TableCell>
+                        <strong>Mobile:</strong>
+                      </TableCell>
+                      <TableCell
+                        style={{ whiteSpace: "unset", wordBreak: "break-all" }}
+                      >
+                        {userData.mobile}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
                         <strong>Role:</strong>
                       </TableCell>
                       <TableCell
@@ -696,7 +711,7 @@ const UserView = ({ params }: { params: IUserView }) => {
           </Box>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Box sx={{ p: 2, height: "85%", position: "sticky" }}>
+          <Box sx={{ p: 2, height: "88%", position: "sticky" }}>
             <Typography
               variant="h5"
               component="h2"
