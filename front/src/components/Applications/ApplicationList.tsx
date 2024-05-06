@@ -56,6 +56,7 @@ const ApplicationList = () => {
   const [alertShow, setAlertShow] = useState("");
   const [uniqueAlert, setUniqueAlert] = useState("");
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
+  const filteredRows = rows.filter((row) => row.id);
 
   useEffect(() => {
     restrictMenuAccess();
@@ -97,6 +98,7 @@ const ApplicationList = () => {
   const handleEditModalClose = () => {
     setEditModalOpen(false);
     setSelectedRow(null);
+    setUniqueAlert("");
   };
 
   const handleEditSave = (editedData: RowData) => {
@@ -252,7 +254,10 @@ const ApplicationList = () => {
           setUniqueAlert(response.message);
         } else if (response.statusCode == 200) {
           handleEditModalClose();
-          setRows(response.data);
+          const updatedRows = rows.map((row) =>
+            row.id === applicationId ? response.data : row
+          );
+          setRows(updatedRows);
           setAlertShow(response.message);
         }
       }
@@ -294,7 +299,9 @@ const ApplicationList = () => {
       const response = await ApplicationApi.getApplications();
       if (response) {
         const sortedRows = response.sort((a: RowData, b: RowData) => {
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
         });
         setRows(sortedRows);
         setLoading(false);
@@ -396,7 +403,7 @@ const ApplicationList = () => {
               </Grid>
             </Grid>
             <StyledDataGrid
-              rows={rows}
+              rows={filteredRows}
               columns={columns.filter(
                 (column) => column.field !== "created_at"
               )}

@@ -34,6 +34,7 @@ const InitialRowData = {
   logoPath: "",
   file: "",
   logo_path: "",
+  created_at: "",
 };
 
 interface EditModalProps {
