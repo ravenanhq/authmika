@@ -87,6 +87,7 @@ const UserList = () => {
       }
       return prevRowData;
     });
+    setInvalidEmail("");
     setEditModalOpen(true);
   };
 
@@ -104,6 +105,7 @@ const UserList = () => {
   const handleEditModalClose = () => {
     setEditModalOpen(false);
     setSelectedRow(null);
+    setInvalidEmail("");
   };
 
   const handleEditSave = async (editedData: RowData) => {
@@ -199,7 +201,7 @@ const UserList = () => {
       headerName: "Actions",
       headerClassName: "user-header",
       flex: 0.5,
-      minWidth: 150,
+      minWidth: 140,
       disableColumnMenu: true,
       sortable: false,
       renderCell: (params) => (
@@ -269,11 +271,7 @@ const UserList = () => {
       }
     } catch (error: any) {
       var response = error.response.data;
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.statusCode === 422
-      ) {
+      if (response.statusCode == 422 && response.message.email) {
         setInvalidEmail(response.message.email);
       }
       console.log(error);
@@ -287,22 +285,25 @@ const UserList = () => {
       if (response) {
         if (response.statusCode == 409) {
           setInvalidEmail(response.message);
-        } else if (response.statusCode == 200) {
+        } else if (response && response.statusCode === 200) {
           handleEditModalClose();
-          setRows(response.data);
+          const updatedRows = rows.map((row) => {
+            if (row.id === id) {
+              return { ...row, ...updatedData };
+            }
+            return row;
+          });
+          setRows(updatedRows);
           setAlertShow(response.message);
         }
       }
     } catch (error: any) {
       var response = error.response.data;
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.statusCode === 422
-      ) {
+      if (response.statusCode == 422 && response.message.email) {
         setInvalidEmail(response.message.email);
       }
-      console.error(error);
+
+      console.log(error);
     }
   };
 

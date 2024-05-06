@@ -511,8 +511,10 @@ export class UsersService {
         const existingUsername = await this.userModel.findOne({
           where: { email: email },
         });
-
-        if (existingUsername && existingUsername.id !== id) {
+        if (
+          existingUsername &&
+          existingUsername.id.toString() !== id.toString()
+        ) {
           throw new UnprocessableEntityException('Email already exists.');
         }
         existingUser.firstName = firstName;
@@ -667,8 +669,7 @@ export class UsersService {
       if (!passwordReset)
         throw new HttpException(
           {
-            message:
-              "Apologies, but we couldn't locate the verification link you provided. The verification link appears to be invalid.",
+            message: ' The verification link appears to be invalid.',
             statusCode: HttpStatus.NOT_FOUND,
           },
           HttpStatus.NOT_FOUND,

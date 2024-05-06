@@ -48,9 +48,18 @@ export default function AddUserModal({
 
   useEffect(() => {
     if (!open) {
-      setErrors({});
+      clearForm();
     }
   }, [open]);
+
+  const clearForm = () => {
+    setFirstName("");
+    setLastName("");
+    setEmail("");
+    setMobile("");
+    setRole("");
+    setErrors({});
+  };
 
   const validateForm = () => {
     let newErrors: Errors = {};
@@ -101,18 +110,12 @@ export default function AddUserModal({
         role: role,
       };
       onAddUser(newUser);
-      setErrors({});
     }
   };
 
   const handleClose = () => {
-    setFirstName("");
-    setLastName("");
-    setEmail("");
-    setMobile("");
-    setRole("");
+    clearForm();
     onClose();
-    setErrors({});
   };
 
   const PrimaryButton = styled(Button)(() => ({

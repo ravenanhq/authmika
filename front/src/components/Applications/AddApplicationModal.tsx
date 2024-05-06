@@ -47,8 +47,18 @@ export default function AddApplicationModal({
   }, [uniqueValidation]);
 
   useEffect(() => {
-    setErrors({});
+    if (!open) {
+      clearForm();
+    }
   }, [open]);
+
+  const clearForm = () => {
+    setName("");
+    setApplication("");
+    setBaseUrl("");
+    setCallBackUrl("");
+    setErrors({});
+  };
 
   const validateForm = () => {
     let newErrors: Errors = {};
@@ -97,20 +107,11 @@ export default function AddApplicationModal({
         file: file,
       };
       onAddApplication(newApplication);
-      setErrors({});
-      setName("");
-      setApplication("");
-      setBaseUrl("");
-      setCallBackUrl("");
     }
   };
 
   const handleClose = () => {
-    setErrors({});
-    setName("");
-    setApplication("");
-    setBaseUrl("");
-    setCallBackUrl("");
+    clearForm();
     onClose();
   };
 
