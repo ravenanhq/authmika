@@ -477,6 +477,16 @@ const UserView = ({ params }: { params: IUserView }) => {
             >
               Set Password & Activate
             </PrimaryButton>
+            <PrimaryButton
+              variant="contained"
+              color="primary"
+              style={{ margin: "15px 15px 0 0" }}
+              onClick={() => resendLink()}
+              startIcon={<LocalPostOfficeIcon />}
+              disabled={userData.status === 1}
+            >
+              Resend Activation Email
+            </PrimaryButton>
             <Dialog open={openModal} onClose={handleClose}>
               <DialogTitle
                 sx={{
@@ -617,16 +627,6 @@ const UserView = ({ params }: { params: IUserView }) => {
                 </PrimaryButton>
               </DialogActions>
             </Dialog>
-            <PrimaryButton
-              variant="contained"
-              color="primary"
-              style={{ margin: "15px 15px 0 0" }}
-              onClick={() => resendLink()}
-              startIcon={<LocalPostOfficeIcon />}
-              disabled={userData.status === 1}
-            >
-              Resend Activation Email
-            </PrimaryButton>
             <Card
               sx={{
                 width: "100%",

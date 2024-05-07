@@ -145,14 +145,14 @@ const UserList = () => {
   const columns: GridColDef[] = [
     {
       field: "firstName",
-      headerName: "First Name",
+      headerName: "First name",
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 140,
     },
     {
       field: "lastName",
-      headerName: "Last Name",
+      headerName: "Last name",
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 160,
@@ -310,10 +310,17 @@ const UserList = () => {
   const handleDeleteConfirm = async (selectedRow: any) => {
     if (selectedRow !== null) {
       try {
-        const response = await UserApi.deleteUser(selectedRow.id);
-        if (response && response.data) {
-          setRows(response.data);
-          setDeleteAlert({ severity: "error", message: response.message });
+        const currentRows = [...rows];
+        const userIndex = currentRows.findIndex(
+          (user) => user.id === selectedRow.id
+        );
+        if (userIndex !== -1) {
+          const response = await UserApi.deleteUser(selectedRow.id);
+          if (response && response.data) {
+            currentRows.splice(userIndex, 1);
+            setRows(currentRows);
+            setDeleteAlert({ severity: "error", message: response.message });
+          }
         }
         setDeleteModalOpen(false);
       } catch (error: any) {

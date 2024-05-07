@@ -250,38 +250,45 @@ const ApplicationList = () => {
       );
       setUniqueAlert("");
       if (response) {
-        if (response.statusCode == 409) {
+        if (response.statusCode === 409) {
           setUniqueAlert(response.message);
-        } else if (response.statusCode == 200) {
+        } else if (response.statusCode === 200) {
           handleEditModalClose();
           const updatedRows = rows.map((row) =>
-            row.id === applicationId ? response.data : row
+            row.id === applicationId ? { ...row, ...updatedData } : row
           );
           setRows(updatedRows);
           setAlertShow(response.message);
         }
       }
     } catch (error: any) {
+      console.error(error);
       var response = error.response.data;
-      if (response.statusCode == 422 && response.message.application) {
+      if (response.statusCode === 422 && response.message.application) {
         setUniqueAlert(response.message.application);
       }
-
-      console.log(error);
     }
   };
 
   const handleDeleteConfirm = async (selectedRow: any) => {
     if (selectedRow !== null) {
       try {
-        const response = await ApplicationApi.deleteApplication(selectedRow.id);
-
-        if (response && response.data) {
-          setRows(response.data);
-          setDeleteAlert({
-            severity: "error",
-            message: response.message,
-          });
+        const currentRows = [...rows];
+        const itemIndex = currentRows.findIndex(
+          (item) => item.id === selectedRow.id
+        );
+        if (itemIndex !== -1) {
+          const response = await ApplicationApi.deleteApplication(
+            selectedRow.id
+          );
+          if (response && response.data) {
+            currentRows.splice(itemIndex, 1);
+            setRows(currentRows);
+            setDeleteAlert({
+              severity: "error",
+              message: response.message,
+            });
+          }
         }
         setDeleteModalOpen(false);
       } catch (error: any) {
