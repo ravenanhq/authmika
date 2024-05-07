@@ -183,25 +183,28 @@ export default function EditUserModal({
       <Divider color="#265073"></Divider>
       <DialogContent>
       <TextField
-          label="First Name"
+          label="First name"
           name="firstName"
           value={editedData.firstName || ""}
           onChange={handleChange}
           required
           fullWidth
           margin="normal"
+          size="small"
           error={!!errors.firstName}
           helperText={errors.firstName && <span>{errors.firstName}</span>}
+          sx={{ marginBottom: 1.5 }}
         />
 
         <TextField
-          label="Last Name"
+          label="Last name"
           name="lastName"
           required
           value={editedData.lastName || ""}
           onChange={handleChange}
           fullWidth
           margin="normal"
+          size="small"
           error={!!errors.lastName}
           helperText={errors.lastName ? errors.lastName : " "}
         />

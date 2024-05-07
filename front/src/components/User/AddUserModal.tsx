@@ -65,11 +65,11 @@ export default function AddUserModal({
     let newErrors: Errors = {};
 
     if (!firstName.trim()) {
-      newErrors.firstName = "firstName is required";
+      newErrors.firstName = "First name is required";
     }
 
     if (!lastName.trim()) {
-      newErrors.lastName = "lastName is required";
+      newErrors.lastName = "Last name is required";
     }
 
     if (!email.trim()) {
@@ -172,7 +172,7 @@ export default function AddUserModal({
       <Divider color="#265073"></Divider>
       <DialogContent>
         <TextField
-          label="First Name"
+          label="First name"
           fullWidth
           margin="normal"
           required
@@ -183,7 +183,7 @@ export default function AddUserModal({
           size="small"
         />
         <TextField
-          label="Last Name"
+          label="Last name"
           fullWidth
           margin="normal"
           required

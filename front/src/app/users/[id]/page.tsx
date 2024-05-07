@@ -477,6 +477,16 @@ const UserView = ({ params }: { params: IUserView }) => {
             >
               Set Password & Activate
             </PrimaryButton>
+            <PrimaryButton
+              variant="contained"
+              color="primary"
+              style={{ margin: "15px 15px 0 0" }}
+              onClick={() => resendLink()}
+              startIcon={<LocalPostOfficeIcon />}
+              disabled={userData.status === 1}
+            >
+              Resend Activation Email
+            </PrimaryButton>
             <Dialog open={openModal} onClose={handleClose}>
               <DialogTitle
                 sx={{
@@ -617,16 +627,6 @@ const UserView = ({ params }: { params: IUserView }) => {
                 </PrimaryButton>
               </DialogActions>
             </Dialog>
-            <PrimaryButton
-              variant="contained"
-              color="primary"
-              style={{ margin: "15px 15px 0 0" }}
-              onClick={() => resendLink()}
-              startIcon={<LocalPostOfficeIcon />}
-              disabled={userData.status === 1}
-            >
-              Resend Activation Email
-            </PrimaryButton>
             <Card
               sx={{
                 width: "100%",
@@ -646,7 +646,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                   <TableBody sx={{ height: "100%" }}>
                     <TableRow>
                       <TableCell>
-                        <strong>First Name:</strong>
+                        <strong>First name:</strong>
                       </TableCell>
                       <TableCell
                         style={{ whiteSpace: "unset", wordBreak: "break-all" }}
@@ -656,7 +656,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                     </TableRow>
                     <TableRow>
                       <TableCell>
-                        <strong>Last Name:</strong>
+                        <strong>Last name:</strong>
                       </TableCell>
                       <TableCell
                         style={{ whiteSpace: "unset", wordBreak: "break-all" }}

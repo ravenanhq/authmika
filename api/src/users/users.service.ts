@@ -394,7 +394,7 @@ export class UsersService {
       });
       if (updatedUser[0] === 1) {
         return {
-          message: 'Password updated successfully',
+          message: 'Password updated and user activated successfully',
           statusCode: HttpStatus.OK,
           user: users,
         };
@@ -455,7 +455,7 @@ export class UsersService {
         );
       }
       return {
-        message: 'User link sent successfully',
+        message: 'User activation email sent successfully',
         statusCode: HttpStatus.OK,
       };
     } catch (error) {
