@@ -455,7 +455,7 @@ export class UsersService {
         );
       }
       return {
-        message: 'User activated email sent successfully',
+        message: 'User activation email sent successfully',
         statusCode: HttpStatus.OK,
       };
     } catch (error) {

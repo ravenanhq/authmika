@@ -646,7 +646,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                   <TableBody sx={{ height: "100%" }}>
                     <TableRow>
                       <TableCell>
-                        <strong>First Name:</strong>
+                        <strong>First name:</strong>
                       </TableCell>
                       <TableCell
                         style={{ whiteSpace: "unset", wordBreak: "break-all" }}
@@ -656,7 +656,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                     </TableRow>
                     <TableRow>
                       <TableCell>
-                        <strong>Last Name:</strong>
+                        <strong>Last name:</strong>
                       </TableCell>
                       <TableCell
                         style={{ whiteSpace: "unset", wordBreak: "break-all" }}
