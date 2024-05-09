@@ -751,14 +751,10 @@ export class UsersService {
         });
 
         if (userApplication) {
-          const users = await this.userModel.findAll({
-            where: { status: 1 },
-          });
-
           return {
             message: 'The user cannot be deleted as a mapping exists.',
-            statusCode: HttpStatus.OK,
-            data: users,
+            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+            data: [],
           };
         } else {
           user.status = 0;

@@ -314,12 +314,18 @@ const UserList = () => {
         const userIndex = currentRows.findIndex(
           (user) => user.id === selectedRow.id
         );
+
         if (userIndex !== -1) {
           const response = await UserApi.deleteUser(selectedRow.id);
-          if (response && response.data) {
+          if (response && response.statusCode == 422) {
+            setDeleteAlert({
+              severity: "error",
+              message: response.message,
+            });
+          } else if (response && response.statusCode == 200) {
             currentRows.splice(userIndex, 1);
             setRows(currentRows);
-            setDeleteAlert({ severity: "error", message: response.message });
+            setDeleteAlert({ severity: "success", message: response.message });
           }
         }
         setDeleteModalOpen(false);
