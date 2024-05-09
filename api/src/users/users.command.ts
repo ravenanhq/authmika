@@ -73,7 +73,7 @@ export class UsersCommand {
         message: 'Enter the firstName:',
         validate: (input) => {
           if (!input) {
-            return 'firstName is required';
+            return 'First name is required';
           }
           return true;
         },
@@ -82,7 +82,7 @@ export class UsersCommand {
         type: 'input',
         name: 'lastName',
         message: 'Enter the lastName:',
-        validate: (input) => (input ? true : 'lastName is required'),
+        validate: (input) => (input ? true : 'Last name is required'),
       },
       {
         type: 'input',

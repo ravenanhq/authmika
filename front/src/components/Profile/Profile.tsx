@@ -221,11 +221,11 @@ const ProfilePage = () => {
     let newErrors: Errors = {};
 
     if (!editedData.firstName?.trim()) {
-      newErrors.firstName = "firstName is required";
+      newErrors.firstName = "First name is required";
     }
 
     if (!editedData.lastName?.trim()) {
-      newErrors.lastName = " lastName is required";
+      newErrors.lastName = " Last name is required";
     }
 
     if (!editedData.email?.trim()) {
@@ -466,7 +466,7 @@ const ProfilePage = () => {
           <AccordionDetails>
             <form>
               <TextField
-                label="First Name"
+                label="First name"
                 fullWidth
                 name="firstName"
                 margin="normal"
@@ -483,7 +483,6 @@ const ProfilePage = () => {
                 }
                 sx={{
                   marginTop: 1,
-                  marginBottom: 2,
                   "& .MuiFormHelperText-root": {
                     color:
                       errors.firstName || uniqueValidation
@@ -494,7 +493,7 @@ const ProfilePage = () => {
               />
 
               <TextField
-                label="Last Name"
+                label="Last name"
                 name="lastName"
                 required
                 value={editedData.lastName || ""}
@@ -502,8 +501,8 @@ const ProfilePage = () => {
                 fullWidth
                 margin="normal"
                 error={!!errors.lastName}
-                helperText={errors.lastName ? errors.lastName : " "}
-                sx={{ marginBottom: 0.5 }}
+                helperText={errors.lastName ? errors.lastName : ""}
+                sx={{ marginBottom: 1 }}
               />
 
               <TextField
@@ -523,7 +522,7 @@ const ProfilePage = () => {
                     : ""
                 }
                 sx={{
-                  marginTop: 1,
+                  marginBottom: 1,
                   "& .MuiFormHelperText-root": {
                     color: errors.Email || uniqueEmail ? "#e33241" : "inherit",
                   },

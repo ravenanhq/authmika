@@ -281,11 +281,16 @@ const ApplicationList = () => {
           const response = await ApplicationApi.deleteApplication(
             selectedRow.id
           );
-          if (response && response.data) {
+          if (response && response.statusCode == 422) {
+            setDeleteAlert({
+              severity: "error",
+              message: response.message,
+            });
+          } else if (response && response.statusCode == 200) {
             currentRows.splice(itemIndex, 1);
             setRows(currentRows);
             setDeleteAlert({
-              severity: "error",
+              severity: "success",
               message: response.message,
             });
           }

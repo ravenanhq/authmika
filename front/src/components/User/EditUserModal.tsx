@@ -92,11 +92,11 @@ export default function EditUserModal({
     let newErrors: Errors = {};
 
     if (!editedData.firstName?.trim()) {
-      newErrors.firstName = "firstName is required";
+      newErrors.firstName = "First name is required";
     }
 
     if (!editedData.lastName?.trim()) {
-      newErrors.lastName = "lastName is required";
+      newErrors.lastName = "Last name is required";
     }
 
     if (!editedData.email?.trim()) {
