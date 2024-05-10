@@ -535,7 +535,7 @@ export class UsersService {
         await existingUser.save();
 
         const users = await this.userModel.findAll({
-          where: { status: 1 },
+          where: { status: { [Op.or]: [1, 2] } },
         });
 
         return {

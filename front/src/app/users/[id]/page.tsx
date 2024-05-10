@@ -121,6 +121,10 @@ const UserView = ({ params }: { params: IUserView }) => {
   const [password, setPassword] = useState<string>("");
   const [savepasswordAlert, setSavePasswordAlert] = useState("");
   const [resendlinkAlert, setResendLinkAlert] = useState("");
+  const [confirmationApplicationId, setConfirmationApplicationId] =
+    useState<number>();
+  const [confirmationApplicationName, setConfirmationApplicationName] =
+    useState("");
 
   const {
     register,
@@ -228,8 +232,10 @@ const UserView = ({ params }: { params: IUserView }) => {
     setSearchTerm(event.target.value);
   };
 
-  const handleConfirmOpen = () => {
+  const handleConfirmOpen = (applicationId: number, applicationName: any) => {
     setConfirmationOpen(true);
+    setConfirmationApplicationId(applicationId);
+    setConfirmationApplicationName(applicationName);
   };
 
   const filteredApplications = applications
@@ -287,7 +293,7 @@ const UserView = ({ params }: { params: IUserView }) => {
     setOpen(false);
   };
 
-  const handleCancel = async (
+  const handleConfirm = async (
     userId: number | undefined,
     applicationId: number
   ) => {
@@ -841,7 +847,12 @@ const UserView = ({ params }: { params: IUserView }) => {
                             }}
                           >
                             <IconButton
-                              onClick={handleConfirmOpen}
+                              onClick={() =>
+                                handleConfirmOpen(
+                                  application.id,
+                                  application.name
+                                )
+                              }
                               sx={{
                                 fontSize: "4px",
                                 color: "#FF9843",
@@ -874,6 +885,9 @@ const UserView = ({ params }: { params: IUserView }) => {
                                   <p>
                                     Are you sure you want to remove this
                                     application?
+                                    <span style={{ color: "#191c1a" }}>
+                                      {confirmationApplicationName}
+                                    </span>
                                   </p>
                                   <SecondaryButton
                                     variant="contained"
@@ -890,7 +904,10 @@ const UserView = ({ params }: { params: IUserView }) => {
                                     style={{ margin: "15px 15px 0 0" }}
                                     startIcon={<CheckIcon />}
                                     onClick={() => {
-                                      handleCancel(id, application.id);
+                                      handleConfirm(
+                                        id,
+                                        confirmationApplicationId!
+                                      );
                                     }}
                                   >
                                     Confirm
