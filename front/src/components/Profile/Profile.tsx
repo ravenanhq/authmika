@@ -280,7 +280,6 @@ const ProfilePage = () => {
         };
         const response = await UserApi.verifyCurrentPassword(id, updatedData);
         setPasswordAlert("");
-        setTwoFactorPasswordAlert(null);
         if (response) {
           if (response.statusCode === 409) {
             return false;
@@ -301,6 +300,7 @@ const ProfilePage = () => {
           }
         }
         setCurrentPassword("");
+        setTwoFactorPasswordAlert(null);
       } catch (error: any) {
         if (
           error.response &&
@@ -446,20 +446,36 @@ const ProfilePage = () => {
 
   return (
     <div>
-      <Box sx={{ p: 2, marginLeft: "320px", marginTop: "60px" }}>
+      <Box sx={{ p: 2, marginTop: "60px" }}>
         <Box
           sx={{
             display: "flex",
             flexDirection: "column",
-            gap: "10px",
-            flexWrap: "wrap",
+            [theme.breakpoints.up("sm")]: {
+              marginLeft: "auto",
+              marginRight: "auto",
+            },
           }}
         >
-          <Accordion sx={{ width: "800px" }} defaultExpanded>
+          <Accordion
+            defaultExpanded
+            sx={{
+              width: "70%",
+              [theme.breakpoints.down("md")]: {
+                width: "80%",
+              },
+              [theme.breakpoints.down("sm")]: {
+                width: "90%",
+              },
+              marginLeft: "auto !important",
+              marginRight: "auto !important",
+            }}
+          >
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
               aria-controls="panel1-content"
               id="panel1-header"
+              sx={{}}
             >
               <Typography sx={{ fontWeight: "bold" }}>
                 Profile Information
@@ -593,7 +609,19 @@ const ProfilePage = () => {
             flexWrap: "wrap",
           }}
         >
-          <Accordion sx={{ width: "800px" }}>
+          <Accordion
+            sx={{
+              width: "70%",
+              [theme.breakpoints.down("md")]: {
+                width: "80%",
+              },
+              [theme.breakpoints.down("sm")]: {
+                width: "90%",
+              },
+              marginLeft: "auto !important",
+              marginRight: "auto !important",
+            }}
+          >
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
               aria-controls="panel2-content"
@@ -742,13 +770,27 @@ const ProfilePage = () => {
           </Accordion>
         </Box>
         <Box sx={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          <Accordion sx={{ width: "800px" }}>
+          <Accordion
+            sx={{
+              width: "70%",
+              [theme.breakpoints.down("md")]: {
+                width: "80%",
+              },
+              [theme.breakpoints.down("sm")]: {
+                width: "90%",
+              },
+              marginLeft: "auto !important",
+              marginRight: "auto !important",
+            }}
+          >
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
               aria-controls="panel3-content"
               id="panel3-header"
             >
-              <Typography sx={{ fontWeight: "bold" }}>
+              <Typography
+                sx={{ fontWeight: "bold", overflowWrap: "break-word" }}
+              >
                 Two Factor Authentication (OPTIONAL)
               </Typography>
             </AccordionSummary>
@@ -799,7 +841,10 @@ const ProfilePage = () => {
                   >
                     Confirm Password
                     <IconButton
-                      onClick={handleClose}
+                      onClick={() => {
+                        handleClose();
+                        setTwoFactorPasswordAlert(null);
+                      }}
                       sx={{
                         backgroundColor: "#FF9843",
                         color: "#fff",
@@ -881,7 +926,10 @@ const ProfilePage = () => {
                           color="primary"
                           sx={{ mt: 2, position: "sticky", top: "20px" }}
                           startIcon={<CloseIcon />}
-                          onClick={handleClose}
+                          onClick={() => {
+                            handleClose();
+                            setTwoFactorPasswordAlert(null);
+                          }}
                         >
                           Cancel
                         </SecondaryButton>
@@ -892,6 +940,7 @@ const ProfilePage = () => {
                           startIcon={<CheckIcon />}
                           onClick={() => {
                             verifyPassword(userId, currentPassword);
+                            setCurrentPassword("");
                           }}
                         >
                           Confirm
