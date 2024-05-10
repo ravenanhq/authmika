@@ -11,6 +11,9 @@ export class ApplicationsDto {
   @IsNotEmpty({ message: 'Base URL cannot be blank' })
   base_url: string;
 
+  @IsNotEmpty({ message: 'Call back URL cannot be blank' })
+  call_back_url: string;
+
   logo_path: string;
 
   file: string;

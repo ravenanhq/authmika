@@ -11,18 +11,17 @@ import { useMediaQuery } from "@mui/material";
 import { usePathname } from "next/navigation";
 import { NavbarProvider } from "../../contexts/NavbarContext";
 
-const inter = Inter({ subsets: ['latin'] })
-
+const inter = Inter({ subsets: ["latin"] });
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   const pathName = usePathname();
-  const showHeader = ![
-    "/login"
-  ].includes(pathName);
+  const showHeader =
+    pathName !== null &&
+    !["/login", "/two-factor", "/create-password","/forgot-password","/reset-password","/user-activation"].includes(pathName);
   const theme = useTheme();
   const isMobile = useMediaQuery("(max-width:1023px)");
   return (
@@ -35,22 +34,28 @@ export default function RootLayout({
           content="width=device-width, initial-scale=1, shrink-to-fit=no"
         />
       </Head>
-      <body suppressHydrationWarning={true} className={inter.className} style={{backgroundColor: "white"}}>
+      <body
+        suppressHydrationWarning={true}
+        className={inter.className}
+        style={{ backgroundColor: "white" }}
+      >
         <NavbarProvider>
           {isMobile ? (
-            <Box component="main"
-            sx={{
-              flexGrow: 1,
-              p: !showHeader ? 0 : 3,
-              marginTop: !showHeader ? '0' : "30px",
-            }}>
-            <Header />
-            <div style={{ paddingTop: !showHeader ? '0' : theme.spacing(2) }}>
+            <Box
+              component="main"
+              sx={{
+                flexGrow: 1,
+                p: !showHeader ? 0 : 3,
+                marginTop: !showHeader ? "0" : "30px",
+              }}
+            >
+              <Header />
+              <div style={{ paddingTop: !showHeader ? "0" : theme.spacing(2) }}>
                 {" "}
                 {/* Use theme spacing for consistent spacing */}
                 {children}
               </div>
-          </Box>
+            </Box>
           ) : (
             <Box sx={{ display: "flex" }}>
               <CssBaseline />
@@ -60,10 +65,12 @@ export default function RootLayout({
                 sx={{
                   flexGrow: 1,
                   p: !showHeader ? 0 : 3,
-                  marginTop: !showHeader ?  '0' : "30px" ,
+                  marginTop: !showHeader ? "0" : "30px",
                 }}
               >
-                <div style={{ paddingTop: !showHeader ? '0' :  theme.spacing(2) }}>
+                <div
+                  style={{ paddingTop: !showHeader ? "0" : theme.spacing(2) }}
+                >
                   {" "}
                   {/* Use theme spacing for consistent spacing */}
                   {children}

@@ -1,5 +1,10 @@
 import { config } from "../../../config";
-import { ApiResponseDto, SignInDto, UsersDto } from "@/models/users.dto";
+import {
+  ApiResponseDto,
+  SignInDto,
+  SingleSignInDto,
+  UsersDto,
+} from "@/models/users.dto";
 import axios from "axios";
 
 interface IForgotPasswordData {
@@ -13,8 +18,28 @@ interface IResetPasswordData {
   confirm_password?: string;
 }
 
-interface IClientData {
+interface IActivateUserData {
   key?: string;
+  expires?: string;
+}
+
+interface ResendOtpParams {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  url: string;
+}
+
+interface IClientData {
+  key: string;
+}
+
+interface ISingleSignInData {
+  message: string;
+  statusCode: number;
+  apiToken: string;
+  callBackUrl: string;
 }
 
 export class UserApi {
@@ -22,6 +47,14 @@ export class UserApi {
     const res = await axios.post<UsersDto>(
       `${config.service}/auth/login`,
       user
+    );
+    return res.data;
+  }
+
+  static async quickSignIn(data: SingleSignInDto): Promise<ISingleSignInData> {
+    const res = await axios.post<ISingleSignInData>(
+      `${config.service}/auth/quick-sign-in-url`,
+      data
     );
     return res.data;
   }
@@ -38,6 +71,14 @@ export class UserApi {
 
   static async update(id: number, updatedData: any) {
     const res = await axios.put(`${config.service}/users/${id}`, updatedData);
+    return res.data;
+  }
+
+  static async updatePassword(id: number, updatedData: any) {
+    const res = await axios.post(
+      `${config.service}/users/update-password/${id}`,
+      updatedData
+    );
     return res.data;
   }
 
@@ -61,6 +102,42 @@ export class UserApi {
     try {
       const res: any = await axios.get<IResetPasswordData>(
         `${config.service}/reset-password/${key}`,
+        { params: payload }
+      );
+
+      return res.data;
+    } catch (error: any) {
+      return error.response.data;
+    }
+  }
+
+  static async createPassword(
+    data: IResetPasswordData
+  ): Promise<ApiResponseDto> {
+    const { key, ...payload } = data;
+
+    try {
+      const res: any = await axios.get<IResetPasswordData>(
+        `${config.service}/users/create-password/${key}`,
+        { params: payload }
+      );
+
+      return res.data;
+    } catch (error: any) {
+      return error.response.data;
+    }
+  }
+
+  static async activeUsers(data: IActivateUserData): Promise<{
+    statusCode: number;
+    success: boolean;
+    message: string;
+  }> {
+    const { key, ...payload } = data;
+
+    try {
+      const res: any = await axios.get<IActivateUserData>(
+        `${config.service}/users/active-users/${key}`,
         { params: payload }
       );
 
@@ -102,7 +179,7 @@ export class UserApi {
 
   static async deleteUserApplicationMapping(
     userId: number,
-    applicationId: number,
+    applicationId: number
   ): Promise<ApiResponseDto> {
     try {
       const res: any = await axios.post(
@@ -118,7 +195,6 @@ export class UserApi {
     }
   }
 
-
   static async getApplication() {
     const res = await axios.get(`${config.service}/applications`);
     return res.data;
@@ -132,6 +208,91 @@ export class UserApi {
       }
     );
     return res.data;
+  }
+
+  static async getApplicationByKey(data: any) {
+    const res = await axios.post(
+      `${config.service}/application/get-application`,
+      {
+        key: data,
+      }
+    );
+    return res.data;
+  }
+
+  static async verifyCurrentPassword(id: number, updatedData: any) {
+    const res = await axios.post(
+      `${config.service}/users/verify-current-password/${id}`,
+      updatedData
+    );
+    return res.data;
+  }
+
+  // static async generateQRCodeDataUrlById(id: number) {
+  //   const res = await axios.get(`${config.service}/users/qrcode/${id}`);
+  // }
+
+  // static async verifyToken(token: string, id: number) {
+  //   try {
+  //     const res = await axios.get(
+  //       `${config.service}/users/verify-token/${id}/${token}`
+  //     );
+  //     if (!res) {
+  //       throw new Error("Empty response received");
+  //     }
+  //     return res.data;
+  //   } catch (error) {
+  //     console.error("Error verifying token:", error);
+  //     throw new Error("Failed to verify token");
+  //   }
+  // }
+
+  static async sendOtp(id: number, newUser: any) {
+    const res = await axios.post(
+      `${config.service}/users/get-otp/${id}`,
+      newUser
+    );
+    return res.data;
+  }
+
+  static async verifyOtp(id: number, otp: string) {
+    const res = await axios.post(
+      `${config.service}/users/verify-otp/${id}/${otp}`
+    );
+    return res.data;
+  }
+
+  static async resendOtp(params: ResendOtpParams) {
+    try {
+      const res = await axios.post(`${config.service}/users/resend-otp`, {
+        ...params,
+      });
+      return res.data;
+    } catch (error) {
+      console.error("Error resending OTP:", error);
+      throw error;
+    }
+  }
+
+  static async savePassword(data: any) {
+    const res = await axios.post(
+      `${config.service}/users/save-password`,
+      data
+    );
+    return res.data;
+  }
+
+  static async sendResendLinkToUser(data: any): Promise<any> {
+    try {
+      const res = await axios.post(
+        `${config.service}/users/send-resend-link`,
+        data
+      );
+
+      return res.data;
+    } catch (error) {
+      throw error;
+    }
   }
 
   static async setClientDetails(data: IClientData): Promise<ApiResponseDto> {

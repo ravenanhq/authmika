@@ -19,12 +19,24 @@ import { getSession } from "next-auth/react";
 
 const drawerWidth = 240;
 
+interface INavItem {
+  label: string;
+  route: string;
+}
+
 export default function DrawerAppBar() {
   const pathName = usePathname() || "";
   const [activePage, setActivePage] = useState<string>(pathName);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const showHeader = !["/login"].includes(pathName);
-  const [navItems, setNavItems] = useState([
+  const showHeader = ![
+    "/login",
+    "/two-factor",
+    "/create-password",
+    "/forgot-password",
+    "/reset-password",
+    "/user-activation",
+  ].includes(pathName);
+  const [navItems, setNavItems] = useState<INavItem[]>([
     { label: "Dashboard", route: "/dashboard" },
     { label: "Users", route: "/users" },
     { label: "Applications", route: "/applications" },
@@ -131,7 +143,10 @@ export default function DrawerAppBar() {
                 <Link
                   href="/dashboard"
                   underline="none"
-                  sx={{ textDecoration: "none", color: "inherit" }}
+                  sx={{
+                    textDecoration: "none",
+                    color: "inherit",
+                  }}
                 >
                   Authmika
                 </Link>
@@ -143,13 +158,18 @@ export default function DrawerAppBar() {
                     key={item.route}
                     href={item.route}
                     underline="none"
-                    sx={{ textDecoration: "none", color: "inherit" }}
+                    sx={{
+                      textDecoration: "none",
+                      color: "inherit",
+                    }}
                   >
                     <ListItemButton
                       selected={activeIndex === index}
                       onClick={() => handleSetActivePage(item.route)}
                       sx={{
-                        "&:hover": { backgroundColor: "#f1eded26" },
+                        "&:hover": {
+                          backgroundColor: "#f1eded26",
+                        },
                         textDecoration: "none",
                         backgroundColor:
                           activePage === item.route ? "#f1eded26" : "inherit",

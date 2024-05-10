@@ -12,7 +12,6 @@ import {
   CircularProgress,
   Stack,
   Alert,
-  CardMedia,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { SetStateAction, useEffect, useState } from "react";
@@ -27,11 +26,14 @@ import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
 
 export interface RowData {
+  created_at: string | number | Date;
   id: number;
   name?: string;
   application?: string;
   baseUrl?: string;
   base_url?: string;
+  callBackUrl?: string;
+  call_back_url?: string;
   file?: string;
   logoPath: string;
   logo_path: string;
@@ -44,7 +46,7 @@ interface AlertState {
 
 const ApplicationList = () => {
   const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState([]);
+  const [rows, setRows] = useState<RowData[]>([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [message, setMessage] = useState("");
@@ -54,6 +56,7 @@ const ApplicationList = () => {
   const [alertShow, setAlertShow] = useState("");
   const [uniqueAlert, setUniqueAlert] = useState("");
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
+  const filteredRows = rows.filter((row) => row.id);
 
   useEffect(() => {
     restrictMenuAccess();
@@ -95,11 +98,13 @@ const ApplicationList = () => {
   const handleEditModalClose = () => {
     setEditModalOpen(false);
     setSelectedRow(null);
+    setUniqueAlert("");
   };
 
   const handleEditSave = (editedData: RowData) => {
     editedData["logo_path"] = editedData["logoPath"];
     editedData["base_url"] = editedData["baseUrl"];
+    editedData["call_back_url"] = editedData["callBackUrl"];
     editApplication(editedData.id, editedData);
   };
 
@@ -171,11 +176,22 @@ const ApplicationList = () => {
       minWidth: 200,
     },
     {
+      field: "created_at",
+      headerName: "Created At",
+      headerClassName: "user-header",
+      type: "date",
+      flex: 0.5,
+      minWidth: 160,
+      valueGetter: (params) => {
+        return new Date(params.row.created_at);
+      },
+    },
+    {
       field: "actions",
       headerName: "Actions",
       headerClassName: "application-header",
       flex: 1,
-      minWidth: 150,
+      minWidth: 200,
       disableColumnMenu: true,
       sortable: false,
       renderCell: (params) => (
@@ -205,8 +221,15 @@ const ApplicationList = () => {
         if (response.statusCode == 409) {
           setUniqueAlert(response.message);
         } else if (response.statusCode == 200) {
-          handleCloseAddApplicationModal();
           setRows(response.data);
+          const sortedApplications = [...response.data].sort((a, b) => {
+            return (
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+            );
+          });
+          handleCloseAddApplicationModal();
+          setRows(sortedApplications);
           setAlertShow(response.message);
         }
       }
@@ -227,32 +250,50 @@ const ApplicationList = () => {
       );
       setUniqueAlert("");
       if (response) {
-        if (response.statusCode == 409) {
+        if (response.statusCode === 409) {
           setUniqueAlert(response.message);
-        } else if (response.statusCode == 200) {
+        } else if (response.statusCode === 200) {
           handleEditModalClose();
-          setRows(response.data);
+          const updatedRows = rows.map((row) =>
+            row.id === applicationId ? { ...row, ...updatedData } : row
+          );
+          setRows(updatedRows);
           setAlertShow(response.message);
         }
       }
     } catch (error: any) {
+      console.error(error);
       var response = error.response.data;
-      if (response.statusCode == 422 && response.message.application) {
+      if (response.statusCode === 422 && response.message.application) {
         setUniqueAlert(response.message.application);
       }
-
-      console.log(error);
     }
   };
 
   const handleDeleteConfirm = async (selectedRow: any) => {
     if (selectedRow !== null) {
       try {
-        const response = await ApplicationApi.deleteApplication(selectedRow.id);
-
-        if (response && response.data) {
-          setRows(response.data);
-          setDeleteAlert({ severity: "error", message: response.message });
+        const currentRows = [...rows];
+        const itemIndex = currentRows.findIndex(
+          (item) => item.id === selectedRow.id
+        );
+        if (itemIndex !== -1) {
+          const response = await ApplicationApi.deleteApplication(
+            selectedRow.id
+          );
+          if (response && response.statusCode == 422) {
+            setDeleteAlert({
+              severity: "error",
+              message: response.message,
+            });
+          } else if (response && response.statusCode == 200) {
+            currentRows.splice(itemIndex, 1);
+            setRows(currentRows);
+            setDeleteAlert({
+              severity: "success",
+              message: response.message,
+            });
+          }
         }
         setDeleteModalOpen(false);
       } catch (error: any) {
@@ -269,8 +310,13 @@ const ApplicationList = () => {
     try {
       const response = await ApplicationApi.getApplications();
       if (response) {
+        const sortedRows = response.sort((a: RowData, b: RowData) => {
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        });
+        setRows(sortedRows);
         setLoading(false);
-        setRows(response);
       }
     } catch (error: any) {
       console.log(error);
@@ -369,8 +415,10 @@ const ApplicationList = () => {
               </Grid>
             </Grid>
             <StyledDataGrid
-              rows={rows}
-              columns={columns}
+              rows={filteredRows}
+              columns={columns.filter(
+                (column) => column.field !== "created_at"
+              )}
               initialState={{
                 pagination: {
                   paginationModel: { page: 0, pageSize: 5 },
@@ -382,7 +430,10 @@ const ApplicationList = () => {
                     <Typography
                       variant="body1"
                       align="center"
-                      sx={{ marginTop: 10, justifyContent: "center" }}
+                      sx={{
+                        marginTop: 10,
+                        justifyContent: "center",
+                      }}
                     >
                       No results found.
                     </Typography>

@@ -27,11 +27,10 @@ import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
 
 export interface RowData {
+  created_at: string | number | Date;
   id: number;
-  userName?: string;
-  user_name?: string;
-  display_name?: string;
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   mobile?: string;
   role?: string;
@@ -50,7 +49,6 @@ const UserList = () => {
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
-  const [uniqueAlert, setUniqueAlert] = useState("");
   const [invalidEmail, setInvalidEmail] = useState("");
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
 
@@ -89,6 +87,7 @@ const UserList = () => {
       }
       return prevRowData;
     });
+    setInvalidEmail("");
     setEditModalOpen(true);
   };
 
@@ -106,15 +105,12 @@ const UserList = () => {
   const handleEditModalClose = () => {
     setEditModalOpen(false);
     setSelectedRow(null);
+    setInvalidEmail("");
   };
 
   const handleEditSave = async (editedData: RowData) => {
     if ("id" in editedData) {
       const updatedData = { ...editedData };
-      updatedData.user_name = updatedData.userName;
-      delete updatedData.userName;
-      updatedData.display_name = updatedData.displayName;
-      delete updatedData.displayName;
       try {
         await editUser(updatedData.id, updatedData);
       } catch (error) {
@@ -148,15 +144,15 @@ const UserList = () => {
 
   const columns: GridColDef[] = [
     {
-      field: "userName",
-      headerName: "Username",
+      field: "firstName",
+      headerName: "First name",
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 140,
     },
     {
-      field: "displayName",
-      headerName: "Display Name",
+      field: "lastName",
+      headerName: "Last name",
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 160,
@@ -183,11 +179,29 @@ const UserList = () => {
       minWidth: 100,
     },
     {
+      field: "status",
+      headerName: "Status",
+      headerClassName: "user-header",
+      flex: 0.5,
+      minWidth: 100,
+      renderCell: (params) => <>{params.value === 1 ? "Active" : "Pending"}</>,
+    },
+    {
+      field: "created_at",
+      headerName: "Created At",
+      type: "date",
+      flex: 0.5,
+      minWidth: 160,
+      valueGetter: (params) => {
+        return new Date(params.row.created_at);
+      },
+    },
+    {
       field: "actions",
       headerName: "Actions",
       headerClassName: "user-header",
       flex: 0.5,
-      minWidth: 150,
+      minWidth: 140,
       disableColumnMenu: true,
       sortable: false,
       renderCell: (params) => (
@@ -213,7 +227,12 @@ const UserList = () => {
     try {
       const response = await UserApi.getUsers();
       if (response) {
-        setRows(response);
+        const sortedRows = response.sort((a: RowData, b: RowData) => {
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        });
+        setRows(sortedRows);
         setLoading(false);
       }
     } catch (error: any) {
@@ -224,25 +243,36 @@ const UserList = () => {
   const addUser = async (newUser: RowData) => {
     try {
       const response = await UserApi.create(newUser);
-      setUniqueAlert("");
       setInvalidEmail("");
       if (response) {
         if (response.statusCode == 409) {
-          setUniqueAlert(response.message);
+          setInvalidEmail(response.message);
         } else if (response.statusCode == 200) {
-          handleCloseAddUserModal();
           setRows(response.data);
+          const newUserId = Math.floor(Math.random() * 1000);
+          const newUserData = {
+            ...newUser,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            id: newUserId,
+          };
+          const currentUsers = [...rows];
+          currentUsers.unshift(newUserData);
+          const sortedUsers = currentUsers.sort((a, b) => {
+            return (
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+            );
+          });
+          setRows(sortedUsers);
+          handleCloseAddUserModal();
           setAlertShow(response.message);
+          window.location.reload();
         }
       }
     } catch (error: any) {
       var response = error.response.data;
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.statusCode === 422
-      ) {
-        setUniqueAlert(response.message.userName);
+      if (response.statusCode == 422 && response.message.email) {
         setInvalidEmail(response.message.email);
       }
       console.log(error);
@@ -252,38 +282,52 @@ const UserList = () => {
   const editUser = async (id: any, updatedData: any) => {
     try {
       const response = await UserApi.update(id, updatedData);
-      setUniqueAlert("");
       setInvalidEmail("");
       if (response) {
         if (response.statusCode == 409) {
-          setUniqueAlert(response.message);
-        } else if (response.statusCode == 200) {
-          handleEditModalClose();
-          setRows(response.data);
+          setInvalidEmail(response.message);
+        } else if (response && response.statusCode === 200) {
+          const updatedRows = rows.map((row) => {
+            if (row.id === id) {
+              return { ...row, ...updatedData };
+            }
+            return row;
+          });
+          setRows(updatedRows);
           setAlertShow(response.message);
+          handleEditModalClose();
         }
       }
     } catch (error: any) {
       var response = error.response.data;
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.statusCode === 422
-      ) {
-        setUniqueAlert(response.message.userName);
+      if (response.statusCode == 422 && response.message.email) {
         setInvalidEmail(response.message.email);
       }
-      console.error(error);
+
+      console.log(error);
     }
   };
 
   const handleDeleteConfirm = async (selectedRow: any) => {
     if (selectedRow !== null) {
       try {
-        const response = await UserApi.deleteUser(selectedRow.id);
-        if (response && response.data) {
-          setRows(response.data);
-          setDeleteAlert({ severity: "error", message: response.message });
+        const currentRows = [...rows];
+        const userIndex = currentRows.findIndex(
+          (user) => user.id === selectedRow.id
+        );
+
+        if (userIndex !== -1) {
+          const response = await UserApi.deleteUser(selectedRow.id);
+          if (response && response.statusCode == 422) {
+            setDeleteAlert({
+              severity: "error",
+              message: response.message,
+            });
+          } else if (response && response.statusCode == 200) {
+            currentRows.splice(userIndex, 1);
+            setRows(currentRows);
+            setDeleteAlert({ severity: "success", message: response.message });
+          }
         }
         setDeleteModalOpen(false);
       } catch (error: any) {
@@ -385,7 +429,9 @@ const UserList = () => {
               </Grid>
               <StyledDataGrid
                 rows={rows}
-                columns={columns}
+                columns={columns.filter(
+                  (column) => column.field !== "created_at"
+                )}
                 getRowId={(row) => row.id}
                 autoHeight
                 initialState={{
@@ -422,7 +468,6 @@ const UserList = () => {
           onClose={handleEditModalClose}
           rowData={selectedRow}
           onEdit={handleEditSave}
-          uniqueValidation={uniqueAlert}
           uniqueEmail={invalidEmail}
         />
 
@@ -437,7 +482,6 @@ const UserList = () => {
           open={isAddUserModalOpen}
           onClose={handleCloseAddUserModal}
           onAddUser={handleAddUser}
-          uniqueValidation={uniqueAlert}
           uniqueEmail={invalidEmail}
         />
       </Card>

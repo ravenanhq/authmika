@@ -15,6 +15,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import FileUpload from "../FileUpload/FileUpload";
 
 interface Errors {
+  call_back_url?: string;
   name?: string;
   application?: string;
   base_url?: string;
@@ -36,6 +37,7 @@ export default function AddApplicationModal({
   const [application, setApplication] = useState("");
   const [name, setName] = useState("");
   const [base_url, setBaseUrl] = useState("");
+  const [call_back_url, setCallBackUrl] = useState("");
   const [logo_path, setLogoPath] = useState("");
   const [file, setFile] = useState("");
   const [errors, setErrors] = useState<Errors>({});
@@ -45,8 +47,18 @@ export default function AddApplicationModal({
   }, [uniqueValidation]);
 
   useEffect(() => {
-    setErrors({});
+    if (!open) {
+      clearForm();
+    }
   }, [open]);
+
+  const clearForm = () => {
+    setName("");
+    setApplication("");
+    setBaseUrl("");
+    setCallBackUrl("");
+    setErrors({});
+  };
 
   const validateForm = () => {
     let newErrors: Errors = {};
@@ -61,6 +73,10 @@ export default function AddApplicationModal({
 
     if (!base_url.trim()) {
       newErrors.base_url = "Base Url is required";
+    }
+
+    if (!call_back_url.trim()) {
+      newErrors.call_back_url = "Call Back Url is required";
     }
 
     setErrors(newErrors);
@@ -86,22 +102,16 @@ export default function AddApplicationModal({
         name: name,
         application: application,
         base_url: base_url,
+        call_back_url: call_back_url,
         logo_path: logo_path,
         file: file,
       };
       onAddApplication(newApplication);
-      setErrors({});
-      setName("");
-      setApplication("");
-      setBaseUrl("");
     }
   };
 
   const handleClose = () => {
-    setErrors({});
-    setName("");
-    setApplication("");
-    setBaseUrl("");
+    clearForm();
     onClose();
   };
 
@@ -163,6 +173,7 @@ export default function AddApplicationModal({
           fullWidth
           margin="normal"
           value={name}
+          size="small"
           onChange={(e) => setName(e.target.value)}
           error={!!errors.name}
           helperText={errors.name}
@@ -173,6 +184,7 @@ export default function AddApplicationModal({
           fullWidth
           margin="normal"
           value={application}
+          size="small"
           onChange={(e) => setApplication(e.target.value)}
           error={!!errors.application}
           helperText={errors.application}
@@ -182,10 +194,22 @@ export default function AddApplicationModal({
           label="Base Url"
           fullWidth
           margin="normal"
+          size="small"
           value={base_url}
           onChange={(e) => setBaseUrl(e.target.value)}
           error={!!errors.base_url}
           helperText={errors.base_url}
+        />
+        <TextField
+          required
+          label="Call Back Url"
+          fullWidth
+          margin="normal"
+          size="small"
+          value={call_back_url}
+          onChange={(e) => setCallBackUrl(e.target.value)}
+          error={!!errors.call_back_url}
+          helperText={errors.call_back_url}
         />
         {/* <FileUpload onFileUpload={handleFileUpload} imageFile={""} /> */}
       </DialogContent>

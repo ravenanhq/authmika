@@ -23,7 +23,7 @@ export class AuthController {
   @UsePipes(new ValidationPipe())
   signIn(@Body() loginDto: LoginDto) {
     return this.authService.signIn(
-      loginDto.username,
+      loginDto.email,
       loginDto.password,
       loginDto.clientId,
     );
@@ -33,5 +33,10 @@ export class AuthController {
   @Get('profile')
   getProfile(@Request() req) {
     return req.user;
+  }
+
+  @Post('quick-sign-in-url')
+  getQuickSignInUrl(@Body() body: { userId: number; applicationId: number }) {
+    return this.authService.quickSignIn(body.userId, body.applicationId);
   }
 }

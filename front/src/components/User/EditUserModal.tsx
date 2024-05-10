@@ -16,8 +16,8 @@ import { RowData } from "./UserList";
 import { MenuItem } from "@mui/material";
 
 interface Errors {
-  userName?: string;
-  displayName?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   mobile?: string;
   role?: string;
@@ -25,13 +25,12 @@ interface Errors {
 
 const InitialRowData = {
   id: 0,
-  userName: "",
-  user_name: "",
-  display_name: "",
-  displayName: "",
+  firstName: "",
+  lastName: "",
   email: "",
   mobile: "",
   role: "",
+  created_at: "",
 };
 
 interface EditModalProps {
@@ -39,7 +38,6 @@ interface EditModalProps {
   onClose: () => void;
   rowData: RowData | null;
   onEdit: (editedData: RowData) => void;
-  uniqueValidation: string;
   uniqueEmail: string;
 }
 
@@ -59,7 +57,6 @@ export default function EditUserModal({
   onClose,
   rowData,
   onEdit,
-  uniqueValidation,
   uniqueEmail,
 }: EditModalProps) {
   const [editedData, setEditedData] = useState<RowData>(InitialRowData);
@@ -73,12 +70,18 @@ export default function EditUserModal({
   }, [rowData]);
 
   useEffect(() => {
-    setErrors((prevErrors) => ({ ...prevErrors, email: uniqueEmail }));
-  }, [uniqueEmail]);
+    if (open) {
+      setErrors({});
+    }
+  }, [open]);
 
   useEffect(() => {
-    setErrors((prevErrors) => ({ ...prevErrors, userName: uniqueValidation }));
-  }, [uniqueValidation]);
+    setErrors((prevErrors) => ({ ...prevErrors, email: uniqueEmail }));
+    return () => {
+      setErrors({});
+    };
+  }, [uniqueEmail]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -88,12 +91,12 @@ export default function EditUserModal({
   const validateForm = () => {
     let newErrors: Errors = {};
 
-    if (!editedData.userName?.trim()) {
-      newErrors.userName = "Username is required";
+    if (!editedData.firstName?.trim()) {
+      newErrors.firstName = "First name is required";
     }
 
-    if (!editedData.displayName?.trim()) {
-      newErrors.displayName = "Display Name is required";
+    if (!editedData.lastName?.trim()) {
+      newErrors.lastName = "Last name is required";
     }
 
     if (!editedData.email?.trim()) {
@@ -114,8 +117,10 @@ export default function EditUserModal({
   };
 
   const handleUpdateUser = () => {
+    setErrors({});
     if (validateForm()) {
       onEdit(editedData);
+      setErrors({});
     }
     setSuccessMessageOpen(true);
   };
@@ -177,28 +182,31 @@ export default function EditUserModal({
       </DialogTitle>
       <Divider color="#265073"></Divider>
       <DialogContent>
-        <TextField
-          label="Username"
-          name="userName"
-          value={editedData.userName || ""}
+      <TextField
+          label="First name"
+          name="firstName"
+          value={editedData.firstName || ""}
           onChange={handleChange}
           required
           fullWidth
           margin="normal"
-          error={!!errors.userName}
-          helperText={errors.userName && <span>{errors.userName}</span>}
+          size="small"
+          error={!!errors.firstName}
+          helperText={errors.firstName && <span>{errors.firstName}</span>}
+          sx={{ marginBottom: 1.5 }}
         />
 
         <TextField
-          label="Display Name"
-          name="displayName"
+          label="Last name"
+          name="lastName"
           required
-          value={editedData.displayName || ""}
+          value={editedData.lastName || ""}
           onChange={handleChange}
           fullWidth
           margin="normal"
-          error={!!errors.displayName}
-          helperText={errors.displayName ? errors.displayName : " "}
+          size="small"
+          error={!!errors.lastName}
+          helperText={errors.lastName ? errors.lastName : " "}
         />
 
         <TextField
@@ -209,9 +217,10 @@ export default function EditUserModal({
           onChange={handleChange}
           fullWidth
           margin="normal"
+          size="small"
           error={!!errors.email}
           helperText={errors.email ? errors.email : " "}
-          sx={{ marginLeft: "0 !important" }}
+          sx={{ marginTop: 0 }}
         />
 
         <TextField
@@ -222,13 +231,14 @@ export default function EditUserModal({
           onChange={handleChange}
           fullWidth
           margin="normal"
+          size="small"
           error={!!errors.mobile}
           helperText={errors.mobile ? errors.mobile : " "}
+          sx={{ marginTop: 0 }}
         />
 
         <TextField
           label="Role"
-          sx={{ marginTop: 1, marginBottom: 2 }}
           name="role"
           size="small"
           required

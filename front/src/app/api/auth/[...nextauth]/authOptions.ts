@@ -9,12 +9,12 @@ export const authOptions: NextAuthOptions = {
       type: "credentials",
       credentials: {},
       async authorize(credentials) {
-        const { username, password, clientId } = credentials as {
-          username: string;
+        const { email, password, clientId } = credentials as {
+          email: string;
           password: string;
           clientId: string;
         };
-        const user = { username, password, clientId };
+        const user = { email, password, clientId };
         try {
           const data = await UserApi.login(user);
           return Promise.resolve(data as User);

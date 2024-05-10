@@ -19,11 +19,11 @@ export class Users extends Model {
   @Column({ type: DataType.INTEGER })
   id: number;
 
-  @Column({ field: 'user_name', type: DataType.STRING })
-  userName: string;
+  @Column({ field: 'first_name', type: DataType.STRING })
+  firstName: string;
 
-  @Column({ field: 'display_name', type: DataType.STRING })
-  displayName: string;
+  @Column({ field: 'last_name', type: DataType.STRING })
+  lastName: string;
 
   @Column({ type: DataType.STRING })
   email: string;
@@ -40,8 +40,14 @@ export class Users extends Model {
   @Column({ field: 'role', type: DataType.STRING })
   role: string;
 
-  @Column({ defaultValue: true })
+  @Column({ defaultValue: false })
   isTwoFactorEnabled: boolean;
+
+  @Column({ field: 'is_two_factor_enabled' })
+  is_two_factor_enabled: boolean;
+
+  @Column({ field: 'two_factor_secret', type: DataType.TEXT })
+  two_factor_secret: string;
 
   @Column({ field: 'two_factor_recovery_codes', type: DataType.STRING })
   twoFactorRecoveryCodes: string;
@@ -55,6 +61,12 @@ export class Users extends Model {
   @Column({ field: 'email_verification_token', type: DataType.STRING })
   emailVerificationToken: string;
 
-  @Column({ defaultValue: true })
-  isActive: boolean;
+  @Column({ type: DataType.INTEGER })
+  status: number;
+
+  @Column({ type: DataType.INTEGER })
+  otp: number;
+
+  @Column({ type: DataType.BIGINT })
+  otp_expiration: number;
 }

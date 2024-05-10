@@ -17,6 +17,7 @@ import { RowData } from "./ApplicationList";
 import FileUpload from "../FileUpload/FileUpload";
 
 interface Errors {
+  callBackUrl?: string;
   name?: string;
   application?: string;
   baseUrl?: string;
@@ -28,9 +29,12 @@ const InitialRowData = {
   application: "",
   baseUrl: "",
   base_url: "",
+  callBackUrl: "",
+  call_back_url: "",
   logoPath: "",
   file: "",
   logo_path: "",
+  created_at: "",
 };
 
 interface EditModalProps {
@@ -83,6 +87,10 @@ export default function EditApplicationModal({
 
     if (!editedData.baseUrl?.trim()) {
       newErrors.baseUrl = "Base Url is required";
+    }
+
+    if (!editedData.callBackUrl?.trim()) {
+      newErrors.callBackUrl = "Call Back Url is required";
     }
 
     setErrors(newErrors);
@@ -172,31 +180,50 @@ export default function EditApplicationModal({
           value={editedData.name || ""}
           onChange={handleChange}
           fullWidth
+          size="small"
           margin="normal"
           error={!!errors.name}
           helperText={errors.name}
+          sx={{ paddingBottom: 2 }}
         />
         <TextField
           required
           label="Application"
           name="application"
+          size="small"
           value={editedData.application || ""}
           onChange={handleChange}
           fullWidth
           margin="normal"
           error={!!errors.application}
           helperText={errors.application}
+          sx={{ paddingBottom: 2 }}
         />
         <TextField
           required
           label="Base Url"
           name="baseUrl"
+          size="small"
           value={editedData.baseUrl || ""}
           onChange={handleChange}
           fullWidth
           margin="normal"
           error={!!errors.baseUrl}
           helperText={errors.baseUrl}
+          sx={{ paddingBottom: 2 }}
+        />
+        <TextField
+          required
+          label="Call Back Url"
+          name="callBackUrl"
+          size="small"
+          value={editedData.callBackUrl || ""}
+          onChange={handleChange}
+          fullWidth
+          margin="normal"
+          error={!!errors.callBackUrl}
+          helperText={errors.callBackUrl}
+          sx={{ paddingBottom: 2 }}
         />
         {/* <FileUpload
           onFileUpload={handleFileUpload}
