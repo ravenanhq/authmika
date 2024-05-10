@@ -114,9 +114,9 @@ const Twofactor = () => {
           py: 5,
           flexDirection: "column",
           width: {
-            xs: "100%",
-            sm: "80%",
-            md: "60%",
+            xs: "80%",
+            sm: "60%",
+            md: "40%",
             lg: "50%",
             xl: "30%",
           },
@@ -150,11 +150,10 @@ const Twofactor = () => {
           sx={{ marginBottom: "2%" }}
         />
         {tokenAlert && <p style={{ color: "#d10007" }}>{tokenAlert}</p>}
-        <Typography component="p" variant="h5" align="center">
+        <Typography component="p" variant="h5" align="center" sx={{cursor:"pointer"}}>
           <Link
             variant="body2"
             onClick={() => handleResendOTP(id, userData)}
-            sx={{ cursor: "pointer" }}
           >
             {"Resend OTP"}
           </Link>
