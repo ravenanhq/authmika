@@ -152,9 +152,9 @@ const Twofactor = () => {
         {tokenAlert && <p style={{ color: "#d10007" }}>{tokenAlert}</p>}
         <Typography component="p" variant="h5" align="center">
           <Link
-            href="/two-factor"
             variant="body2"
             onClick={() => handleResendOTP(id, userData)}
+            sx={{ cursor: "pointer" }}
           >
             {"Resend OTP"}
           </Link>
