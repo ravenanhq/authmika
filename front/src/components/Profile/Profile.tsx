@@ -98,6 +98,7 @@ const ProfilePage = () => {
   const [passwordAlert, setPasswordAlert] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState<string>("");
   const [userId, setUserId] = useState<number | undefined>(undefined);
   const [showPassword1, setShowPassword1] = useState<Boolean>(false);
@@ -270,44 +271,55 @@ const ProfilePage = () => {
   };
 
   const verifyPassword = async (id: any, currentPassword: string) => {
-    try {
-      const updatedData = {
-        ...editedData,
-        id: id,
-        currentPassword: currentPassword,
-      };
-      const response = await UserApi.verifyCurrentPassword(id, updatedData);
-      setPasswordAlert("");
-      setTwoFactorPasswordAlert(null);
-      if (response) {
-        if (response.statusCode === 409) {
-          return false;
-        } else if (response.statusCode === 200) {
-          setRows(response.data);
-          const updatedUserDetails = { ...userDetails, ...updatedData };
-          setUserDetails(updatedUserDetails);
-          setPasswordAlert(response.message);
-          setEnable(true);
-          setOpen(false);
-          handleQRCodeVisibility();
-        } else if (response.statusCode === 422) {
-          setTwoFactorPasswordAlert({
-            severity: "error",
-            message: response.message,
-          });
-          return false;
+    if (validatePassword()) {
+      try {
+        const updatedData = {
+          ...editedData,
+          id: id,
+          currentPassword: currentPassword,
+        };
+        const response = await UserApi.verifyCurrentPassword(id, updatedData);
+        setPasswordAlert("");
+        setTwoFactorPasswordAlert(null);
+        if (response) {
+          if (response.statusCode === 409) {
+            return false;
+          } else if (response.statusCode === 200) {
+            setRows(response.data);
+            const updatedUserDetails = { ...userDetails, ...updatedData };
+            setUserDetails(updatedUserDetails);
+            setPasswordAlert(response.message);
+            setEnable(true);
+            setOpen(false);
+            handleQRCodeVisibility();
+          } else if (response.statusCode === 422) {
+            setTwoFactorPasswordAlert({
+              severity: "error",
+              message: response.message,
+            });
+            return false;
+          }
         }
+        setCurrentPassword("");
+      } catch (error: any) {
+        if (
+          error.response &&
+          error.response.data &&
+          error.response.data.statusCode === 422
+        )
+          console.error(error);
+        return false;
       }
-      setCurrentPassword("");
-    } catch (error: any) {
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.statusCode === 422
-      )
-        console.error(error);
-      return false;
     }
+  };
+
+  const validatePassword = () => {
+    let newErrors: Errors = {};
+    if (!currentPassword.trim()) {
+      newErrors.currentPassword = "Current Password is required";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const validate = () => {
@@ -435,304 +447,329 @@ const ProfilePage = () => {
   return (
     <div>
       <Box sx={{ p: 2, marginLeft: "320px", marginTop: "60px" }}>
-        <Accordion sx={{ width: "800px" }} defaultExpanded>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="panel1-content"
-            id="panel1-header"
-          >
-            <Typography sx={{ fontWeight: "bold" }}>
-              Profile Information
-            </Typography>
-          </AccordionSummary>
-          {alertShow && (
-            <Alert
-              sx={{
-                width: "60%",
-                margin: "auto",
-                mt: "30px",
-                [theme.breakpoints.down("md")]: {
-                  width: "100%",
-                },
-              }}
-              severity="success"
-              onClose={() => {
-                setAlertShow("");
-              }}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            flexWrap: "wrap",
+          }}
+        >
+          <Accordion sx={{ width: "800px" }} defaultExpanded>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="panel1-content"
+              id="panel1-header"
             >
-              {alertShow}
-            </Alert>
-          )}
-          <AccordionDetails>
-            <form>
-              <TextField
-                label="First name"
-                fullWidth
-                name="firstName"
-                margin="normal"
-                required
-                value={editedData.firstName}
-                onChange={handleChange}
-                error={!!errors.firstName}
-                helperText={
-                  errors.firstName
-                    ? errors.firstName
-                    : uniqueValidation
-                    ? "User already exists"
-                    : ""
-                }
+              <Typography sx={{ fontWeight: "bold" }}>
+                Profile Information
+              </Typography>
+            </AccordionSummary>
+            {alertShow && (
+              <Alert
                 sx={{
-                  marginTop: 1,
-                  "& .MuiFormHelperText-root": {
-                    color:
-                      errors.firstName || uniqueValidation
-                        ? "#e33241"
-                        : "inherit",
+                  width: "60%",
+                  margin: "auto",
+                  mt: "30px",
+                  [theme.breakpoints.down("md")]: {
+                    width: "100%",
                   },
                 }}
-              />
+                severity="success"
+                onClose={() => {
+                  setAlertShow("");
+                }}
+              >
+                {alertShow}
+              </Alert>
+            )}
+            <AccordionDetails>
+              <form>
+                <TextField
+                  label="First name"
+                  fullWidth
+                  name="firstName"
+                  margin="normal"
+                  required
+                  value={editedData.firstName}
+                  onChange={handleChange}
+                  error={!!errors.firstName}
+                  helperText={
+                    errors.firstName
+                      ? errors.firstName
+                      : uniqueValidation
+                      ? "User already exists"
+                      : ""
+                  }
+                  sx={{
+                    marginTop: 1,
+                    "& .MuiFormHelperText-root": {
+                      color:
+                        errors.firstName || uniqueValidation
+                          ? "#e33241"
+                          : "inherit",
+                    },
+                  }}
+                />
 
-              <TextField
-                label="Last name"
-                name="lastName"
-                required
-                value={editedData.lastName || ""}
-                onChange={handleChange}
-                fullWidth
-                margin="normal"
-                error={!!errors.lastName}
-                helperText={errors.lastName ? errors.lastName : ""}
-                sx={{ marginBottom: 1 }}
-              />
+                <TextField
+                  label="Last name"
+                  name="lastName"
+                  required
+                  value={editedData.lastName || ""}
+                  onChange={handleChange}
+                  fullWidth
+                  margin="normal"
+                  error={!!errors.lastName}
+                  helperText={errors.lastName ? errors.lastName : ""}
+                  sx={{ marginBottom: 1 }}
+                />
 
-              <TextField
-                label="Email"
-                name="email"
-                required
-                value={editedData.email || ""}
-                onChange={handleChange}
-                fullWidth
-                margin="normal"
-                error={!!errors.Email}
-                helperText={
-                  errors.Email
-                    ? errors.Email
-                    : uniqueEmail
-                    ? "Invalid email address"
-                    : ""
-                }
+                <TextField
+                  label="Email"
+                  name="email"
+                  required
+                  value={editedData.email || ""}
+                  onChange={handleChange}
+                  fullWidth
+                  margin="normal"
+                  error={!!errors.Email}
+                  helperText={
+                    errors.Email
+                      ? errors.Email
+                      : uniqueEmail
+                      ? "Invalid email address"
+                      : ""
+                  }
+                  sx={{
+                    marginBottom: 1,
+                    "& .MuiFormHelperText-root": {
+                      color:
+                        errors.Email || uniqueEmail ? "#e33241" : "inherit",
+                    },
+                  }}
+                />
+
+                <TextField
+                  label="Role"
+                  name="role"
+                  required
+                  fullWidth
+                  disabled
+                  value={editedData.role || ""}
+                  onChange={handleChange}
+                  error={!!errors.role}
+                  helperText={errors.role ? errors.role : " "}
+                  sx={{ marginBottom: 0.5, marginTop: 3 }}
+                ></TextField>
+
+                <Grid container justifyContent="flex-end">
+                  <PrimaryButton
+                    variant="contained"
+                    color="primary"
+                    sx={{ position: "sticky", top: "20px" }}
+                    startIcon={<SaveIcon />}
+                    onClick={() => {
+                      if (userId !== undefined) {
+                        const updatedData = { ...editedData, id: userId };
+                        updateProfile(userId, updatedData);
+                      } else {
+                        console.error("User ID is undefined");
+                      }
+                    }}
+                  >
+                    Save
+                  </PrimaryButton>
+                </Grid>
+              </form>
+            </AccordionDetails>
+          </Accordion>
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            flexWrap: "wrap",
+          }}
+        >
+          <Accordion sx={{ width: "800px" }}>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="panel2-content"
+              id="panel2-header"
+            >
+              <Typography sx={{ fontWeight: "bold" }}>
+                Change Password
+              </Typography>
+            </AccordionSummary>
+
+            {passwordAlert && (
+              <Alert
                 sx={{
-                  marginBottom: 1,
-                  "& .MuiFormHelperText-root": {
-                    color: errors.Email || uniqueEmail ? "#e33241" : "inherit",
+                  width: "60%",
+                  margin: "auto",
+                  mt: "30px",
+                  [theme.breakpoints.down("md")]: {
+                    width: "100%",
                   },
                 }}
-              />
-
-              <TextField
-                label="Role"
-                name="role"
-                required
-                fullWidth
-                disabled
-                value={editedData.role || ""}
-                onChange={handleChange}
-                error={!!errors.role}
-                helperText={errors.role ? errors.role : " "}
-                sx={{ marginBottom: 0.5, marginTop: 3 }}
-              ></TextField>
-
-              <Grid container justifyContent="flex-end">
-                <PrimaryButton
-                  variant="contained"
-                  color="primary"
-                  sx={{ position: "sticky", top: "20px" }}
-                  startIcon={<SaveIcon />}
-                  onClick={() => {
-                    if (userId !== undefined) {
-                      const updatedData = { ...editedData, id: userId };
-                      updateProfile(userId, updatedData);
-                    } else {
-                      console.error("User ID is undefined");
-                    }
+                severity="success"
+                onClose={() => {
+                  setPasswordAlert("");
+                }}
+              >
+                {passwordAlert}
+              </Alert>
+            )}
+            {currentPasswordAlert && (
+              <Alert
+                sx={{
+                  width: "60%",
+                  margin: "auto",
+                  mt: "30px",
+                  [theme.breakpoints.down("md")]: {
+                    width: "100%",
+                  },
+                }}
+                severity={currentPasswordAlert.severity}
+                onClose={() => {
+                  setCurrentPasswordAlert(null);
+                }}
+              >
+                {currentPasswordAlert.message}
+              </Alert>
+            )}
+            <AccordionDetails>
+              <form>
+                <TextField
+                  label="Current Password"
+                  name="currentPassword"
+                  required
+                  fullWidth
+                  margin="normal"
+                  value={currentPassword}
+                  type={showPassword1 ? "text" : "password"}
+                  id="password"
+                  onChange={(e) => {
+                    setCurrentPassword(e.target.value);
+                    setErrors({});
                   }}
-                >
-                  Save
-                </PrimaryButton>
-              </Grid>
-            </form>
-          </AccordionDetails>
-        </Accordion>
-        <Accordion sx={{ width: "800px" }}>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="panel2-content"
-            id="panel2-header"
-          >
-            <Typography sx={{ fontWeight: "bold" }}>Change Password</Typography>
-          </AccordionSummary>
-
-          {passwordAlert && (
-            <Alert
-              sx={{
-                width: "60%",
-                margin: "auto",
-                mt: "30px",
-                [theme.breakpoints.down("md")]: {
-                  width: "100%",
-                },
-              }}
-              severity="success"
-              onClose={() => {
-                setPasswordAlert("");
-              }}
-            >
-              {passwordAlert}
-            </Alert>
-          )}
-          {currentPasswordAlert && (
-            <Alert
-              sx={{
-                width: "60%",
-                margin: "auto",
-                mt: "30px",
-                [theme.breakpoints.down("md")]: {
-                  width: "100%",
-                },
-              }}
-              severity={currentPasswordAlert.severity}
-              onClose={() => {
-                setCurrentPasswordAlert(null);
-              }}
-            >
-              {currentPasswordAlert.message}
-            </Alert>
-          )}
-          <AccordionDetails>
-            <form>
-              <TextField
-                label="Current Password"
-                name="currentPassword"
-                required
-                fullWidth
-                margin="normal"
-                value={currentPassword}
-                type={showPassword1 ? "text" : "password"}
-                id="password"
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                error={!!errors.currentPassword}
-                helperText={errors.currentPassword}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => handlePasswordVisibility(1)}
-                        onMouseDown={(e) => e.preventDefault()}
-                        edge="end"
-                      >
-                        {showPassword1 ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <TextField
-                label="Password"
-                type={showPassword2 ? "text" : "password"}
-                name="newPassword"
-                required
-                fullWidth
-                margin="normal"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                error={!!errors.newPassword}
-                helperText={errors.newPassword}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => handlePasswordVisibility(2)}
-                        onMouseDown={(e) => e.preventDefault()}
-                        edge="end"
-                      >
-                        {showPassword2 ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <TextField
-                label="Confirm Password"
-                type={showPassword3 ? "text" : "password"}
-                name="confirmPassword"
-                fullWidth
-                required
-                margin="normal"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                error={!!errors.confirmPassword}
-                helperText={errors.confirmPassword}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => handlePasswordVisibility(3)}
-                        onMouseDown={(e) => e.preventDefault()}
-                        edge="end"
-                      >
-                        {showPassword3 ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-              <Grid container justifyContent="flex-end">
-                <PrimaryButton
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  sx={{ mt: 2, position: "sticky", top: "20px" }}
-                  onClick={() => {
-                    updatePassword(userId, currentPassword, newPassword);
+                  error={!!errors.currentPassword}
+                  helperText={errors.currentPassword}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => handlePasswordVisibility(1)}
+                          onMouseDown={(e) => e.preventDefault()}
+                          edge="end"
+                        >
+                          {showPassword1 ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
                   }}
-                  startIcon={<SaveIcon />}
-                >
-                  Save
-                </PrimaryButton>
-              </Grid>
-            </form>
-          </AccordionDetails>
-        </Accordion>
-        <Accordion sx={{ width: "800px" }}>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="panel3-content"
-            id="panel3-header"
-          >
-            <Typography sx={{ fontWeight: "bold" }}>
-              Two Factor Authentication (OPTIONAL)
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Typography variant="h6" component="h1" sx={{ marginBottom: 1 }}>
-              You have not enabled two factor authentication.
-            </Typography>
-            <Typography
-              variant="h6"
-              component="h1"
-              sx={{ marginBottom: 2, marginTop: 2, fontSize: "16px" }}
+                />
+
+                <TextField
+                  label="Password"
+                  type={showPassword2 ? "text" : "password"}
+                  name="newPassword"
+                  required
+                  fullWidth
+                  margin="normal"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  error={!!errors.newPassword}
+                  helperText={errors.newPassword}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => handlePasswordVisibility(2)}
+                          onMouseDown={(e) => e.preventDefault()}
+                          edge="end"
+                        >
+                          {showPassword2 ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <TextField
+                  label="Confirm Password"
+                  type={showPassword3 ? "text" : "password"}
+                  name="confirmPassword"
+                  fullWidth
+                  required
+                  margin="normal"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  error={!!errors.confirmPassword}
+                  helperText={errors.confirmPassword}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => handlePasswordVisibility(3)}
+                          onMouseDown={(e) => e.preventDefault()}
+                          edge="end"
+                        >
+                          {showPassword3 ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <Grid container justifyContent="flex-end">
+                  <PrimaryButton
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                    sx={{ mt: 2, position: "sticky", top: "20px" }}
+                    onClick={() => {
+                      updatePassword(userId, currentPassword, newPassword);
+                    }}
+                    startIcon={<SaveIcon />}
+                  >
+                    Save
+                  </PrimaryButton>
+                </Grid>
+              </form>
+            </AccordionDetails>
+          </Accordion>
+        </Box>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <Accordion sx={{ width: "800px" }}>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="panel3-content"
+              id="panel3-header"
             >
-              When two factor authentication is enabled, you will be prompted
-              for a secure, random One-Time password(OTP) during authentication.
-              This One-Time password(OTP) will be sent to you via email and will
-              be required along with your password to access your account.
-              Please note that this One-Time password(OTP) is unique to each
-              login attempt and provides an additional layer of security to your
-              account.
-            </Typography>
-            {/* {showQRCode && qrCodeDataUrl && (
+              <Typography sx={{ fontWeight: "bold" }}>
+                Two Factor Authentication (OPTIONAL)
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography variant="h6" component="h1" sx={{ marginBottom: 1 }}>
+                You have not enabled two factor authentication.
+              </Typography>
+              <Typography
+                variant="h6"
+                component="h1"
+                sx={{ marginBottom: 2, marginTop: 2, fontSize: "16px" }}
+              >
+                When two factor authentication is enabled, you will be prompted
+                for a secure, random One-Time password(OTP) during
+                authentication. This One-Time password(OTP) will be sent to you
+                via email and will be required along with your password to
+                access your account. Please note that this One-Time
+                password(OTP) is unique to each login attempt and provides an
+                additional layer of security to your account.
+              </Typography>
+              {/* {showQRCode && qrCodeDataUrl && (
             <div>
               <Image
                 src={qrCodeDataUrl}
@@ -742,101 +779,131 @@ const ProfilePage = () => {
               />
             </div>
           )} */}
-            <div>
-              <PrimaryButton
-                onClick={handleOpenDialog}
-                startIcon={enable ? <CloseIcon /> : <DoneIcon />}
-              >
-                {enable ? "Disable" : "Enable"}
-              </PrimaryButton>
-              <Dialog open={open} onClose={handleClose}>
-                <DialogTitle
-                  sx={{
-                    backgroundColor: "#265073",
-                    color: "#fff",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    width: "100%",
-                  }}
+              <div>
+                <PrimaryButton
+                  onClick={handleOpenDialog}
+                  startIcon={enable ? <CloseIcon /> : <DoneIcon />}
                 >
-                  Confirm Password
-                  <IconButton
-                    onClick={handleClose}
+                  {enable ? "Disable" : "Enable"}
+                </PrimaryButton>
+                <Dialog open={open} onClose={handleClose}>
+                  <DialogTitle
                     sx={{
-                      backgroundColor: "#FF9843",
+                      backgroundColor: "#265073",
                       color: "#fff",
-                      ":hover": {
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      width: "100%",
+                    }}
+                  >
+                    Confirm Password
+                    <IconButton
+                      onClick={handleClose}
+                      sx={{
+                        backgroundColor: "#FF9843",
                         color: "#fff",
-                        backgroundColor: "#FE7A36",
-                      },
-                    }}
-                  >
-                    <CloseIcon />
-                  </IconButton>
-                </DialogTitle>
-                <DialogContent>
-                  <Typography
-                    variant="h6"
-                    component="h1"
-                    sx={{ marginBottom: 1, marginTop: 2 }}
-                  >
-                    For your security, please confirm your password to continue.
-                  </Typography>
-                  <TextField
-                    label="Password"
-                    name="password"
-                    fullWidth
-                    margin="normal"
-                    id="password"
-                    type={showPassword4 ? "text" : "password"}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    error={!!errors.password}
-                    helperText={errors.password}
-                    sx={{ marginBottom: 3 }}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() => handlePasswordVisibility(4)}
-                            onMouseDown={(e) => e.preventDefault()}
-                            edge="end"
-                          >
-                            {showPassword4 ? <VisibilityOff /> : <Visibility />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                  <DialogActions style={{ margin: "0 16px 10px 0" }}>
-                    <Stack spacing={2} direction="row" paddingLeft="400px">
-                      <SecondaryButton
-                        variant="contained"
-                        color="primary"
-                        sx={{ mt: 2, position: "sticky", top: "20px" }}
-                        startIcon={<CloseIcon />}
-                        onClick={handleClose}
-                      >
-                        Cancel
-                      </SecondaryButton>
-                      <PrimaryButton
-                        variant="contained"
-                        color="primary"
-                        sx={{ position: "sticky", top: "20px" }}
-                        startIcon={<CheckIcon />}
-                        onClick={() => {
-                          verifyPassword(userId, currentPassword);
+                        ":hover": {
+                          color: "#fff",
+                          backgroundColor: "#FE7A36",
+                        },
+                      }}
+                    >
+                      <CloseIcon />
+                    </IconButton>
+                  </DialogTitle>
+                  <DialogContent>
+                    <Typography
+                      variant="h6"
+                      component="h1"
+                      sx={{ marginBottom: 1, marginTop: 2 }}
+                    >
+                      For your security, please confirm your password to
+                      continue.
+                    </Typography>
+                    {twofactorPasswordAlert && (
+                      <Alert
+                        sx={{
+                          width: "100%",
+                          margin: "auto",
+                          mt: "30px",
+                          [theme.breakpoints.down("md")]: {
+                            width: "100%",
+                          },
+                        }}
+                        severity={twofactorPasswordAlert.severity}
+                        onClose={() => {
+                          setTwoFactorPasswordAlert(null);
                         }}
                       >
-                        Confirm
-                      </PrimaryButton>
-                    </Stack>
-                  </DialogActions>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </AccordionDetails>
-        </Accordion>
+                        {twofactorPasswordAlert.message}
+                      </Alert>
+                    )}
+
+                    <TextField
+                      label="Password"
+                      name="currentPassword"
+                      fullWidth
+                      required
+                      margin="normal"
+                      id="currentPassword"
+                      value={currentPassword}
+                      type={showPassword4 ? "text" : "password"}
+                      onChange={(e) => {
+                        setCurrentPassword(e.target.value);
+                        setErrors({});
+                      }}
+                      error={!!errors.currentPassword}
+                      helperText={errors.currentPassword}
+                      sx={{ marginBottom: 3 }}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => handlePasswordVisibility(4)}
+                              onMouseDown={(e) => e.preventDefault()}
+                              edge="end"
+                            >
+                              {showPassword4 ? (
+                                <VisibilityOff />
+                              ) : (
+                                <Visibility />
+                              )}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                    <DialogActions style={{ margin: "0 16px 10px 0" }}>
+                      <Stack spacing={2} direction="row" paddingLeft="400px">
+                        <SecondaryButton
+                          variant="contained"
+                          color="primary"
+                          sx={{ mt: 2, position: "sticky", top: "20px" }}
+                          startIcon={<CloseIcon />}
+                          onClick={handleClose}
+                        >
+                          Cancel
+                        </SecondaryButton>
+                        <PrimaryButton
+                          variant="contained"
+                          color="primary"
+                          sx={{ position: "sticky", top: "20px" }}
+                          startIcon={<CheckIcon />}
+                          onClick={() => {
+                            verifyPassword(userId, currentPassword);
+                          }}
+                        >
+                          Confirm
+                        </PrimaryButton>
+                      </Stack>
+                    </DialogActions>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </AccordionDetails>
+          </Accordion>
+        </Box>
       </Box>
     </div>
   );

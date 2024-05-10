@@ -267,6 +267,7 @@ const UserList = () => {
           setRows(sortedUsers);
           handleCloseAddUserModal();
           setAlertShow(response.message);
+          window.location.reload();
         }
       }
     } catch (error: any) {
@@ -286,7 +287,6 @@ const UserList = () => {
         if (response.statusCode == 409) {
           setInvalidEmail(response.message);
         } else if (response && response.statusCode === 200) {
-          handleEditModalClose();
           const updatedRows = rows.map((row) => {
             if (row.id === id) {
               return { ...row, ...updatedData };
@@ -295,6 +295,7 @@ const UserList = () => {
           });
           setRows(updatedRows);
           setAlertShow(response.message);
+          handleEditModalClose();
         }
       }
     } catch (error: any) {
