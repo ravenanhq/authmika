@@ -35,6 +35,7 @@ const InitialRowData = {
   file: "",
   logo_path: "",
   created_at: "",
+  deleting: false,
 };
 
 interface EditModalProps {
@@ -98,22 +99,25 @@ export default function EditApplicationModal({
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleUpdateApplication = () => {
+    if (validateForm()) {
+      onEdit(editedData);
+    }
+  };
+
   const handleFileUpload = (file: File) => {
     const reader = new FileReader();
 
     reader.onload = () => {
       const base64String = reader.result as string;
-      editedData.file = base64String;
+      setEditedData((prevData) => ({
+        ...prevData,
+        logoPath: file.name,
+        file: base64String,
+      }));
     };
 
     reader.readAsDataURL(file);
-    editedData.logoPath = file.name;
-  };
-
-  const handleUpdateApplication = () => {
-    if (validateForm()) {
-      onEdit(editedData);
-    }
   };
 
   const handleClose = () => {
@@ -225,10 +229,11 @@ export default function EditApplicationModal({
           helperText={errors.callBackUrl}
           sx={{ paddingBottom: 2 }}
         />
-        {/* <FileUpload
+
+        <FileUpload
           onFileUpload={handleFileUpload}
           imageFile={editedData.logoPath}
-        /> */}
+        />
       </DialogContent>
       <Divider
         color="#265073"

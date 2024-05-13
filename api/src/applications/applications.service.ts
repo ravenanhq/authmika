@@ -13,6 +13,8 @@ import { Optional } from 'sequelize';
 import { ApplicationsDto } from './dto/applications.dto';
 import { UserApplications } from 'src/db/model/user-applications.model';
 import { AuthClients } from 'src/db/model/auth-clients.model';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class ApplicationsService {
@@ -71,25 +73,26 @@ export class ApplicationsService {
     applicationDto: ApplicationsDto,
     user: { id: any },
   ): Promise<{ message: string; statusCode: number; data: object }> {
-    const { name, application, base_url, call_back_url } = applicationDto;
+    const { name, application, base_url, call_back_url, logo_path, file } =
+      applicationDto;
     try {
-      const fileName = null;
-      // if (file) {
-      //   fileName = `${Date.now()}_` + logo_path;
-      //   const targetPath = path.join(
-      //     __dirname,
-      //     '../../..',
-      //     'front/public/assets/images',
-      //     fileName,
-      //   );
-      //   const base64Image = file.split(';base64,').pop();
+      let fileName = null;
+      if (file) {
+        fileName = `${Date.now()}_` + logo_path;
+        const targetPath = path.join(
+          __dirname,
+          '../../..',
+          'api/public/assets/images',
+          fileName,
+        );
+        const base64Image = file.split(';base64,').pop();
 
-      //   fs.writeFile(targetPath, base64Image, { encoding: 'base64' }, (err) => {
-      //     if (err) {
-      //       console.error('Error saving image:', err);
-      //     }
-      //   });
-      // }
+        fs.writeFile(targetPath, base64Image, { encoding: 'base64' }, (err) => {
+          if (err) {
+            console.error('Error saving image:', err);
+          }
+        });
+      }
 
       const clientSecretKey = randomBytes(32).toString('hex');
       const clientSecretId = randomBytes(16).toString('hex');
@@ -179,42 +182,43 @@ export class ApplicationsService {
     user: { id: any },
     id: number,
   ): Promise<{ message: string; statusCode: number; data: object }> {
-    const { name, application, base_url, call_back_url } = applicationDto;
+    const { name, application, base_url, call_back_url, logo_path, file } =
+      applicationDto;
     try {
       const existingApplication = await this.applicationsModel.findOne({
         where: { id: id },
       });
       if (existingApplication) {
-        const fileName = null;
-        // if (file) {
-        //   const absolutePath = path.resolve(
-        //     __dirname,
-        //     '../../..',
-        //     'front/public/assets/images',
-        //     existingApplication.logoPath,
-        //   );
-        //   await fs.promises.unlink(absolutePath);
+        let fileName = null;
+        if (file) {
+          const absolutePath = path.resolve(
+            __dirname,
+            '../../..',
+            'api/public/assets/images',
+            existingApplication.logoPath,
+          );
+          await fs.promises.unlink(absolutePath);
 
-        //   fileName = `${Date.now()}_` + logo_path;
-        //   const targetPath = path.join(
-        //     __dirname,
-        //     '../../..',
-        //     'front/public/assets/images',
-        //     fileName,
-        //   );
-        //   const base64Image = file.split(';base64,').pop();
+          fileName = `${Date.now()}_` + logo_path;
+          const targetPath = path.join(
+            __dirname,
+            '../../..',
+            'api/public/assets/images',
+            fileName,
+          );
+          const base64Image = file.split(';base64,').pop();
 
-        //   fs.writeFile(
-        //     targetPath,
-        //     base64Image,
-        //     { encoding: 'base64' },
-        //     (err) => {
-        //       if (err) {
-        //         console.error('Error saving image:', err);
-        //       }
-        //     },
-        //   );
-        // }
+          fs.writeFile(
+            targetPath,
+            base64Image,
+            { encoding: 'base64' },
+            (err) => {
+              if (err) {
+                console.error('Error saving image:', err);
+              }
+            },
+          );
+        }
 
         const fetchedApplication = await this.applicationsModel.findOne({
           where: { application: application },
@@ -284,10 +288,14 @@ export class ApplicationsService {
         });
 
         if (userApplication) {
+          const applications = await this.applicationsModel.findAll({
+            where: { isActive: true },
+          });
+
           return {
             message: 'The application cannot be deleted as a mapping exists.',
-            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            data: [],
+            statusCode: HttpStatus.OK,
+            data: applications,
           };
         } else {
           application.isActive = false;

@@ -211,7 +211,7 @@ export default function AddApplicationModal({
           error={!!errors.call_back_url}
           helperText={errors.call_back_url}
         />
-        {/* <FileUpload onFileUpload={handleFileUpload} imageFile={""} /> */}
+        <FileUpload onFileUpload={handleFileUpload} imageFile={""} />
       </DialogContent>
       <Divider
         color="#265073"

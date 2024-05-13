@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Stack,
   Alert,
+  CardMedia,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { SetStateAction, useEffect, useState } from "react";
@@ -24,6 +25,7 @@ import EditApplicationModal from "./EditApplicationModal";
 import DeleteApplicationModal from "./DeleteApplicationModal";
 import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
+import { config } from "../../../config";
 
 export interface RowData {
   created_at: string | number | Date;
@@ -37,6 +39,7 @@ export interface RowData {
   file?: string;
   logoPath: string;
   logo_path: string;
+  formData?: FormData;
 }
 
 interface AlertState {
@@ -134,26 +137,26 @@ const ApplicationList = () => {
   };
 
   const columns: GridColDef[] = [
-    // {
-    //   field: "logoPath",
-    //   headerName: "Logo",
-    //   headerClassName: "application-header",
-    //   flex: 1,
-    //   minWidth: 100,
-    //   disableColumnMenu: true,
-    //   sortable: false,
-    //   renderCell: (params) => (
-    //     <CardMedia
-    //       component="img"
-    //       alt="Image"
-    //       height="auto"
-    //       image={
-    //         "/assets/images/" + (params.value ? params.value : "no_image.jpg")
-    //       }
-    //       style={{ width: "20%", padding: "10px" }}
-    //     />
-    //   ),
-    // },
+    {
+      field: "logoPath",
+      headerName: "Logo",
+      headerClassName: "application-header",
+      flex: 1,
+      minWidth: 100,
+      disableColumnMenu: true,
+      sortable: false,
+      renderCell: (params) => (
+        <CardMedia
+          component="img"
+          alt="Image"
+          height="auto"
+          image={`${config.service}/assets/images/${
+            params.value ? params.value : "no_image.jpg"
+          }`}
+          style={{ width: "20%", padding: "10px" }}
+        />
+      ),
+    },
     {
       field: "name",
       headerName: "Name",
@@ -253,12 +256,13 @@ const ApplicationList = () => {
         if (response.statusCode === 409) {
           setUniqueAlert(response.message);
         } else if (response.statusCode === 200) {
-          handleEditModalClose();
           const updatedRows = rows.map((row) =>
             row.id === applicationId ? { ...row, ...updatedData } : row
           );
           setRows(updatedRows);
+          handleEditModalClose();
           setAlertShow(response.message);
+          window.location.reload();
         }
       }
     } catch (error: any) {
@@ -281,16 +285,11 @@ const ApplicationList = () => {
           const response = await ApplicationApi.deleteApplication(
             selectedRow.id
           );
-          if (response && response.statusCode == 422) {
-            setDeleteAlert({
-              severity: "error",
-              message: response.message,
-            });
-          } else if (response && response.statusCode == 200) {
+          if (response && response.data) {
             currentRows.splice(itemIndex, 1);
             setRows(currentRows);
             setDeleteAlert({
-              severity: "success",
+              severity: "error",
               message: response.message,
             });
           }
