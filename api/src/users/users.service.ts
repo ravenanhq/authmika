@@ -662,6 +662,41 @@ export class UsersService {
     }
   }
 
+  async updateStatus(
+    id: number,
+  ): Promise<{ message: string; statusCode: number }> {
+    try {
+      const existingUser = await this.userModel.findOne({
+        where: { id: id },
+      });
+      if (existingUser) {
+        existingUser.status = 3;
+        existingUser.save();
+        return {
+          message: 'User deactivated successfully.',
+          statusCode: HttpStatus.OK,
+        };
+      } else {
+        return {
+          message: 'User not found.',
+          statusCode: HttpStatus.NOT_FOUND,
+        };
+      }
+    } catch (error) {
+      if (error instanceof HttpException) {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.CONFLICT,
+        };
+      } else {
+        return {
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
+    }
+  }
+
   async createPassword(
     token: string,
     queryParams: ResetPasswordDto,

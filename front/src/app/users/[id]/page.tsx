@@ -4,6 +4,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { UserApi } from "@/services/api/UserApi";
 import {
   Alert,
+  AlertColor,
   Box,
   Button,
   Card,
@@ -44,6 +45,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useForm } from "react-hook-form";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import LocalPostOfficeIcon from "@mui/icons-material/LocalPostOffice";
+import PersonOffIcon from "@mui/icons-material/PersonOff";
 
 export interface RowData {
   name: string;
@@ -119,12 +121,24 @@ const UserView = ({ params }: { params: IUserView }) => {
   });
   const [confirmPassword, setConfirmPassword] = useState("");
   const [password, setPassword] = useState<string>("");
-  const [savepasswordAlert, setSavePasswordAlert] = useState("");
-  const [resendlinkAlert, setResendLinkAlert] = useState("");
   const [confirmationApplicationId, setConfirmationApplicationId] =
     useState<number>();
   const [confirmationApplicationName, setConfirmationApplicationName] =
     useState("");
+  const [error, setError] = useState<{
+    type: AlertColor;
+    message: string;
+  } | null>(null);
+  const [deactivateModalOpen, setDeactivateModalOpen] =
+    useState<boolean>(false);
+
+  const setErrorMsg = (type: AlertColor, message: string) => {
+    setError({ type, message });
+  };
+
+  const clearError = () => {
+    setError(null);
+  };
 
   const {
     register,
@@ -313,6 +327,7 @@ const UserView = ({ params }: { params: IUserView }) => {
   };
 
   const resendLink = async () => {
+    clearError();
     if (userData !== null) {
       const email = userData.email;
       const id = userData.id;
@@ -322,9 +337,7 @@ const UserView = ({ params }: { params: IUserView }) => {
       };
       try {
         const res = await UserApi.sendResendLinkToUser(data);
-        setResendLinkAlert("");
-        setSavePasswordAlert("");
-        setResendLinkAlert(res.message);
+        setErrorMsg("success", res.message);
         return res;
       } catch (error) {
         console.error("Error submitting data:", error);
@@ -353,6 +366,7 @@ const UserView = ({ params }: { params: IUserView }) => {
   };
 
   const onSubmit = async () => {
+    clearError();
     const formData = watch();
     if (userData !== null) {
       const email = userData.email;
@@ -370,9 +384,8 @@ const UserView = ({ params }: { params: IUserView }) => {
         if (res.user) {
           userData.status = res.user.status;
         }
-        setSavePasswordAlert("");
+        setErrorMsg("success", res.message);
         handleCloseModal();
-        setSavePasswordAlert(res.message);
         return res;
       } catch (error) {
         console.error("Error submitting data:", error);
@@ -381,6 +394,18 @@ const UserView = ({ params }: { params: IUserView }) => {
       setConfirmPassword("");
     } else {
       console.error("Error: userData is null");
+    }
+  };
+
+  const deactivateUser = async () => {
+    clearError();
+    if (userData && userData.id) {
+      const response = await UserApi.updateStatus(userData.id);
+      if (response.statusCode == 200) {
+        setErrorMsg("success", "User deactivated");
+        userData.status = 3;
+      }
+      setDeactivateModalOpen(false);
     }
   };
 
@@ -423,43 +448,25 @@ const UserView = ({ params }: { params: IUserView }) => {
   if (!userData) {
     return null;
   }
+  const userStatus: { [key: number]: string } = {
+    1: "Active",
+    2: "Pending",
+    3: "Inactive",
+  };
 
   return (
     <Container maxWidth="xl">
-      {savepasswordAlert && (
+      {error && (
         <Alert
           sx={{
-            width: "60%",
+            width: "100%",
             margin: "0px",
             mt: "30px",
-            [theme.breakpoints.down("md")]: {
-              width: "100%",
-            },
           }}
-          severity="success"
-          onClose={() => {
-            setSavePasswordAlert("");
-          }}
+          severity={error.type}
+          onClose={clearError}
         >
-          {savepasswordAlert}
-        </Alert>
-      )}
-      {resendlinkAlert && (
-        <Alert
-          sx={{
-            width: "60%",
-            margin: "0px",
-            mt: "30px",
-            [theme.breakpoints.down("md")]: {
-              width: "100%",
-            },
-          }}
-          severity="success"
-          onClose={() => {
-            setResendLinkAlert("");
-          }}
-        >
-          {resendlinkAlert}
+          {error.message}
         </Alert>
       )}
       <Grid container spacing={2}>
@@ -492,6 +499,16 @@ const UserView = ({ params }: { params: IUserView }) => {
               disabled={userData.status === 1}
             >
               Resend Activation Email
+            </PrimaryButton>
+            <PrimaryButton
+              variant="contained"
+              color="primary"
+              style={{ margin: "15px 15px 0 0" }}
+              onClick={() => setDeactivateModalOpen(true)}
+              startIcon={<PersonOffIcon />}
+              disabled={userData.status === 3}
+            >
+              Deactivate User
             </PrimaryButton>
             <Dialog open={openModal} onClose={handleClose}>
               <DialogTitle
@@ -633,6 +650,17 @@ const UserView = ({ params }: { params: IUserView }) => {
                 </PrimaryButton>
               </DialogActions>
             </Dialog>
+            <Dialog open={deactivateModalOpen}>
+              <DialogTitle>
+                {"Are you sure you want to deactivate this user?"}
+              </DialogTitle>
+              <DialogActions>
+                <Button onClick={() => setDeactivateModalOpen}>Cancel</Button>
+                <Button onClick={deactivateUser} autoFocus>
+                  Deactivate
+                </Button>
+              </DialogActions>
+            </Dialog>
             <Card
               sx={{
                 width: "100%",
@@ -707,7 +735,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                       <TableCell
                         style={{ whiteSpace: "unset", wordBreak: "break-all" }}
                       >
-                        {userData.status === 1 ? "Active" : "Pending"}
+                        {userStatus[userData.status]}
                       </TableCell>
                     </TableRow>
                   </TableBody>

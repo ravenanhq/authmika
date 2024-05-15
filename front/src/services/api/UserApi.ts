@@ -82,6 +82,11 @@ export class UserApi {
     return res.data;
   }
 
+  static async updateStatus(id: number) {
+    const res = await axios.post(`${config.service}/users/update-status/${id}`);
+    return res.data;
+  }
+
   static async deleteUser(id: number) {
     const res = await axios.delete(`${config.service}/users/${id}`);
     return res.data;
@@ -275,10 +280,7 @@ export class UserApi {
   }
 
   static async savePassword(data: any) {
-    const res = await axios.post(
-      `${config.service}/users/save-password`,
-      data
-    );
+    const res = await axios.post(`${config.service}/users/save-password`, data);
     return res.data;
   }
 

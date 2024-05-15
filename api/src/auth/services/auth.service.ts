@@ -23,7 +23,7 @@ export class AuthService {
     if (
       !user ||
       !(await bcrypt.compare(pass, user?.password)) ||
-      user.status === 0
+      user.status != 1
     ) {
       throw new UnauthorizedException('Incorrect email or password.');
     }
