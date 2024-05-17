@@ -148,7 +148,7 @@ const ApplicationList = () => {
       renderCell: (params) => (
         <CardMedia
           component="img"
-          alt="Image"
+          alt="logo"
           height="auto"
           image={`${config.service}/assets/images/${
             params.value ? params.value : "no_image.jpg"
@@ -256,6 +256,7 @@ const ApplicationList = () => {
         if (response.statusCode === 409) {
           setUniqueAlert(response.message);
         } else if (response.statusCode === 200) {
+          setRows(response.data);
           const updatedRows = rows.map((row) =>
             row.id === applicationId ? { ...row, ...updatedData } : row
           );
