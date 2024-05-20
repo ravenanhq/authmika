@@ -256,14 +256,13 @@ const ApplicationList = () => {
         if (response.statusCode === 409) {
           setUniqueAlert(response.message);
         } else if (response.statusCode === 200) {
-          setRows(response.data);
           const updatedRows = rows.map((row) =>
-            row.id === applicationId ? { ...row, ...updatedData } : row
+            row.id === applicationId ? { ...row, ...response.data } : row
           );
           setRows(updatedRows);
           handleEditModalClose();
+
           setAlertShow(response.message);
-          window.location.reload();
         }
       }
     } catch (error: any) {

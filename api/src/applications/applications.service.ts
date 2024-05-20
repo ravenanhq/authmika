@@ -220,6 +220,8 @@ export class ApplicationsService {
               }
             },
           );
+        } else {
+          fileName = logo_path;
         }
         const fetchedApplication = await this.applicationsModel.findOne({
           where: { application: application },
@@ -237,14 +239,10 @@ export class ApplicationsService {
         existingApplication.updatedBy = user ? user.id : null;
         await existingApplication.save();
 
-        const applications = await this.applicationsModel.findAll({
-          where: { isActive: true },
-        });
-
         return {
           message: 'Application updated successfully.',
           statusCode: HttpStatus.OK,
-          data: applications,
+          data: existingApplication,
         };
       } else {
         return {

@@ -114,6 +114,8 @@ export default function EditApplicationModal({
     };
 
     reader.readAsDataURL(file);
+
+    editedData.logo_path = file.name;
   };
 
   const handleClose = () => {
@@ -228,7 +230,7 @@ export default function EditApplicationModal({
 
         <FileUpload
           onFileUpload={handleFileUpload}
-          imageFile={editedData.logoPath}
+          imageFile={editedData.logoPath || ""}
         />
       </DialogContent>
       <Divider
