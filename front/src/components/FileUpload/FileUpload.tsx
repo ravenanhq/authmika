@@ -97,7 +97,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, imageFile }) => {
           {imageUrl && (
             <CardMedia
               component="img"
-              alt="Uploaded Image"
+              alt="logo"
               height="auto"
               image={imageUrl}
               style={{ width: "50px", marginLeft: "20px" }}

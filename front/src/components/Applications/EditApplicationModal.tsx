@@ -9,7 +9,6 @@ import {
   DialogContent,
   DialogActions,
   styled,
-  CardMedia,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
@@ -21,6 +20,7 @@ interface Errors {
   name?: string;
   application?: string;
   baseUrl?: string;
+  logoPath?: string;
 }
 
 const InitialRowData = {
@@ -110,11 +110,7 @@ export default function EditApplicationModal({
 
     reader.onload = () => {
       const base64String = reader.result as string;
-      setEditedData((prevData) => ({
-        ...prevData,
-        logoPath: file.name,
-        file: base64String,
-      }));
+      editedData.file = base64String;
     };
 
     reader.readAsDataURL(file);

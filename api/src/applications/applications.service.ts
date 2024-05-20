@@ -191,14 +191,16 @@ export class ApplicationsService {
       if (existingApplication) {
         let fileName = null;
         if (file) {
-          const absolutePath = path.resolve(
-            __dirname,
-            '../../..',
-            'api/public/assets/images',
-            existingApplication.logoPath,
-          );
-          await fs.promises.unlink(absolutePath);
+          if (existingApplication.logoPath) {
+            const absolutePath = path.resolve(
+              __dirname,
+              '../../..',
+              'api/public/assets/images',
+              existingApplication.logoPath,
+            );
 
+            await fs.promises.unlink(absolutePath);
+          }
           fileName = `${Date.now()}_` + logo_path;
           const targetPath = path.join(
             __dirname,
@@ -219,7 +221,6 @@ export class ApplicationsService {
             },
           );
         }
-
         const fetchedApplication = await this.applicationsModel.findOne({
           where: { application: application },
         });
