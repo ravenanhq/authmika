@@ -5,9 +5,11 @@ import {
   ValidationError,
   ValidationPipe,
 } from '@nestjs/common';
+import { join } from 'path';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -35,7 +37,8 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
-
+  app.useStaticAssets(join(__dirname, '..', 'public'));
   await app.listen(process.env.APP_PORT || 3001);
 }
+
 bootstrap();

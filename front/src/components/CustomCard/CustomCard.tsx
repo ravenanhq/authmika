@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import Image from "next/image";
 import { UserApi } from "@/services/api/UserApi";
 import { getSession } from "next-auth/react";
+import { config } from "../../../config";
 
 interface CustomCardProps {
     logo_path: string;
@@ -78,14 +79,14 @@ const CustomCard: React.FC<CustomCardProps> = ({
                 logo_path !== "" &&
                 logo_path !== null ? (
                     <Image
-                        src={"/assets/images/" + logo_path}
+                        src={`${config.service}/assets/images/${logo_path}`}
                         alt="logo"
                         width={80}
                         height={100}
                     />
                 ) : (
                     <Image
-                        src="/assets/images/no_image.jpg"
+                        src={`${config.service}/assets/images/no_image.jpg`}
                         alt="logo"
                         width={80}
                         height={100}
