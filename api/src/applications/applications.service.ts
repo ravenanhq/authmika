@@ -287,14 +287,10 @@ export class ApplicationsService {
         });
 
         if (userApplication) {
-          const applications = await this.applicationsModel.findAll({
-            where: { isActive: true },
-          });
-
           return {
             message: 'The application cannot be deleted as a mapping exists.',
-            statusCode: HttpStatus.OK,
-            data: applications,
+            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+            data: [],
           };
         } else {
           application.isActive = false;

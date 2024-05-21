@@ -261,7 +261,6 @@ const ApplicationList = () => {
           );
           setRows(updatedRows);
           handleEditModalClose();
-
           setAlertShow(response.message);
         }
       }
@@ -285,15 +284,22 @@ const ApplicationList = () => {
           const response = await ApplicationApi.deleteApplication(
             selectedRow.id
           );
-          if (response && response.data) {
-            currentRows.splice(itemIndex, 1);
-            setRows(currentRows);
+          if (response && response.statusCode == 422) {
             setDeleteAlert({
               severity: "error",
               message: response.message,
             });
+          } else if (response && response.statusCode == 200) {
+          if (response && response.data) {
+            currentRows.splice(itemIndex, 1);
+            setRows(currentRows);
+            setDeleteAlert({
+              severity: "success",
+              message: response.message,
+            });
           }
         }
+      }
         setDeleteModalOpen(false);
       } catch (error: any) {
         console.error(error);
