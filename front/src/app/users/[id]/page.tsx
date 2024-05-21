@@ -48,6 +48,7 @@ import LocalPostOfficeIcon from "@mui/icons-material/LocalPostOffice";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import Image from "next/image";
 import { config } from "../../../../config";
+import DeActivateModal from "@/components/User/DeActivateModal";
 
 export interface RowData {
   name: string;
@@ -405,6 +406,10 @@ const UserView = ({ params }: { params: IUserView }) => {
     }
   };
 
+  const deactivateModalClose = () => {
+    setDeactivateModalOpen(false);
+  };
+
   const PrimaryButton = styled(Button)(() => ({
     textTransform: "none",
     paddingLeft: "10px",
@@ -646,17 +651,11 @@ const UserView = ({ params }: { params: IUserView }) => {
                 </PrimaryButton>
               </DialogActions>
             </Dialog>
-            <Dialog open={deactivateModalOpen}>
-              <DialogTitle>
-                {"Are you sure you want to deactivate this user?"}
-              </DialogTitle>
-              <DialogActions>
-                <Button onClick={() => setDeactivateModalOpen}>Cancel</Button>
-                <Button onClick={deactivateUser} autoFocus>
-                  Deactivate
-                </Button>
-              </DialogActions>
-            </Dialog>
+            <DeActivateModal
+              open={deactivateModalOpen}
+              onDeactivateConfirm={deactivateUser}
+              onClose={deactivateModalClose}
+            />
             <Card
               sx={{
                 width: "100%",
