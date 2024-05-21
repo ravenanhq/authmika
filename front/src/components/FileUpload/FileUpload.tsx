@@ -8,6 +8,7 @@ import {
   Card,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { config } from "../../../config";
 
 interface FileUploadProps {
   onFileUpload: (file: File) => void;
@@ -22,9 +23,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, imageFile }) => {
 
   useEffect(() => {
     if (imageFile) {
-      setImageUrl("/assets/images/" + imageFile);
+      setImageUrl(`${config.service}/assets/images/${imageFile}`);
     } else {
-      setImageUrl("/assets/images/no_image.jpg");
+      setImageUrl(`${config.service}/assets/images/no_image.jpg`);
     }
   }, [imageFile]);
 
@@ -96,7 +97,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, imageFile }) => {
           {imageUrl && (
             <CardMedia
               component="img"
-              alt="Uploaded Image"
+              alt="logo"
               height="auto"
               image={imageUrl}
               style={{ width: "50px", marginLeft: "20px" }}

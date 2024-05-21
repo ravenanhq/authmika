@@ -46,29 +46,27 @@ import { useForm } from "react-hook-form";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import LocalPostOfficeIcon from "@mui/icons-material/LocalPostOffice";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
+import Image from "next/image";
+import { config } from "../../../../config";
 
 export interface RowData {
   name: string;
   id: number;
 }
-
 interface IUserView {
   id?: number;
   username?: string;
   email?: string;
 }
-
 interface ICreateListProps {
   name: string;
   id: number;
 }
-
 interface Application {
   logoPath: string;
   id: number;
   name: string;
 }
-
 interface ExtractedDataItem {
   application: {
     id: any;
@@ -79,7 +77,6 @@ interface ExtractedDataItem {
   name: string;
   baseUrl: string;
 }
-
 interface UserData {
   firstName: string;
   lastName: string;
@@ -89,7 +86,6 @@ interface UserData {
   mobile: number;
   id: number | undefined;
 }
-
 interface ICreatePasswordProps {
   password?: string | undefined;
   confirmPassword?: string | undefined;
@@ -829,25 +825,25 @@ const UserView = ({ params }: { params: IUserView }) => {
                           key={application.id}
                           style={{ display: "flex" }}
                         >
-                          {/* <TableCell style={{ width: "6%" }}>
-                    {application.logoPath !== undefined &&
-                    application.logoPath !== "" &&
-                    application.logoPath !== null ? (
-                      <Image
-                        src={"/assets/images/" + application.logoPath}
-                        alt="logo"
-                        width={60}
-                        height={40}
-                      />
-                    ) : (
-                      <Image
-                        src="/assets/images/no_image.jpg"
-                        alt="logo"
-                        width={60}
-                        height={40}
-                      />
-                    )}
-                  </TableCell> */}
+                          <TableCell style={{ width: "6%" }}>
+                            {application &&
+                            application.logoPath !== undefined &&
+                            application.logoPath !== "" ? (
+                              <Image
+                                src={`${config.service}/assets/images/${application.logoPath}`}
+                                alt="logo"
+                                width={40}
+                                height={40}
+                              />
+                            ) : (
+                              <Image
+                                src={`${config.service}/assets/images/no_image.jpg`}
+                                alt="logo"
+                                width={40}
+                                height={40}
+                              />
+                            )}
+                          </TableCell>
                           <TableCell style={{ width: "100%", height: "50%" }}>
                             <Box
                               sx={{

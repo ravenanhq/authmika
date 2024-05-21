@@ -9,7 +9,6 @@ import {
   DialogContent,
   DialogActions,
   styled,
-  CardMedia,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
@@ -21,6 +20,7 @@ interface Errors {
   name?: string;
   application?: string;
   baseUrl?: string;
+  logoPath?: string;
 }
 
 const InitialRowData = {
@@ -35,6 +35,7 @@ const InitialRowData = {
   file: "",
   logo_path: "",
   created_at: "",
+  deleting: false,
 };
 
 interface EditModalProps {
@@ -54,6 +55,7 @@ export default function EditApplicationModal({
 }: EditModalProps) {
   const [editedData, setEditedData] = useState<RowData>(InitialRowData);
   const [errors, setErrors] = useState<Errors>({});
+  const [logo_path, setLogoPath] = useState("");
 
   useEffect(() => {
     if (rowData) {
@@ -98,6 +100,13 @@ export default function EditApplicationModal({
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleUpdateApplication = () => {
+    if (validateForm()) {
+      onEdit(editedData);
+      editedData.file = '';
+    }
+  };
+
   const handleFileUpload = (file: File) => {
     const reader = new FileReader();
 
@@ -107,13 +116,10 @@ export default function EditApplicationModal({
     };
 
     reader.readAsDataURL(file);
-    editedData.logoPath = file.name;
-  };
 
-  const handleUpdateApplication = () => {
-    if (validateForm()) {
-      onEdit(editedData);
-    }
+    editedData.logoPath = file.name;
+    editedData.logo_path = file.name;
+    setLogoPath(file.name);
   };
 
   const handleClose = () => {
@@ -225,10 +231,11 @@ export default function EditApplicationModal({
           helperText={errors.callBackUrl}
           sx={{ paddingBottom: 2 }}
         />
-        {/* <FileUpload
+
+        <FileUpload
           onFileUpload={handleFileUpload}
-          imageFile={editedData.logoPath}
-        /> */}
+          imageFile={editedData.logoPath || ""}
+        />
       </DialogContent>
       <Divider
         color="#265073"
