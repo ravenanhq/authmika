@@ -290,7 +290,6 @@ const ApplicationList = () => {
               message: response.message,
             });
           } else if (response && response.statusCode == 200) {
-          if (response && response.data) {
             currentRows.splice(itemIndex, 1);
             setRows(currentRows);
             setDeleteAlert({
@@ -299,7 +298,6 @@ const ApplicationList = () => {
             });
           }
         }
-      }
         setDeleteModalOpen(false);
       } catch (error: any) {
         console.error(error);

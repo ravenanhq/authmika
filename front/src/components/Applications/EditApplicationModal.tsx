@@ -55,6 +55,7 @@ export default function EditApplicationModal({
 }: EditModalProps) {
   const [editedData, setEditedData] = useState<RowData>(InitialRowData);
   const [errors, setErrors] = useState<Errors>({});
+  const [logo_path, setLogoPath] = useState("");
 
   useEffect(() => {
     if (rowData) {
@@ -102,6 +103,7 @@ export default function EditApplicationModal({
   const handleUpdateApplication = () => {
     if (validateForm()) {
       onEdit(editedData);
+      editedData.file = '';
     }
   };
 
@@ -115,7 +117,9 @@ export default function EditApplicationModal({
 
     reader.readAsDataURL(file);
 
+    editedData.logoPath = file.name;
     editedData.logo_path = file.name;
+    setLogoPath(file.name);
   };
 
   const handleClose = () => {
