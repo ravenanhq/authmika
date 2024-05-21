@@ -6,10 +6,12 @@ import {
   HttpCode,
   HttpStatus,
   Body,
+  UseGuards,
 } from '@nestjs/common';
 
 export class UserApplicationController {}
 import { UserApplicationService } from './user-applications.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('user-applications')
 export class UserApplicationsController {
@@ -20,6 +22,7 @@ export class UserApplicationsController {
   @Post()
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async create(
     @Body('userId') userId: number,
     @Body('applicationId') applicationId: Array<string>,
@@ -30,6 +33,7 @@ export class UserApplicationsController {
   @Post('get-user-applications')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async getApplicationsByUserId(
     @Body() requestBody: { userId: number },
   ): Promise<{
@@ -51,6 +55,7 @@ export class UserApplicationsController {
   @Post('delete-applications')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async deleteUserApplicationMapping(
     @Body() requestBody: { userId: number; applicationId: number },
   ): Promise<{ message: string; statusCode: number }> {

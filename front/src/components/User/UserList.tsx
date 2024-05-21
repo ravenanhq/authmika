@@ -23,6 +23,7 @@ import DeleteModal from "./DeleteUserModal";
 import AddUserModal from "./AddUserModal";
 import EditUserModal from "./EditUserModal";
 import { UserApi } from "@/services/api/UserApi";
+import { UserServiceApi } from "@/services/api/UserServiceApi";
 import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
 
@@ -41,12 +42,6 @@ interface AlertState {
   message: string;
 }
 
-const userStatus: { [key: number]: string } = {
-  1: "Active",
-  2: "Pending",
-  3: "Inactive",
-};
-
 const UserList = () => {
   const [alertShow, setAlertShow] = useState("");
   const [loading, setLoading] = useState(true);
@@ -56,7 +51,7 @@ const UserList = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
   const [invalidEmail, setInvalidEmail] = useState("");
-  const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
+  const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null); 
 
   useEffect(() => {
     restrictMenuAccess();
@@ -190,7 +185,7 @@ const UserList = () => {
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 100,
-      renderCell: (params) => <>{userStatus[params.value]}</>,
+      renderCell: (params) => <>{params.value === 1 ? "Active" : "Pending"}</>,
     },
     {
       field: "created_at",
@@ -248,7 +243,7 @@ const UserList = () => {
 
   const addUser = async (newUser: RowData) => {
     try {
-      const response = await UserApi.create(newUser);
+      const response = await UserServiceApi.create(newUser);
       setInvalidEmail("");
       if (response) {
         if (response.statusCode == 409) {
@@ -368,6 +363,9 @@ const UserList = () => {
       color: "white",
     },
   }));
+
+
+
 
   return (
     <Container maxWidth="xl">

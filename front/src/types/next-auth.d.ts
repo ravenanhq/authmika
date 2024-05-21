@@ -9,7 +9,7 @@ declare module "next-auth" {
   }
 
   interface User {
-    accessToken: string;
+    access_token: string;
     user: {
       user: UserDto;
     };

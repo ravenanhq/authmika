@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "@/api/axios";
 import { config } from "../../../config";
 
 export class ApplicationApi {

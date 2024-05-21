@@ -1,3 +1,4 @@
+"use client";
 import React, { useState } from "react";
 import { Button, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { signOut } from "next-auth/react";

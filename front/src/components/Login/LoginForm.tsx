@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { UserApi } from "@/services/api/UserApi";
+import { UserServiceApi } from "@/services/api/UserServiceApi";
 import { getSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -64,7 +64,7 @@ const Login = () => {
         const param = {
           key: key,
         };
-        const response = await UserApi.setClientDetails(param);
+        const response = await UserServiceApi.setClientDetails(param);
         if (response.statusCode == 200) {
           if (response.clientId) setClientId(response.clientId);
           if (response.redirectUrl) setRedirectUrl(response.redirectUrl);
@@ -84,7 +84,7 @@ const Login = () => {
     if (session) {
       const response = await ApplicationApi.getApplicationByClientId(clientId!);
       if (response.statusCode == 200 && response.applicationId) {
-        const result = await UserApi.quickSignIn({
+        const result = await UserServiceApi.quickSignIn({
           userId: session.user.id,
           applicationId: response.applicationId,
         });

@@ -20,11 +20,14 @@ import { AuthClientsController } from 'src/auth-clients/auth-clients.controller'
 import { AuthClientsService } from 'src/auth-clients/auth-clients.service';
 import { ApplicationsService } from 'src/applications/applications.service';
 import { UserApplicationService } from 'src/user-applications/user-applications.service';
+import { PassportModule } from '@nestjs/passport';
+import { JwtStrategy } from './jwt.strategy';
 
 dotenv.config();
 
 @Module({
   imports: [
+    PassportModule,
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,
@@ -53,6 +56,7 @@ dotenv.config();
     ApplicationsService,
     UserApplicationService,
     AuthClientsService,
+    JwtStrategy,
   ],
 })
 export class AuthModule {}

@@ -14,10 +14,12 @@ import {
   HttpException,
   Query,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersDto } from './dto/users.dto';
 import { UsersService } from './users.service';
 import { ResetPasswordDto } from 'src/auth/dto/reset-password.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 interface ResendOtpParams {
   id: number;
@@ -32,6 +34,7 @@ export class UsersController {
   constructor(private userService: UsersService) {}
 
   @Get('qrcode/:id')
+  @UseGuards(AuthGuard('jwt'))
   async generateQRCodeDataUrl(
     @Query('is_two_factor_enabled') is_two_factor_enabled: string,
     @Param('id') id: number,
@@ -56,6 +59,7 @@ export class UsersController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async getUsers() {
     try {
       const activeUsers = await this.userService.getUsers();
@@ -73,6 +77,7 @@ export class UsersController {
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe())
+  @UseGuards(AuthGuard('jwt'))
   async create(
     @Body() usersDto: UsersDto,
   ): Promise<{ message: string; statusCode: number }> {
@@ -94,6 +99,7 @@ export class UsersController {
   @Post('verify-current-password/:id')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async verifyCurrentPassword(
     @Request() req,
     @Param('id') id: number,
@@ -104,6 +110,7 @@ export class UsersController {
 
   @Get('create-password/:token')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async createPassword(
     @Param('token') token: string,
     @Query() queryParams: ResetPasswordDto,
@@ -118,6 +125,7 @@ export class UsersController {
 
   @Get('active-users/:token')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async aciveUsers(@Param('token') token: string, @Query() expires: number) {
     try {
       const result = await this.userService.acitiveUsers(token, expires);
@@ -129,6 +137,7 @@ export class UsersController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async show(
     @Param('id') id: number,
   ): Promise<{ message: string; statusCode: number }> {
@@ -138,6 +147,7 @@ export class UsersController {
   @Put(':id')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async update(
     @Body() usersDto: UsersDto,
     @Request() req,
@@ -149,6 +159,7 @@ export class UsersController {
   @Post('update-password/:id')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async updatePassword(
     @Body() usersDto: UsersDto,
     @Request() req,
@@ -163,19 +174,11 @@ export class UsersController {
     );
   }
 
-  @Post('update-status/:id')
-  @UsePipes(new ValidationPipe())
-  @HttpCode(HttpStatus.OK)
-  async updateStatus(
-    @Param('id') id: number,
-  ): Promise<{ message: string; statusCode: number }> {
-    return this.userService.updateStatus(id);
-  }
-
   @Post('create-from-api')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe())
+  @UseGuards(AuthGuard('jwt'))
   async createFromApi(
     @Body() usersDto: UsersDto,
     @Body('clientSecretKey') clientSecretKey: any,
@@ -194,6 +197,7 @@ export class UsersController {
   }
 
   @Post('verify-otp/:id/:otp')
+  @UseGuards(AuthGuard('jwt'))
   async verifyOtp(
     @Param('id') id: number,
     @Param('otp') otp: string,
@@ -217,6 +221,7 @@ export class UsersController {
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe())
+  @UseGuards(AuthGuard('jwt'))
   async sendResendLinkToUser(
     @Body('email') email: string,
     @Body('firstName') firstName: string,
@@ -229,6 +234,7 @@ export class UsersController {
   }
 
   @Post('save-password')
+  @UseGuards(AuthGuard('jwt'))
   async savePassword(
     @Body('email') email: string,
     @Body('id') id: number,
@@ -254,6 +260,7 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
   async remove(
     @Param('id') id: number,
   ): Promise<{ message: string; statusCode: number }> {
@@ -261,6 +268,7 @@ export class UsersController {
   }
 
   @Post('resend-otp')
+  @UseGuards(AuthGuard('jwt'))
   async resendOtp(@Body() params: ResendOtpParams) {
     try {
       const result = await this.userService.resendOtp(params);
