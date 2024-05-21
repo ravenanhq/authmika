@@ -13,11 +13,11 @@ import {
   Box,
   Divider,
   Container,
+  CardMedia,
 } from "@mui/material";
 import React from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { config } from "../../../../config";
 interface ApplicationData {
   name: string;
@@ -87,6 +87,7 @@ const ApplicationView = () => {
             [theme.breakpoints.down("md")]: {
               width: "100%",
             },
+            overflowX: "auto",
           }}
         >
           <CardContent>
@@ -106,18 +107,20 @@ const ApplicationView = () => {
                     {applicationData.logoPath !== undefined &&
                     applicationData.logoPath !== "" &&
                     applicationData.logoPath !== null ? (
-                      <Image
+                      <CardMedia
+                        component="img"
                         src={`${config.service}/assets/images/${applicationData.logoPath}`}
                         alt="logo"
-                        width={80}
-                        height={100}
+                        height="100"
+                        style={{ width: "80px" }}
                       />
                     ) : (
-                      <Image
+                      <CardMedia
+                        component="img"
                         src={`${config.service}/assets/images/no_image.jpg`}
                         alt="logo"
-                        width={80}
-                        height={100}
+                        height="100"
+                        style={{ width: "80px" }}
                       />
                     )}
                   </TableCell>
