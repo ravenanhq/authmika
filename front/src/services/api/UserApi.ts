@@ -224,4 +224,9 @@ export class UserApi {
       throw error;
     }
   }
+
+  static async updateStatus(id: number) {
+    const res = await axios.post(`${config.service}/users/update-status/${id}`);
+    return res.data;
+  }
 }

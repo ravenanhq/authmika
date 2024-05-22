@@ -102,7 +102,7 @@ const CustomCard: React.FC<CustomCardProps> = ({
         ) : (
           <CardMedia
             component="img"
-            src={`${config.service}/assets/images/${logo_path}`}
+            src={`${config.service}/assets/images/no_image.jpg`}
             alt="logo"
             height="100"
             style={{

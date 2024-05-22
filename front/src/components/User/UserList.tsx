@@ -42,6 +42,12 @@ interface AlertState {
   message: string;
 }
 
+const userStatus: { [key: number]: string } = {
+  1: "Active",
+  2: "Pending",
+  3: "Inactive",
+};
+
 const UserList = () => {
   const [alertShow, setAlertShow] = useState("");
   const [loading, setLoading] = useState(true);
@@ -185,7 +191,7 @@ const UserList = () => {
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 100,
-      renderCell: (params) => <>{params.value === 1 ? "Active" : "Pending"}</>,
+      renderCell: (params) => <>{userStatus[params.value]}</>,
     },
     {
       field: "created_at",

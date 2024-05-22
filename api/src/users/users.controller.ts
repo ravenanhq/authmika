@@ -281,4 +281,13 @@ export class UsersController {
       };
     }
   }
+
+  @Post('update-status/:id')
+  @UsePipes(new ValidationPipe())
+  @HttpCode(HttpStatus.OK)
+  async updateStatus(
+    @Param('id') id: number,
+  ): Promise<{ message: string; statusCode: number }> {
+    return this.userService.updateStatus(id);
+  }
 }
