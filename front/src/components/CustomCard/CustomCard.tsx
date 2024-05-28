@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import { UserApi } from "@/services/api/UserApi";
+import Image from "next/image";
+import { UserServiceApi } from "@/services/api/UserServiceApi";
 import { getSession } from "next-auth/react";
-import { config } from "../../../config";
 import { CardMedia } from "@mui/material";
-
+import { config } from "../../../config";
 interface CustomCardProps {
   logo_path: string;
   name: string;
@@ -43,7 +43,7 @@ const CustomCard: React.FC<CustomCardProps> = ({
   const handleClick = async () => {
     try {
       if (role?.toLowerCase() === "client") {
-        const response = await UserApi.quickSignIn({
+        const response = await UserServiceApi.quickSignIn({
           userId: userId,
           applicationId: applicationId,
         });
@@ -68,19 +68,36 @@ const CustomCard: React.FC<CustomCardProps> = ({
         cursor: role?.toLowerCase() === "client" ? "pointer" : "default",
         transition: "transform 0.3s ease",
         transform: hovered ? "scale(1.05)" : "scale(1)",
+        textAlign: "center",
+        justifyContent: "center",
+        alignItems: "center",
+        display: "flex",
       }}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <CardContent style={{ textAlign: "center" }}>
+      <CardContent
+        style={{
+          textAlign: "center",
+          justifyContent: "center",
+          alignItems: "center",
+          display: "inline",
+        }}
+      >
         {logo_path !== undefined && logo_path !== "" && logo_path !== null ? (
           <CardMedia
             component="img"
             src={`${config.service}/assets/images/${logo_path}`}
             alt="logo"
             height="100"
-            style={{ width: "160px", paddingLeft: "30px" }}
+            style={{
+              width: "80px",
+              textAlign: "center",
+              justifyContent: "center",
+              alignItems: "center",
+              display: "inline",
+            }}
           />
         ) : (
           <CardMedia
@@ -88,7 +105,13 @@ const CustomCard: React.FC<CustomCardProps> = ({
             src={`${config.service}/assets/images/no_image.jpg`}
             alt="logo"
             height="100"
-            style={{ width: "160px", paddingLeft: "30px" }}
+            style={{
+              width: "80px",
+              textAlign: "center",
+              justifyContent: "center",
+              alignItems: "center",
+              display: "inline",
+            }}
           />
         )}
         <Typography variant="h5" component="div">

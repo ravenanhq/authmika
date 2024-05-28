@@ -1,5 +1,5 @@
 "use client";
-import { UserApi } from "@/services/api/UserApi";
+import { UserServiceApi } from "@/services/api/UserServiceApi";
 import { AlternateEmailRounded } from "@mui/icons-material";
 import {
   Box,
@@ -34,7 +34,7 @@ const ForgotPassword = () => {
     const emailData = { email: data.email };
     if (data.email) setSubmittedEmail(data.email);
     try {
-      const response = await UserApi.forgotPassword(emailData);
+      const response = await UserServiceApi.forgotPassword(emailData);
       if (response.statusCode == 200) {
         setIsMailSent(true);
       } else {

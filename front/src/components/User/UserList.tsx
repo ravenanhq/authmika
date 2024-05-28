@@ -23,6 +23,7 @@ import DeleteModal from "./DeleteUserModal";
 import AddUserModal from "./AddUserModal";
 import EditUserModal from "./EditUserModal";
 import { UserApi } from "@/services/api/UserApi";
+import { UserServiceApi } from "@/services/api/UserServiceApi";
 import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
 
@@ -56,7 +57,7 @@ const UserList = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
   const [invalidEmail, setInvalidEmail] = useState("");
-  const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
+  const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null); 
 
   useEffect(() => {
     restrictMenuAccess();
@@ -248,7 +249,7 @@ const UserList = () => {
 
   const addUser = async (newUser: RowData) => {
     try {
-      const response = await UserApi.create(newUser);
+      const response = await UserServiceApi.create(newUser);
       setInvalidEmail("");
       if (response) {
         if (response.statusCode == 409) {
@@ -368,6 +369,9 @@ const UserList = () => {
       color: "white",
     },
   }));
+
+
+
 
   return (
     <Container maxWidth="xl">

@@ -11,9 +11,11 @@ import {
   Delete,
   Param,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { ApplicationsDto } from './dto/applications.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('applications')
 export class ApplicationsController {
@@ -21,6 +23,7 @@ export class ApplicationsController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async getApplications() {
     return this.applicationService.getApplications();
   }
@@ -28,6 +31,7 @@ export class ApplicationsController {
   @Post()
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async create(
     @Body() applicationsDto: ApplicationsDto,
     @Request() req,
@@ -37,6 +41,7 @@ export class ApplicationsController {
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async show(
     @Param('id') id: number,
   ): Promise<{ message: string; statusCode: number }> {
@@ -46,6 +51,7 @@ export class ApplicationsController {
   @Put(':id')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async update(
     @Body() applicationsDto: ApplicationsDto,
     @Request() req,
@@ -55,6 +61,7 @@ export class ApplicationsController {
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
   async remove(
     @Param('id') id: number,
   ): Promise<{ message: string; statusCode: number }> {
@@ -62,6 +69,7 @@ export class ApplicationsController {
   }
 
   @Get('get/:clientId')
+  @UseGuards(AuthGuard('jwt'))
   getApplicationId(@Param('clientId') clientId: number) {
     return this.applicationService.getApplication(clientId);
   }
