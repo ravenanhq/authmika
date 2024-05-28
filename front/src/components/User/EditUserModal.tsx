@@ -14,6 +14,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import { RowData } from "./UserList";
 import { MenuItem } from "@mui/material";
+import { RoleApi } from "@/services/api/RoleApi";
 
 interface Errors {
   firstName?: string;
@@ -41,17 +42,6 @@ interface EditModalProps {
   uniqueEmail: string;
 }
 
-const Role: { value: string; label: string }[] = [
-  {
-    value: "ADMIN",
-    label: "ADMIN",
-  },
-  {
-    value: "CLIENT",
-    label: "CLIENT",
-  },
-];
-
 export default function EditUserModal({
   open,
   onClose,
@@ -62,6 +52,11 @@ export default function EditUserModal({
   const [editedData, setEditedData] = useState<RowData>(InitialRowData);
   const [errors, setErrors] = useState<Errors>({});
   const [successMessageOpen, setSuccessMessageOpen] = useState(false);
+  const [roles, setRoles] = useState<{ name: string; label: string }[]>([]);
+
+  useEffect(() => {
+    getroles();
+  }, []);
 
   useEffect(() => {
     if (rowData) {
@@ -81,7 +76,6 @@ export default function EditUserModal({
       setErrors({});
     };
   }, [uniqueEmail]);
-
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -123,6 +117,18 @@ export default function EditUserModal({
       setErrors({});
     }
     setSuccessMessageOpen(true);
+  };
+
+  const getroles = async () => {
+    try {
+      const response = await RoleApi.updateRole();
+      if (response) {
+        const roleData = response;
+        setRoles(roleData);
+      }
+    } catch (error: any) {
+      console.log(error);
+    }
   };
 
   const handleClose = () => {
@@ -182,7 +188,7 @@ export default function EditUserModal({
       </DialogTitle>
       <Divider color="#265073"></Divider>
       <DialogContent>
-      <TextField
+        <TextField
           label="First name"
           name="firstName"
           value={editedData.firstName || ""}
@@ -249,13 +255,13 @@ export default function EditUserModal({
           error={!!errors.role}
           helperText={errors.role ? errors.role : " "}
         >
-          {Role.map((option) => (
+          {roles.map((option) => (
             <MenuItem
-              key={option.value}
-              value={option.value}
+              key={option.name}
+              value={option.name}
               style={{ paddingLeft: "16px" }}
             >
-              {option.label}
+              {option.name}
             </MenuItem>
           ))}
         </TextField>
