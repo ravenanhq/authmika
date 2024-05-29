@@ -14,7 +14,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import { RowData } from "./UserList";
 import { MenuItem } from "@mui/material";
-import { RoleApi } from "@/services/api/RoleApi";
+import { RolesApi } from "@/services/api/RolesApi";
 
 interface Errors {
   firstName?: string;
@@ -121,7 +121,7 @@ export default function EditUserModal({
 
   const getroles = async () => {
     try {
-      const response = await RoleApi.updateRole();
+      const response = await RolesApi.updateRole();
       if (response) {
         const roleData = response;
         setRoles(roleData);
