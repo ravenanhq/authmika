@@ -172,16 +172,4 @@ export class RolesService {
       };
     }
   }
-
-  async getActiveRoles(): Promise<Roles[]> {
-    try {
-      const roles = await this.getRoleList();
-      return roles;
-    } catch (error) {
-      throw new HttpException(
-        'Error assigning roles to users',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
 }
