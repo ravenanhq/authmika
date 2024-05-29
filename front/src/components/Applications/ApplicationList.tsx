@@ -153,7 +153,7 @@ const ApplicationList = () => {
           image={`${config.service}/assets/images/${
             params.value ? params.value : "no_image.jpg"
           }`}
-          style={{ width: "20%", padding: "10px" }}
+          style={{ width: "20%" }}
         />
       ),
     },
