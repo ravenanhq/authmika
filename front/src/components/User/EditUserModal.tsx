@@ -31,6 +31,7 @@ const InitialRowData = {
   mobile: "",
   role: "",
   created_at: "",
+  status: 0,
 };
 
 interface EditModalProps {

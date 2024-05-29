@@ -49,11 +49,10 @@ import PersonOffIcon from "@mui/icons-material/PersonOff";
 import Image from "next/image";
 import { config } from "../../../../config";
 import DeActivateModal from "@/components/User/DeActivateModal";
+import EditUserModal from "@/components/User/EditUserModal";
+// import EditIcon from "@mui/icons-material/Edit";
+import EditNoteIcon from '@mui/icons-material/EditNote';
 
-export interface RowData {
-  name: string;
-  id: number;
-}
 interface IUserView {
   id?: number;
   username?: string;
@@ -79,13 +78,14 @@ interface ExtractedDataItem {
   baseUrl: string;
 }
 interface UserData {
+  created_at: string | number | Date;
   firstName: string;
   lastName: string;
   email: string;
   role: string;
   status: number;
-  mobile: number;
-  id: number | undefined;
+  mobile: string;
+  id: number;
 }
 interface ICreatePasswordProps {
   password?: string | undefined;
@@ -145,6 +145,59 @@ const UserView = ({ params }: { params: IUserView }) => {
     handleSubmit,
     setValue,
   } = useForm<ICreatePasswordProps>();
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [invalidEmail, setInvalidEmail] = useState("");
+  const [alertShow, setAlertShow] = useState("");
+
+  const handleEditModalClose = () => {
+    setEditModalOpen(false);
+    setInvalidEmail("");
+  };
+
+  const editUser = async (id: any, updatedData: any) => {
+    try {
+      const response = await UserApi.update(id, updatedData);
+      setInvalidEmail("");
+      if (response) {
+        if (response.statusCode == 409) {
+          setInvalidEmail(response.message);
+        } else if (response && response.statusCode === 200) {
+          const updatedRows = response.data.map((row: any) => {
+            if (row.id === id) {
+              return { ...row, ...updatedData };
+            }
+            return row;
+          });
+          setUserData(updatedData);
+          setAlertShow(response.message);
+          handleEditModalClose();
+        }
+      }
+    } catch (error: any) {
+      var response = error.response.data;
+      if (response.statusCode == 422 && response.message.email) {
+        setInvalidEmail(response.message.email);
+      }
+
+      console.log(error);
+    }
+  };
+
+  const handleEditSave = async (editedData: UserData) => {
+    if ("id" in editedData) {
+      const updatedData = { ...editedData };
+      try {
+        await editUser(updatedData.id, updatedData);
+      } catch (error) {
+        console.error("Error editing user:", error);
+      }
+    }
+  };
+
+  const handleEdit = () => {
+    setInvalidEmail("");
+    setEditModalOpen(true);
+  };
 
   useEffect(() => {
     getApplication();
@@ -457,6 +510,16 @@ const UserView = ({ params }: { params: IUserView }) => {
 
   return (
     <Container maxWidth="xl">
+      {alertShow && (
+        <Alert
+          severity="success"
+          onClose={() => {
+            setAlertShow("");
+          }}
+        >
+          {alertShow}
+        </Alert>
+      )}
       {error && (
         <Alert
           sx={{
@@ -673,6 +736,21 @@ const UserView = ({ params }: { params: IUserView }) => {
                   style={{ maxWidth: "100%", height: "120%" }}
                 >
                   <TableBody sx={{ height: "100%" }}>
+                    <TableRow>
+                      <TableCell ></TableCell>
+                      <TableCell align="right">
+                        <EditUserModal
+                          open={editModalOpen}
+                          onClose={handleEditModalClose}
+                          rowData={userData}
+                          onEdit={handleEditSave}
+                          uniqueEmail={invalidEmail}
+                        />
+                        <IconButton aria-label="edit" onClick={() => handleEdit()}>
+                          <EditNoteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
                     <TableRow>
                       <TableCell>
                         <strong>First name:</strong>
