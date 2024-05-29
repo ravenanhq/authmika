@@ -13,7 +13,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import { MenuItem } from "@mui/material";
-import { RoleApi } from "@/services/api/RoleApi";
+import { RolesApi } from "@/services/api/RolesApi";
 
 interface Errors {
   firstName?: string;
@@ -45,7 +45,7 @@ export default function AddUserModal({
   const [errors, setErrors] = useState<Errors>({});
 
   useEffect(() => {
-    getroles();
+    getRoles();
   }, []);
 
   useEffect(() => {
@@ -108,9 +108,9 @@ export default function AddUserModal({
     }
   };
 
-  const getroles = async () => {
+  const getRoles = async () => {
     try {
-      const response = await RoleApi.updateRole();
+      const response = await RolesApi.updateRole();
       if (response) {
         const roleData = response;
         setRoles(roleData);

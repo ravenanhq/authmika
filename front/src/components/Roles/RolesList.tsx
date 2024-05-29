@@ -1,45 +1,32 @@
-"use client";
 import {
+  Alert,
+  Button,
   Card,
   CardContent,
-  Button,
-  Snackbar,
+  CircularProgress,
+  Divider,
   Grid,
   IconButton,
-  Typography,
-  Divider,
-  styled,
-  CircularProgress,
+  Snackbar,
   Stack,
-  Alert,
-  CardMedia,
+  Typography,
+  styled,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { SetStateAction, useEffect, useState } from "react";
-import { ApplicationApi } from "@/services/api/ApplicationApi";
-import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import AddApplicationModal from "./AddApplicationModal";
-import EditApplicationModal from "./EditApplicationModal";
-import DeleteApplicationModal from "./DeleteApplicationModal";
-import { Visibility } from "@mui/icons-material";
-import { getSession } from "next-auth/react";
-import { config } from "../../../config";
+import { SetStateAction, useEffect, useState } from "react";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import AddIcon from "@mui/icons-material/Add";
+import React from "react";
+import { RolesApi } from "@/services/api/RolesApi";
+import AddRolesModal from "./AddRolesModal";
+import DeleteRolesModal from "./DeleteRolesModal";
+import EditRolesModal from "./EditRolesModal";
+import EditIcon from "@mui/icons-material/Edit";
 
 export interface RowData {
-  created_at: string | number | Date;
-  id: number;
+  id?: number;
   name?: string;
-  application?: string;
-  baseUrl?: string;
-  base_url?: string;
-  callBackUrl?: string;
-  call_back_url?: string;
-  file?: string;
-  logoPath: string;
-  logo_path: string;
-  formData?: FormData;
+  created_at: string | number | Date;
 }
 
 interface AlertState {
@@ -47,55 +34,43 @@ interface AlertState {
   message: string;
 }
 
-const ApplicationList = () => {
+const RoleListPage = () => {
   const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<RowData[]>([]);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedRow, setSelectedRow] = useState(null);
   const [message, setMessage] = useState("");
-  const [isAddApplicationModalOpen, setAddApplicationModalOpen] =
-    useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [alertShow, setAlertShow] = useState("");
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [rows, setRows] = useState<RowData[]>([]);
+  const [isAddRoleModalOpen, setAddRoleModalOpen] = useState(false);
   const [uniqueAlert, setUniqueAlert] = useState("");
-  const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
+  const [alertShow, setAlertShow] = useState("");
   const filteredRows = rows.filter((row) => row.id);
+  const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
+  const [deleteRoleModalOpen, setDeleteRoleModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   useEffect(() => {
-    restrictMenuAccess();
-    getApplications();
+    getRoleList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const restrictMenuAccess = async () => {
-    const session = await getSession();
-    try {
-      if (
-        session &&
-        session.hasOwnProperty("user") &&
-        session.user.hasOwnProperty("role")
-      ) {
-        let role = session.user.role;
-        if (role.toLowerCase() === "client") {
-          const restrictedPage = "/applications";
-          if (restrictedPage == window.location.pathname) {
-            window.location.href = "/dashboard";
-            return;
-          }
-        }
-      }
-    } catch (error: any) {
-      console.log(error);
-    }
+  const handleAddRoleClick = () => {
+    setAddRoleModalOpen(true);
   };
 
-  const handleEdit = (rowData: SetStateAction<null>) => {
+  const handleCloseAddRoleModal = () => {
+    setAddRoleModalOpen(false);
+  };
+
+  const handleAddRole = (editedData: RowData) => {
+    addRole(editedData.id, editedData);
+  };
+  const handleDelete = (rowData: SetStateAction<null>) => {
     setSelectedRow(rowData);
-    setEditModalOpen(true);
+    setDeleteRoleModalOpen(true);
   };
 
-  const handleAddApplication = (newApplication: RowData) => {
-    addApplication(newApplication);
+  const handleDeleteRoleModalClose = () => {
+    setDeleteRoleModalOpen(false);
+    setSelectedRow(null);
   };
 
   const handleEditModalClose = () => {
@@ -104,87 +79,27 @@ const ApplicationList = () => {
     setUniqueAlert("");
   };
 
-  const handleEditSave = (editedData: RowData) => {
-    editedData["logo_path"] = editedData["logoPath"];
-    editedData["base_url"] = editedData["baseUrl"];
-    editedData["call_back_url"] = editedData["callBackUrl"];
-    editApplication(editedData.id, editedData);
-  };
-
-  const handleDelete = (rowData: SetStateAction<null>) => {
+  const handleEdit = (rowData: SetStateAction<null>) => {
     setSelectedRow(rowData);
-    setDeleteModalOpen(true);
+    setEditModalOpen(true);
   };
 
-  const handleDeleteModalClose = () => {
-    setDeleteModalOpen(false);
-    setSelectedRow(null);
-  };
-
-  const handleAddApplicationClick = () => {
-    setAddApplicationModalOpen(true);
-  };
-
-  const handleCloseAddApplicationModal = () => {
-    setAddApplicationModalOpen(false);
-  };
-
-  const handleView = (rowData: RowData) => {
-    const data = JSON.stringify(rowData);
-    localStorage.setItem("application-data", data);
-    const url = `/applications/${rowData.id}`;
-    window.location.href = url;
+  const handleEditSave = (editedData: RowData) => {
+    editRole(editedData.id, editedData);
   };
 
   const columns: GridColDef[] = [
     {
-      field: "logoPath",
-      headerName: "Logo",
-      headerClassName: "application-header",
-      flex: 1,
-      minWidth: 100,
-      disableColumnMenu: true,
-      sortable: false,
-      renderCell: (params) => (
-        <CardMedia
-          component="img"
-          alt="logo"
-          height="auto"
-          image={`${config.service}/assets/images/${
-            params.value ? params.value : "no_image.jpg"
-          }`}
-          sx={{ width: "20%", padding: "10px","@media (max-width: 1200px)": {
-            padding: "0px",
-            width: "40%",
-          }, }}
-        />
-      ),
-    },
-    {
       field: "name",
       headerName: "Name",
-      headerClassName: "application-header",
+      headerClassName: "role-header",
       flex: 1,
-      minWidth: 200,
-    },
-    {
-      field: "application",
-      headerName: "Application",
-      headerClassName: "application-header",
-      flex: 1,
-      minWidth: 200,
-    },
-    {
-      field: "baseUrl",
-      headerName: "Base URL",
-      headerClassName: "application-header",
-      flex: 1,
-      minWidth: 200,
+      minWidth: 120,
     },
     {
       field: "created_at",
       headerName: "Created At",
-      headerClassName: "user-header",
+      headerClassName: "role-header",
       type: "date",
       flex: 0.5,
       minWidth: 160,
@@ -195,16 +110,13 @@ const ApplicationList = () => {
     {
       field: "actions",
       headerName: "Actions",
-      headerClassName: "application-header",
+      headerClassName: "role-header",
       flex: 1,
-      minWidth: 200,
+      minWidth: 120,
       disableColumnMenu: true,
       sortable: false,
       renderCell: (params) => (
         <>
-          <IconButton aria-label="view" onClick={() => handleView(params.row)}>
-            <Visibility />
-          </IconButton>
           <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
             <EditIcon />
           </IconButton>
@@ -219,64 +131,54 @@ const ApplicationList = () => {
     },
   ];
 
-  const addApplication = async (newApplication: RowData) => {
+  const addRole = async (id: any, newRole: RowData) => {
     try {
-      const response = await ApplicationApi.addApplication(newApplication);
+      const response = await RolesApi.addRoleApi(id, newRole);
       setUniqueAlert("");
       if (response) {
         if (response.statusCode == 409) {
           setUniqueAlert(response.message);
         } else if (response.statusCode == 200) {
-          setRows(response.data);
-          const sortedApplications = [...response.data].sort((a, b) => {
+          setRows(response.data.roles);
+          const sortedRoles = [...response.data.roles].sort((a, b) => {
             return (
               new Date(b.created_at).getTime() -
               new Date(a.created_at).getTime()
             );
           });
-          handleCloseAddApplicationModal();
-          setRows(sortedApplications);
+
+          handleCloseAddRoleModal();
+          setRows(sortedRoles);
           setAlertShow(response.message);
         }
       }
     } catch (error: any) {
       var response = error.response.data;
-      if (response.statusCode == 422 && response.message.application) {
-        setUniqueAlert(response.message.application);
+      if (response.statusCode == 422 && response.message.name) {
+        setUniqueAlert(response.message.name);
       }
       console.log(error);
     }
   };
 
-  const editApplication = async (applicationId: any, updatedData: any) => {
+  const getRoleList = async () => {
     try {
-      const response = await ApplicationApi.updateApplication(
-        applicationId,
-        updatedData
-      );
-      setUniqueAlert("");
+      const response = await RolesApi.getAllRoleApi();
       if (response) {
-        if (response.statusCode === 409) {
-          setUniqueAlert(response.message);
-        } else if (response.statusCode === 200) {
-          const updatedRows = rows.map((row) =>
-            row.id === applicationId ? { ...row, ...response.data } : row
+        const sortedRows = response.sort((a: RowData, b: RowData) => {
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
           );
-          setRows(updatedRows);
-          handleEditModalClose();
-          setAlertShow(response.message);
-        }
+        });
+        setRows(sortedRows);
+        setLoading(false);
       }
     } catch (error: any) {
-      console.error(error);
-      var response = error.response.data;
-      if (response.statusCode === 422 && response.message.application) {
-        setUniqueAlert(response.message.application);
-      }
+      console.log(error);
     }
   };
 
-  const handleDeleteConfirm = async (selectedRow: any) => {
+  const handleDeleteRole = async (selectedRow: any) => {
     if (selectedRow !== null) {
       try {
         const currentRows = [...rows];
@@ -284,9 +186,7 @@ const ApplicationList = () => {
           (item) => item.id === selectedRow.id
         );
         if (itemIndex !== -1) {
-          const response = await ApplicationApi.deleteApplication(
-            selectedRow.id
-          );
+          const response = await RolesApi.deleteRoleApi(selectedRow.id);
           if (response && response.statusCode == 422) {
             setDeleteAlert({
               severity: "error",
@@ -301,7 +201,7 @@ const ApplicationList = () => {
             });
           }
         }
-        setDeleteModalOpen(false);
+        setDeleteRoleModalOpen(false);
       } catch (error: any) {
         console.error(error);
         setDeleteAlert({
@@ -312,20 +212,28 @@ const ApplicationList = () => {
     }
   };
 
-  const getApplications = async () => {
+  const editRole = async (id: any, updatedData: any) => {
     try {
-      const response = await ApplicationApi.getApplications();
+      const response = await RolesApi.updateRoleApi(id, updatedData);
+      setUniqueAlert("");
       if (response) {
-        const sortedRows = response.sort((a: RowData, b: RowData) => {
-          return (
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        if (response.statusCode === 409) {
+          setUniqueAlert(response.message);
+        } else if (response.statusCode === 200) {
+          const updatedRows = rows.map((row) =>
+            row.id === id ? { ...row, ...updatedData } : row
           );
-        });
-        setRows(sortedRows);
-        setLoading(false);
+          setRows(updatedRows);
+          handleEditModalClose();
+          setAlertShow(response.message);
+        }
       }
     } catch (error: any) {
-      console.log(error);
+      console.error(error);
+      var response = error.response.data;
+      if (response.statusCode === 422 && response.message.application) {
+        setUniqueAlert(response.message.application);
+      }
     }
   };
 
@@ -362,16 +270,16 @@ const ApplicationList = () => {
       sx={{
         boxShadow: "none",
         marginTop: "5%",
-        "& .application-header": {
+        "& .role-header": {
           backgroundColor: "#265073",
           color: "#fff",
         },
-        gridWidth: "500px",
+        gridWidth: "300px",
       }}
     >
       <Snackbar autoHideDuration={3000} message={message} />
       <CardContent style={{ padding: "0" }}>
-        <Typography variant="h4">Applications</Typography>
+        <Typography variant="h4">Roles</Typography>
         <Divider
           color="#265073"
           sx={{ marginTop: "5px", marginBottom: "3%" }}
@@ -405,6 +313,7 @@ const ApplicationList = () => {
                 </Alert>
               )}
             </Stack>
+
             <Grid
               container
               justifyContent="flex-end"
@@ -414,9 +323,9 @@ const ApplicationList = () => {
               <Grid item>
                 <PrimaryButton
                   startIcon={<AddIcon />}
-                  onClick={handleAddApplicationClick}
+                  onClick={handleAddRoleClick}
                 >
-                  Add New Application
+                  Add New Roles
                 </PrimaryButton>
               </Grid>
             </Grid>
@@ -457,7 +366,14 @@ const ApplicationList = () => {
         )}
       </CardContent>
 
-      <EditApplicationModal
+      <AddRolesModal
+        open={isAddRoleModalOpen}
+        onClose={handleCloseAddRoleModal}
+        onAddRole={handleAddRole}
+        uniqueNameValidation={uniqueAlert}
+      />
+
+      <EditRolesModal
         open={editModalOpen}
         onClose={handleEditModalClose}
         rowData={selectedRow}
@@ -465,21 +381,14 @@ const ApplicationList = () => {
         uniqueValidation={uniqueAlert}
       />
 
-      <AddApplicationModal
-        open={isAddApplicationModalOpen}
-        onClose={handleCloseAddApplicationModal}
-        onAddApplication={handleAddApplication}
-        uniqueValidation={uniqueAlert}
-      />
-
-      <DeleteApplicationModal
-        open={deleteModalOpen}
-        onClose={handleDeleteModalClose}
-        onDeleteConfirm={() => handleDeleteConfirm(selectedRow)}
+      <DeleteRolesModal
+        open={deleteRoleModalOpen}
+        onClose={handleDeleteRoleModalClose}
+        onDeleteConfirm={() => handleDeleteRole(selectedRow)}
         rowData={selectedRow}
+        tableRowName={undefined}
       />
     </Card>
   );
 };
-
-export default ApplicationList;
+export default RoleListPage;

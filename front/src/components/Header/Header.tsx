@@ -41,7 +41,7 @@ export default function DrawerAppBar() {
     { label: "Users", route: "/users" },
     { label: "Applications", route: "/applications" },
     { label: "Groups", route: "/groups" },
-    { label: "Role", route: "/role" },
+    { label: "Roles", route: "/roles" },
   ]);
 
   useEffect(() => {
