@@ -37,7 +37,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, imageFile }) => {
       if (!files[0].type.startsWith("image/")) {
         setErrorMessage("Please select an image file.");
       } else if (!["image/png", "image/jpeg"].includes(files[0].type)) {
-        setErrorMessage("Only PNG and JPG files are allowed.");
+        setErrorMessage("Only PNG, JPEG and JPG files are allowed.");
       } else if (files[0].size > MAX_FILE_SIZE_KB * 1024) {
         setErrorMessage(`File size exceeds ${MAX_FILE_SIZE_KB} KB.`);
       } else {
@@ -104,7 +104,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, imageFile }) => {
             />
           )}
         </div>
-        {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+        {errorMessage && <p style={{ color: "#d32f2f" }}>{errorMessage}</p>}
       </Box>
     </Card>
   );
