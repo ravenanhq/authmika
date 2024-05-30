@@ -204,10 +204,6 @@ const RoleListPage = () => {
         setDeleteRoleModalOpen(false);
       } catch (error: any) {
         console.error(error);
-        setDeleteAlert({
-          severity: "error",
-          message: "An error occurred while deleting.",
-        });
       }
     }
   };
@@ -386,7 +382,6 @@ const RoleListPage = () => {
         onClose={handleDeleteRoleModalClose}
         onDeleteConfirm={() => handleDeleteRole(selectedRow)}
         rowData={selectedRow}
-        tableRowName={undefined}
       />
     </Card>
   );

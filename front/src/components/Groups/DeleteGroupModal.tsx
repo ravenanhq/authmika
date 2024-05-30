@@ -1,35 +1,60 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Modal, Button, Box } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
-
-export interface RowData {
-  name?: string;
-  created_at: string | number | Date;
-}
+import { RowData } from "./GroupList";
+import DeleteIcon from "@mui/icons-material/Delete";
+import CloseIcon from "@mui/icons-material/Close";
 
 interface DeleteGroupModalProps {
   open: boolean;
   onClose: () => void;
   onDeleteConfirm: () => void;
   rowData: RowData | null;
-  tableRowName:
-    | {
-        name?: string;
-      }
-    | null
-    | undefined;
 }
 
 const DeleteModal: React.FC<DeleteGroupModalProps> = ({
   open,
   onClose,
+  rowData,
   onDeleteConfirm,
-  tableRowName,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const DeleteName = tableRowName && tableRowName.name ? tableRowName.name : "";
+  const [deleteName, setDeleteName] = useState<string | undefined>(
+    rowData?.name
+  );
+
+  useEffect(() => {
+    setDeleteName(rowData?.name);
+  }, [rowData]);
+
+  const PrimaryButton = styled(Button)(() => ({
+    textTransform: "none",
+    paddingLeft: "10px",
+    paddingRight: "10px",
+    backgroundColor: "#1C658C",
+    color: "#fff",
+    ":hover": {
+      color: "#fff",
+      backgroundColor: "#265073",
+    },
+    margin: "25px 15px 0 0",
+  }));
+
+  const SecondaryButton = styled(Button)(() => ({
+    textTransform: "none",
+    paddingLeft: "10px",
+    paddingRight: "10px",
+    backgroundColor: "#FF9843",
+    color: "#fff",
+    ":hover": {
+      color: "#fff",
+      backgroundColor: "#FE7A36",
+    },
+    margin: "25px 0 0 0",
+  }));
+
   return (
     <Modal open={open} onClose={onClose}>
       <Box
@@ -47,25 +72,15 @@ const DeleteModal: React.FC<DeleteGroupModalProps> = ({
         <div>
           <h2>Delete Confirmation</h2>
           <p>
-            Are you sure you want to delete this ?{" "}
-            <span style={{ color: "#191c1a" }}>{DeleteName}</span>
+            Are you sure you want to delete this item?{" "}
+            <span style={{ color: "#191c1a" }}>{deleteName}</span>
           </p>
-          <Button
-            onClick={onDeleteConfirm}
-            variant="contained"
-            color="primary"
-            style={{ margin: "15px 0 0 0" }}
-          >
+          <PrimaryButton startIcon={<DeleteIcon />} onClick={onDeleteConfirm}>
             Delete
-          </Button>
-          <Button
-            onClick={onClose}
-            variant="contained"
-            color="warning"
-            style={{ margin: "15px 0 0 10px" }}
-          >
+          </PrimaryButton>
+          <SecondaryButton startIcon={<CloseIcon />} onClick={onClose}>
             Cancel
-          </Button>
+          </SecondaryButton>
         </div>
       </Box>
     </Modal>

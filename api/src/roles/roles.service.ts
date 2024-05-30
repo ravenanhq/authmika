@@ -10,12 +10,15 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Roles } from 'src/db/model/roles.model';
 import { RolesDto } from './dto/roles.dto';
 import { Op } from 'sequelize';
+import { Users } from 'src/db/model/users.model';
 
 @Injectable()
 export class RolesService {
   constructor(
     @InjectModel(Roles)
     private rolesModel: typeof Roles,
+    @InjectModel(Users)
+    private userModel: typeof Users,
   ) {}
 
   async getRoleList(): Promise<Roles[]> {
@@ -139,24 +142,35 @@ export class RolesService {
     try {
       const role = await this.rolesModel.findOne({
         where: {
-          id,
-          status: true,
+          id: id,
         },
       });
-
       if (role) {
-        role.status = false;
-        await role.save();
-
-        const roles = await this.rolesModel.findAll({
-          where: { status: true },
+        const userRole = await this.userModel.findOne({
+          where: {
+            role: role.name,
+          },
         });
+        if (userRole) {
+          return {
+            message: 'The role cannot be deleted as a mapping exists.',
+            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+            data: [],
+          };
+        } else {
+          role.status = 0;
+          await role.save();
 
-        return {
-          message: 'Role deleted successfully.',
-          statusCode: HttpStatus.OK,
-          data: roles,
-        };
+          const roles = await this.rolesModel.findAll({
+            where: { status: 1 },
+          });
+
+          return {
+            message: 'Role deleted successfully.',
+            statusCode: HttpStatus.OK,
+            data: roles,
+          };
+        }
       } else {
         return {
           message: 'Role not found.',

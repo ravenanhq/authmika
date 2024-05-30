@@ -223,18 +223,17 @@ const GroupListPage = () => {
           const updatedRows = rows.map((row) =>
             row.id === id ? { ...row, ...updatedData } : row
           );
-          console.log("pp", response);
-          setRows(updatedRows);
           handleEditModalClose();
+          setRows(updatedRows);
           setAlertShow(response.message);
         }
       }
     } catch (error: any) {
-      console.error(error);
       var response = error.response.data;
-      if (response.statusCode === 422 && response.message.application) {
-        setUniqueAlert(response.message.application);
+      if (response.statusCode == 422 && response.message.name) {
+        setUniqueAlert(response.message.name);
       }
+      console.log(error);
     }
   };
 
@@ -385,8 +384,7 @@ const GroupListPage = () => {
         onClose={handleDeleteGroupModalClose}
         onDeleteConfirm={() => handleDeleteGroup(selectedRow)}
         rowData={selectedRow}
-        tableRowName={undefined}
-      />
+       />
     </Card>
   );
 };

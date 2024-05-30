@@ -145,7 +145,7 @@ export class GroupsService {
       });
 
       if (group) {
-        group.status = false;
+        group.status = 0;
         await group.save();
 
         const groups = await this.groupModel.findAll({

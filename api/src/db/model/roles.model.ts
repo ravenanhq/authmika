@@ -24,8 +24,8 @@ export class Roles extends Model<Roles> {
   @Column({ field: 'name', type: DataType.STRING })
   name: string;
 
-  @Column({ defaultValue: true })
-  status: boolean;
+  @Column({ type: DataType.INTEGER })
+  status: number;
 
   @Column({ field: 'created_by', type: DataType.INTEGER })
   createdBy: number;
