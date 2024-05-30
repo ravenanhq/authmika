@@ -13,6 +13,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import { MenuItem } from "@mui/material";
+import { RolesApi } from "@/services/api/RolesApi";
 
 interface Errors {
   firstName?: string;
@@ -40,7 +41,12 @@ export default function AddUserModal({
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
   const [role, setRole] = useState("");
+  const [roles, setRoles] = useState<{ name: string; label: string }[]>([]);
   const [errors, setErrors] = useState<Errors>({});
+
+  useEffect(() => {
+    getRoles();
+  }, []);
 
   useEffect(() => {
     setErrors((prevErrors) => ({ ...prevErrors, email: uniqueEmail }));
@@ -89,18 +95,7 @@ export default function AddUserModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  const Role = [
-    {
-      value: "ADMIN",
-      label: "ADMIN",
-    },
-    {
-      value: "CLIENT",
-      label: "CLIENT",
-    },
-  ];
-
-  const handleAddUser = () => {
+  const handleAddUser = async () => {
     if (validateForm()) {
       const newUser = {
         firstName: firstName,
@@ -110,6 +105,18 @@ export default function AddUserModal({
         role: role,
       };
       onAddUser(newUser);
+    }
+  };
+
+  const getRoles = async () => {
+    try {
+      const response = await RolesApi.updateRole();
+      if (response) {
+        const roleData = response;
+        setRoles(roleData);
+      }
+    } catch (error: any) {
+      console.log(error);
     }
   };
 
@@ -229,13 +236,13 @@ export default function AddUserModal({
           helperText={errors.role}
           sx={{ marginTop: 2 }}
         >
-          {Role.map((option) => (
+          {roles.map((option) => (
             <MenuItem
-              key={option.value}
-              value={option.value}
+              key={option.name}
+              value={option.name}
               style={{ paddingLeft: "16px" }}
             >
-              {option.label}
+              {option.name}
             </MenuItem>
           ))}
         </TextField>

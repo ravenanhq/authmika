@@ -1,45 +1,33 @@
-"use client";
 import {
+  Alert,
+  Button,
   Card,
   CardContent,
-  Button,
-  Snackbar,
+  CircularProgress,
+  Divider,
   Grid,
   IconButton,
-  Typography,
-  Divider,
-  styled,
-  CircularProgress,
+  Snackbar,
   Stack,
-  Alert,
-  CardMedia,
+  Typography,
+  styled,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { SetStateAction, useEffect, useState } from "react";
-import { ApplicationApi } from "@/services/api/ApplicationApi";
-import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import AddApplicationModal from "./AddApplicationModal";
-import EditApplicationModal from "./EditApplicationModal";
-import DeleteApplicationModal from "./DeleteApplicationModal";
 import { Visibility } from "@mui/icons-material";
-import { getSession } from "next-auth/react";
-import { config } from "../../../config";
+import { SetStateAction, useEffect, useState } from "react";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import AddIcon from "@mui/icons-material/Add";
+import AddGroupModal from "./AddGroupModal";
+import React from "react";
+import { GroupsApi } from "@/services/api/GroupsApi";
+import DeleteGroupModal from "./DeleteGroupModal";
+import EditGroupModal from "./EditGroupModal";
+import EditIcon from "@mui/icons-material/Edit";
 
 export interface RowData {
-  created_at: string | number | Date;
-  id: number;
+  id?: number;
   name?: string;
-  application?: string;
-  baseUrl?: string;
-  base_url?: string;
-  callBackUrl?: string;
-  call_back_url?: string;
-  file?: string;
-  logoPath: string;
-  logo_path: string;
-  formData?: FormData;
+  created_at: string | number | Date;
 }
 
 interface AlertState {
@@ -47,144 +35,57 @@ interface AlertState {
   message: string;
 }
 
-const ApplicationList = () => {
+const GroupListPage = () => {
   const [loading, setLoading] = useState(true);
-  const [rows, setRows] = useState<RowData[]>([]);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedRow, setSelectedRow] = useState(null);
   const [message, setMessage] = useState("");
-  const [isAddApplicationModalOpen, setAddApplicationModalOpen] =
-    useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [alertShow, setAlertShow] = useState("");
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [rows, setRows] = useState<RowData[]>([]);
+  const [isAddGroupModalOpen, setAddGroupModalOpen] = useState(false);
   const [uniqueAlert, setUniqueAlert] = useState("");
-  const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
+  const [alertShow, setAlertShow] = useState("");
   const filteredRows = rows.filter((row) => row.id);
+  const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
+  const [deleteGroupModalOpen, setDeleteGroupModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   useEffect(() => {
-    restrictMenuAccess();
-    getApplications();
+    getGroupsList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const restrictMenuAccess = async () => {
-    const session = await getSession();
-    try {
-      if (
-        session &&
-        session.hasOwnProperty("user") &&
-        session.user.hasOwnProperty("role")
-      ) {
-        let role = session.user.role;
-        if (role.toLowerCase() === "client") {
-          const restrictedPage = "/applications";
-          if (restrictedPage == window.location.pathname) {
-            window.location.href = "/dashboard";
-            return;
-          }
-        }
-      }
-    } catch (error: any) {
-      console.log(error);
-    }
+  const handleAddGroupClick = () => {
+    setAddGroupModalOpen(true);
   };
 
-  const handleEdit = (rowData: SetStateAction<null>) => {
-    setSelectedRow(rowData);
-    setEditModalOpen(true);
+  const handleCloseAddGroupModal = () => {
+    setAddGroupModalOpen(false);
   };
 
-  const handleAddApplication = (newApplication: RowData) => {
-    addApplication(newApplication);
+  const handleAddGroup = (newGroup: RowData) => {
+    addGroup(newGroup);
   };
-
-  const handleEditModalClose = () => {
-    setEditModalOpen(false);
-    setSelectedRow(null);
-    setUniqueAlert("");
-  };
-
-  const handleEditSave = (editedData: RowData) => {
-    editedData["logo_path"] = editedData["logoPath"];
-    editedData["base_url"] = editedData["baseUrl"];
-    editedData["call_back_url"] = editedData["callBackUrl"];
-    editApplication(editedData.id, editedData);
-  };
-
   const handleDelete = (rowData: SetStateAction<null>) => {
     setSelectedRow(rowData);
-    setDeleteModalOpen(true);
+    setDeleteGroupModalOpen(true);
   };
 
-  const handleDeleteModalClose = () => {
-    setDeleteModalOpen(false);
+  const handleDeleteGroupModalClose = () => {
+    setDeleteGroupModalOpen(false);
     setSelectedRow(null);
-  };
-
-  const handleAddApplicationClick = () => {
-    setAddApplicationModalOpen(true);
-  };
-
-  const handleCloseAddApplicationModal = () => {
-    setAddApplicationModalOpen(false);
-  };
-
-  const handleView = (rowData: RowData) => {
-    const data = JSON.stringify(rowData);
-    localStorage.setItem("application-data", data);
-    const url = `/applications/${rowData.id}`;
-    window.location.href = url;
   };
 
   const columns: GridColDef[] = [
     {
-      field: "logoPath",
-      headerName: "Logo",
-      headerClassName: "application-header",
-      flex: 1,
-      minWidth: 100,
-      disableColumnMenu: true,
-      sortable: false,
-      renderCell: (params) => (
-        <CardMedia
-          component="img"
-          alt="logo"
-          height="auto"
-          image={`${config.service}/assets/images/${
-            params.value ? params.value : "no_image.jpg"
-          }`}
-          sx={{ width: "20%", padding: "10px","@media (max-width: 1200px)": {
-            padding: "0px",
-            width: "40%",
-          }, }}
-        />
-      ),
-    },
-    {
       field: "name",
       headerName: "Name",
-      headerClassName: "application-header",
+      headerClassName: "group-header",
       flex: 1,
-      minWidth: 200,
-    },
-    {
-      field: "application",
-      headerName: "Application",
-      headerClassName: "application-header",
-      flex: 1,
-      minWidth: 200,
-    },
-    {
-      field: "baseUrl",
-      headerName: "Base URL",
-      headerClassName: "application-header",
-      flex: 1,
-      minWidth: 200,
+      minWidth: 120,
     },
     {
       field: "created_at",
       headerName: "Created At",
-      headerClassName: "user-header",
+      headerClassName: "group-header",
       type: "date",
       flex: 0.5,
       minWidth: 160,
@@ -195,16 +96,13 @@ const ApplicationList = () => {
     {
       field: "actions",
       headerName: "Actions",
-      headerClassName: "application-header",
+      headerClassName: "group-header",
       flex: 1,
-      minWidth: 200,
+      minWidth: 120,
       disableColumnMenu: true,
       sortable: false,
       renderCell: (params) => (
         <>
-          <IconButton aria-label="view" onClick={() => handleView(params.row)}>
-            <Visibility />
-          </IconButton>
           <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
             <EditIcon />
           </IconButton>
@@ -219,64 +117,53 @@ const ApplicationList = () => {
     },
   ];
 
-  const addApplication = async (newApplication: RowData) => {
+  const addGroup = async (newGroup: RowData) => {
     try {
-      const response = await ApplicationApi.addApplication(newApplication);
+      const response = await GroupsApi.addGroupApi(newGroup);
       setUniqueAlert("");
       if (response) {
         if (response.statusCode == 409) {
           setUniqueAlert(response.message);
         } else if (response.statusCode == 200) {
-          setRows(response.data);
-          const sortedApplications = [...response.data].sort((a, b) => {
+          setRows(response.data.groups);
+          const sortedGroups = [...response.data.groups].sort((a, b) => {
             return (
               new Date(b.created_at).getTime() -
               new Date(a.created_at).getTime()
             );
           });
-          handleCloseAddApplicationModal();
-          setRows(sortedApplications);
+          handleCloseAddGroupModal();
+          setRows(sortedGroups);
           setAlertShow(response.message);
         }
       }
     } catch (error: any) {
       var response = error.response.data;
-      if (response.statusCode == 422 && response.message.application) {
-        setUniqueAlert(response.message.application);
+      if (response.statusCode == 422 && response.message.name) {
+        setUniqueAlert(response.message.name);
       }
       console.log(error);
     }
   };
 
-  const editApplication = async (applicationId: any, updatedData: any) => {
+  const getGroupsList = async () => {
     try {
-      const response = await ApplicationApi.updateApplication(
-        applicationId,
-        updatedData
-      );
-      setUniqueAlert("");
+      const response = await GroupsApi.getAllGroupsApi();
       if (response) {
-        if (response.statusCode === 409) {
-          setUniqueAlert(response.message);
-        } else if (response.statusCode === 200) {
-          const updatedRows = rows.map((row) =>
-            row.id === applicationId ? { ...row, ...response.data } : row
+        const sortedRows = response.sort((a: RowData, b: RowData) => {
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
           );
-          setRows(updatedRows);
-          handleEditModalClose();
-          setAlertShow(response.message);
-        }
+        });
+        setRows(sortedRows);
+        setLoading(false);
       }
     } catch (error: any) {
-      console.error(error);
-      var response = error.response.data;
-      if (response.statusCode === 422 && response.message.application) {
-        setUniqueAlert(response.message.application);
-      }
+      console.log(error);
     }
   };
 
-  const handleDeleteConfirm = async (selectedRow: any) => {
+  const handleDeleteGroup = async (selectedRow: any) => {
     if (selectedRow !== null) {
       try {
         const currentRows = [...rows];
@@ -284,9 +171,7 @@ const ApplicationList = () => {
           (item) => item.id === selectedRow.id
         );
         if (itemIndex !== -1) {
-          const response = await ApplicationApi.deleteApplication(
-            selectedRow.id
-          );
+          const response = await GroupsApi.deleteGroupApi(selectedRow.id);
           if (response && response.statusCode == 422) {
             setDeleteAlert({
               severity: "error",
@@ -301,7 +186,7 @@ const ApplicationList = () => {
             });
           }
         }
-        setDeleteModalOpen(false);
+        setDeleteGroupModalOpen(false);
       } catch (error: any) {
         console.error(error);
         setDeleteAlert({
@@ -312,19 +197,42 @@ const ApplicationList = () => {
     }
   };
 
-  const getApplications = async () => {
+  const handleEditModalClose = () => {
+    setEditModalOpen(false);
+    setSelectedRow(null);
+    setUniqueAlert("");
+  };
+
+  const handleEdit = (rowData: SetStateAction<null>) => {
+    setSelectedRow(rowData);
+    setEditModalOpen(true);
+  };
+
+  const handleEditSave = (editedData: RowData) => {
+    editGroup(editedData.id, editedData);
+  };
+
+  const editGroup = async (id: any, updatedData: any) => {
     try {
-      const response = await ApplicationApi.getApplications();
+      const response = await GroupsApi.updateGroupApi(id, updatedData);
+      setUniqueAlert("");
       if (response) {
-        const sortedRows = response.sort((a: RowData, b: RowData) => {
-          return (
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        if (response.statusCode === 409) {
+          setUniqueAlert(response.message);
+        } else if (response.statusCode === 200) {
+          const updatedRows = rows.map((row) =>
+            row.id === id ? { ...row, ...updatedData } : row
           );
-        });
-        setRows(sortedRows);
-        setLoading(false);
+          handleEditModalClose();
+          setRows(updatedRows);
+          setAlertShow(response.message);
+        }
       }
     } catch (error: any) {
+      var response = error.response.data;
+      if (response.statusCode == 422 && response.message.name) {
+        setUniqueAlert(response.message.name);
+      }
       console.log(error);
     }
   };
@@ -362,16 +270,16 @@ const ApplicationList = () => {
       sx={{
         boxShadow: "none",
         marginTop: "5%",
-        "& .application-header": {
+        "& .group-header": {
           backgroundColor: "#265073",
           color: "#fff",
         },
-        gridWidth: "500px",
+        gridWidth: "200px",
       }}
     >
       <Snackbar autoHideDuration={3000} message={message} />
       <CardContent style={{ padding: "0" }}>
-        <Typography variant="h4">Applications</Typography>
+        <Typography variant="h4">Groups</Typography>
         <Divider
           color="#265073"
           sx={{ marginTop: "5px", marginBottom: "3%" }}
@@ -414,9 +322,9 @@ const ApplicationList = () => {
               <Grid item>
                 <PrimaryButton
                   startIcon={<AddIcon />}
-                  onClick={handleAddApplicationClick}
+                  onClick={handleAddGroupClick}
                 >
-                  Add New Application
+                  Add New Group
                 </PrimaryButton>
               </Grid>
             </Grid>
@@ -456,8 +364,14 @@ const ApplicationList = () => {
           </>
         )}
       </CardContent>
+      <AddGroupModal
+        open={isAddGroupModalOpen}
+        onClose={handleCloseAddGroupModal}
+        onAddGroup={handleAddGroup}
+        uniqueNameValidation={uniqueAlert}
+      />
 
-      <EditApplicationModal
+      <EditGroupModal
         open={editModalOpen}
         onClose={handleEditModalClose}
         rowData={selectedRow}
@@ -465,21 +379,13 @@ const ApplicationList = () => {
         uniqueValidation={uniqueAlert}
       />
 
-      <AddApplicationModal
-        open={isAddApplicationModalOpen}
-        onClose={handleCloseAddApplicationModal}
-        onAddApplication={handleAddApplication}
-        uniqueValidation={uniqueAlert}
-      />
-
-      <DeleteApplicationModal
-        open={deleteModalOpen}
-        onClose={handleDeleteModalClose}
-        onDeleteConfirm={() => handleDeleteConfirm(selectedRow)}
+      <DeleteGroupModal
+        open={deleteGroupModalOpen}
+        onClose={handleDeleteGroupModalClose}
+        onDeleteConfirm={() => handleDeleteGroup(selectedRow)}
         rowData={selectedRow}
-      />
+       />
     </Card>
   );
 };
-
-export default ApplicationList;
+export default GroupListPage;
