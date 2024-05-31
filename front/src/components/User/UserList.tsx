@@ -17,11 +17,9 @@ import {
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteModal from "./DeleteUserModal";
 import AddUserModal from "./AddUserModal";
-import EditUserModal from "./EditUserModal";
 import { UserApi } from "@/services/api/UserApi";
 import { UserServiceApi } from "@/services/api/UserServiceApi";
 import { Visibility } from "@mui/icons-material";
@@ -29,12 +27,13 @@ import { getSession } from "next-auth/react";
 
 export interface RowData {
   created_at: string | number | Date;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  status: number;
+  mobile: string;
   id: number;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  mobile?: string;
-  role?: string;
 }
 
 interface AlertState {
@@ -52,7 +51,6 @@ const UserList = () => {
   const [alertShow, setAlertShow] = useState("");
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<RowData[]>([]);
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
@@ -87,17 +85,6 @@ const UserList = () => {
     }
   };
 
-  const handleEdit = (rowData: RowData | null) => {
-    setSelectedRow((prevRowData) => {
-      if (rowData !== null) {
-        return rowData;
-      }
-      return prevRowData;
-    });
-    setInvalidEmail("");
-    setEditModalOpen(true);
-  };
-
   const handleView = (rowData: RowData) => {
     const data = JSON.stringify(rowData);
     localStorage.setItem("user-data", data);
@@ -107,23 +94,6 @@ const UserList = () => {
 
   const handleAddUser = (newUser: RowData) => {
     addUser(newUser);
-  };
-
-  const handleEditModalClose = () => {
-    setEditModalOpen(false);
-    setSelectedRow(null);
-    setInvalidEmail("");
-  };
-
-  const handleEditSave = async (editedData: RowData) => {
-    if ("id" in editedData) {
-      const updatedData = { ...editedData };
-      try {
-        await editUser(updatedData.id, updatedData);
-      } catch (error) {
-        console.error("Error editing user:", error);
-      }
-    }
   };
 
   const handleDelete = (rowData: RowData | null) => {
@@ -216,9 +186,6 @@ const UserList = () => {
           <IconButton aria-label="view" onClick={() => handleView(params.row)}>
             <Visibility />
           </IconButton>
-          <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
-            <EditIcon />
-          </IconButton>
           <IconButton
             aria-label="delete"
             onClick={() => handleDelete(params.row)}
@@ -286,35 +253,6 @@ const UserList = () => {
     }
   };
 
-  const editUser = async (id: any, updatedData: any) => {
-    try {
-      const response = await UserApi.update(id, updatedData);
-      setInvalidEmail("");
-      if (response) {
-        if (response.statusCode == 409) {
-          setInvalidEmail(response.message);
-        } else if (response && response.statusCode === 200) {
-          const updatedRows = rows.map((row) => {
-            if (row.id === id) {
-              return { ...row, ...updatedData };
-            }
-            return row;
-          });
-          setRows(updatedRows);
-          setAlertShow(response.message);
-          handleEditModalClose();
-        }
-      }
-    } catch (error: any) {
-      var response = error.response.data;
-      if (response.statusCode == 422 && response.message.email) {
-        setInvalidEmail(response.message.email);
-      }
-
-      console.log(error);
-    }
-  };
-
   const handleDeleteConfirm = async (selectedRow: any) => {
     if (selectedRow !== null) {
       try {
@@ -369,9 +307,6 @@ const UserList = () => {
       color: "white",
     },
   }));
-
-
-
 
   return (
     <Container maxWidth="xl">
@@ -472,14 +407,6 @@ const UserList = () => {
             </>
           )}
         </CardContent>
-
-        <EditUserModal
-          open={editModalOpen}
-          onClose={handleEditModalClose}
-          rowData={selectedRow}
-          onEdit={handleEditSave}
-          uniqueEmail={invalidEmail}
-        />
 
         <DeleteModal
           open={deleteModalOpen}
