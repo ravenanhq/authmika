@@ -32,13 +32,10 @@ import {
   styled,
   useTheme,
 } from "@mui/material";
-import Modal from "@mui/material/Modal";
 import React, { useState, useEffect } from "react";
 import CloseIcon from "@mui/icons-material/Close";
-import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import { Container } from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
 import SaveIcon from "@mui/icons-material/Save";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
@@ -46,11 +43,8 @@ import { useForm } from "react-hook-form";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import LocalPostOfficeIcon from "@mui/icons-material/LocalPostOffice";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
-import Image from "next/image";
-import { config } from "../../../../config";
 import DeActivateModal from "@/components/User/DeActivateModal";
 import EditUserModal from "@/components/User/EditUserModal";
-// import EditIcon from "@mui/icons-material/Edit";
 import EditNoteIcon from '@mui/icons-material/EditNote';
 
 interface IUserView {
@@ -128,24 +122,7 @@ const UserView = ({ params }: { params: IUserView }) => {
   } | null>(null);
   const [deactivateModalOpen, setDeactivateModalOpen] =
     useState<boolean>(false);
-
-  const setErrorMsg = (type: AlertColor, message: string) => {
-    setError({ type, message });
-  };
-
-  const clearError = () => {
-    setError(null);
-  };
-
-  const {
-    register,
-    watch,
-    clearErrors,
-    formState: { errors },
-    handleSubmit,
-    setValue,
-  } = useForm<ICreatePasswordProps>();
-  const [editModalOpen, setEditModalOpen] = useState(false);
+    const [editModalOpen, setEditModalOpen] = useState(false);
   const [invalidEmail, setInvalidEmail] = useState("");
   const [alertShow, setAlertShow] = useState("");
 
@@ -198,6 +175,23 @@ const UserView = ({ params }: { params: IUserView }) => {
     setInvalidEmail("");
     setEditModalOpen(true);
   };
+
+  const setErrorMsg = (type: AlertColor, message: string) => {
+    setError({ type, message });
+  };
+
+  const clearError = () => {
+    setError(null);
+  };
+
+  const {
+    register,
+    watch,
+    clearErrors,
+    formState: { errors },
+    handleSubmit,
+    setValue,
+  } = useForm<ICreatePasswordProps>();
 
   useEffect(() => {
     getApplication();
@@ -284,22 +278,12 @@ const UserView = ({ params }: { params: IUserView }) => {
     }
   };
 
-  const handleOpen = async () => {
-    setOpen(true);
-  };
-
   const handleClose = () => {
     setOpen(false);
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
-  };
-
-  const handleConfirmOpen = (applicationId: number, applicationName: any) => {
-    setConfirmationOpen(true);
-    setConfirmationApplicationId(applicationId);
-    setConfirmationApplicationName(applicationName);
   };
 
   const filteredApplications = applications
@@ -349,25 +333,6 @@ const UserView = ({ params }: { params: IUserView }) => {
           },
         ]);
       }
-    }
-  };
-
-  const handleCancelClick = () => {
-    setSelectedCheckboxes(existingCheckboxes);
-    setOpen(false);
-  };
-
-  const handleConfirm = async (
-    userId: number | undefined,
-    applicationId: number
-  ) => {
-    try {
-      await UserApi.deleteUserApplicationMapping(userId!, applicationId);
-      getApplicationsByUserId(userId);
-      setOpen(false);
-      setConfirmationOpen(false);
-    } catch (error) {
-      console.error("Error deleting user application mapping:", error);
     }
   };
 
@@ -475,18 +440,6 @@ const UserView = ({ params }: { params: IUserView }) => {
     },
   }));
 
-  const SecondaryButton = styled(Button)(() => ({
-    textTransform: "none",
-    paddingLeft: "10px",
-    paddingRight: "10px",
-    backgroundColor: "#FF9843",
-    color: "#fff",
-    ":hover": {
-      color: "#fff",
-      backgroundColor: "#FE7A36",
-    },
-  }));
-
   const BackButton = styled(Button)(({ theme }) => ({
     textTransform: "none",
     paddingLeft: theme.spacing(1),
@@ -510,7 +463,7 @@ const UserView = ({ params }: { params: IUserView }) => {
 
   return (
     <Container maxWidth="xl">
-      {alertShow && (
+            {alertShow && (
         <Alert
           severity="success"
           onClose={() => {
@@ -736,7 +689,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                   style={{ maxWidth: "100%", height: "120%" }}
                 >
                   <TableBody sx={{ height: "100%" }}>
-                    <TableRow>
+                  <TableRow>
                       <TableCell ></TableCell>
                       <TableCell align="right">
                         <EditUserModal
@@ -817,363 +770,207 @@ const UserView = ({ params }: { params: IUserView }) => {
             </Card>
           </Box>
         </Grid>
-        <Grid item xs={12} md={6}>
-          <Box sx={{ p: 2, height: "88%", position: "sticky" }}>
+        <Grid item xs={12} lg={6}>
+          <Box
+            sx={{
+              p: 2,
+            }}
+          >
             <Typography
               variant="h5"
               component="h2"
               sx={{ marginBottom: 1, marginTop: 2 }}
+              position="sticky"
             >
               Assigned Applications
             </Typography>
-            <Divider sx={{ marginBottom: 4, flexGrow: 2 }} color="#265073" />
+            <Divider sx={{ marginBottom: 1, flexGrow: 2 }} color="#265073" />
             <Card
               sx={{
                 width: "100%",
-                height: "95%",
+                height: "30%",
                 margin: "auto",
-                mt: "30px",
                 position: "sticky",
                 [theme.breakpoints.down("md")]: {
                   width: "100%",
                 },
               }}
             >
-              <CardContent>
-                <TableContainer
-                  component={Paper}
-                  sx={{ width: "100%", maxHeight: 300, overflow: "auto" }}
-                >
-                  <Table stickyHeader style={{ maxWidth: "100%" }}>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>
-                          <Grid container spacing={2} alignItems="center">
-                            <Grid item xs={12} sm={6}>
-                              <PrimaryButton
-                                variant="contained"
-                                onClick={handleOpen}
-                                startIcon={<AddIcon />}
-                                disabled={userData.status === 2}
-                              >
-                                Assign Applications
-                              </PrimaryButton>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                              {applications.length > 0 && (
-                                <Box
-                                  display="flex"
-                                  justifyContent="flex-end"
-                                  width="100%"
-                                >
-                                  <TextField
-                                    InputProps={{
-                                      startAdornment: (
-                                        <SearchIcon
-                                          sx={{
-                                            color: "grey",
-                                          }}
-                                        />
-                                      ),
-                                    }}
-                                    placeholder="Search applications"
-                                    variant="outlined"
-                                    value={searchTerm}
-                                    onChange={handleSearchChange}
-                                    size="small"
-                                  />
-                                </Box>
-                              )}
-                            </Grid>
-                          </Grid>
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {filteredApplications.length < 1 && (
-                        <TableRow>
-                          <TableCell>
-                            <Typography>No results found</Typography>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                      {filteredApplications.map((application) => (
-                        <TableRow
-                          key={application.id}
-                          style={{ display: "flex" }}
+              <Card
+                sx={{
+                  width: "60%",
+                  height: "355px",
+                  margin: "auto",
+                  position: "sticky",
+                  marginTop: "15px",
+                  marginBottom: "20px",
+                  overflow: "hidden",
+                  [theme.breakpoints.down("md")]: {
+                    width: "100%",
+                  },
+                }}
+              >
+                <Table stickyHeader style={{ maxWidth: "100%" }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell colSpan={2}>
+                        <Box
+                          display="flex"
+                          width="100%"
+                          margin="auto"
+                          marginLeft="0"
+                          paddingTop="0px"
+                          marginTop="0px"
+                          position="sticky"
+                          sx={{
+                            [theme.breakpoints.down("md")]: {
+                              width: "100%",
+                            },
+                          }}
                         >
-                          <TableCell style={{ width: "6%" }}>
-                            {application &&
-                            application.logoPath !== undefined &&
-                            application.logoPath !== "" ? (
-                              <Image
-                                src={`${config.service}/assets/images/${application.logoPath}`}
-                                alt="logo"
-                                width={40}
-                                height={40}
-                              />
-                            ) : (
-                              <Image
-                                src={`${config.service}/assets/images/no_image.jpg`}
-                                alt="logo"
-                                width={40}
-                                height={40}
-                              />
-                            )}
-                          </TableCell>
-                          <TableCell style={{ width: "100%", height: "50%" }}>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                padding: "10px",
-                                position: "sticky",
-                              }}
-                            >
-                              <Typography
-                                style={{
-                                  marginRight: "auto",
-                                  display: "inline",
-                                  textAlign: "left",
-                                }}
-                              >
-                                {application.name}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell
-                            style={{
-                              width: "10%",
-                              display: "flex",
-                              justifyContent: "flex-end",
+                          <TextField
+                            InputProps={{
+                              startAdornment: (
+                                <SearchIcon
+                                  sx={{
+                                    color: "grey",
+                                  }}
+                                />
+                              ),
                             }}
-                          >
-                            <IconButton
-                              onClick={() =>
-                                handleConfirmOpen(
-                                  application.id,
-                                  application.name
-                                )
-                              }
-                              sx={{
-                                fontSize: "4px",
-                                color: "#FF9843",
-                                filled: "none",
-                                padding: 0,
-                                display: "inline",
-                                width: "100",
-                              }}
-                            >
-                              <CloseIcon />
-                            </IconButton>
-                            <Modal
-                              open={confirmationOpen}
-                              onClose={() => setConfirmationOpen(false)}
-                            >
-                              <Box
-                                sx={{
-                                  position: "absolute",
-                                  top: "50%",
-                                  left: "50%",
-                                  transform: "translate(-50%, -50%)",
-                                  width: isMobile ? "80%" : "auto",
-                                  bgcolor: "background.paper",
-                                  boxShadow: 24,
-                                  p: 4,
-                                }}
-                              >
-                                <div>
-                                  <h2>Confirmation</h2>
-                                  <p>
-                                    Are you sure you want to remove this
-                                    application?
-                                    <span style={{ color: "#191c1a" }}>
-                                      {confirmationApplicationName}
+                            placeholder="Search applications"
+                            variant="outlined"
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            size="small"
+                            sx={{
+                              width: {
+                                xs: "100%",
+                                sm: "75%",
+                                md: "50%",
+                                lg: "390px",
+                              },
+                              height: "40px",
+                              "& .MuiInputBase-root": {
+                                height: "100%",
+                                outline: "none",
+                                textDecoration: "none",
+                              },
+                            }}
+                          />
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <TableRow sx={{ marginTop: "0px" }}>
+                      <TableCell colSpan={2}>
+                        <TableContainer
+                          component={Paper}
+                          sx={{
+                            width: "100%",
+                            height: "260px",
+                            marginTop: "2px",
+                            marginBottom: "0px",
+                            overflowY: "auto",
+                            border: "none",
+                            boxShadow: "none",
+                          }}
+                        >
+                          <FormGroup>
+                            {options
+                              .filter((option) =>
+                                option.name
+                                  .toLowerCase()
+                                  .includes(searchTerm.toLowerCase())
+                              )
+                              .map((option) => (
+                                <FormControlLabel
+                                  key={option.id}
+                                  control={
+                                    <Checkbox
+                                      checked={selectedCheckboxes.some(
+                                        (checkbox) => checkbox.id === option.id
+                                      )}
+                                      onChange={() =>
+                                        handleCheckboxChange(option.id)
+                                      }
+                                      style={{
+                                        color: "#265073",
+                                        marginBottom: "0px",
+                                        marginTop: "0px",
+                                      }}
+                                    />
+                                  }
+                                  label={
+                                    <span
+                                      style={{
+                                        maxWidth: "300px",
+                                        overflow: "hidden",
+                                        display: "inline-block",
+                                        whiteSpace: "unset",
+                                        textOverflow: "ellipsis",
+                                        wordBreak: "break-all",
+                                        marginTop: "0px",
+                                        marginBottom: "0px",
+                                        paddingTop: "3px",
+                                        paddingBottom: "0px",
+                                      }}
+                                    >
+                                      {option.name}
                                     </span>
-                                  </p>
-                                  <SecondaryButton
-                                    variant="contained"
-                                    color="primary"
-                                    style={{ margin: "15px 15px 0 0" }}
-                                    startIcon={<CloseIcon />}
-                                    onClick={() => setConfirmationOpen(false)}
-                                  >
-                                    Cancel
-                                  </SecondaryButton>
-                                  <PrimaryButton
-                                    variant="contained"
-                                    color="primary"
-                                    style={{ margin: "15px 15px 0 0" }}
-                                    startIcon={<CheckIcon />}
-                                    onClick={() => {
-                                      handleConfirm(
-                                        id,
-                                        confirmationApplicationId!
-                                      );
-                                    }}
-                                  >
-                                    Confirm
-                                  </PrimaryButton>
-                                </div>
-                              </Box>
-                            </Modal>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
+                                  }
+                                />
+                              ))}
+                            {options.filter((option) =>
+                              option.name
+                                .toLowerCase()
+                                .includes(searchTerm.toLowerCase())
+                            ).length === 0 && (
+                              <Typography>No applications available</Typography>
+                            )}
+                          </FormGroup>
+                        </TableContainer>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </Card>
+              <Box
+                sx={{
+                  marginBottom: "16px",
+                  marginLeft: "140px",
+                  width: {
+                    xs: "100%",
+                    sm: "75%",
+                    md: "50%",
+                    lg: "390px",
+                  },
+                  mx: { xs: "auto", md: 17, lg: "19", xl: "1" },
+                }}
+              >
+                <PrimaryButton
+                  startIcon={<SaveIcon />}
+                  type="submit"
+                  onClick={() => handleSubmitModal(selectedCheckboxes)}
+                >
+                  Save
+                </PrimaryButton>
+              </Box>
             </Card>
+            <Box display="flex" justifyContent="flex-end">
+              <BackButton
+                variant="contained"
+                onClick={handleBackButtonClick}
+                startIcon={<ArrowBackIcon />}
+                sx={{ marginTop: 4 }}
+              >
+                Back
+              </BackButton>
+            </Box>
           </Box>
         </Grid>
       </Grid>
-      <Box display="flex" justifyContent="flex-end" sx={{ paddingBottom: 2 }}>
-        <BackButton
-          variant="contained"
-          onClick={handleBackButtonClick}
-          startIcon={<ArrowBackIcon />}
-        >
-          Back
-        </BackButton>
-
-        {options && options.length > 0 && (
-          <Modal
-            open={open && options.length > 0}
-            onClose={() => setOpen(false)}
-            title="Application"
-            aria-labelledby="modal-title"
-            aria-describedby="modal-description"
-          >
-            <Box
-              sx={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                maxWidth: "400px",
-                width: "90%",
-                maxHeight: "95vh",
-                overflowX: "hidden",
-                bgcolor: "background.paper",
-                boxShadow: "0 3px 5px rgba(0,0,0,0.2)",
-              }}
-            >
-              <DialogTitle
-                sx={{
-                  position: "sticky",
-                  top: 0,
-                  zIndex: 1,
-                  backgroundColor: "#265073",
-                  color: "#fff",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  width: "100%",
-                  padding: "12px",
-                }}
-              >
-                Assign Applications
-                <IconButton
-                  onClick={handleClose}
-                  sx={{
-                    backgroundColor: "#FF9843",
-                    color: "#fff",
-                    ":hover": {
-                      color: "#fff",
-                      backgroundColor: "#FE7A36",
-                    },
-                  }}
-                >
-                  <CloseIcon />
-                </IconButton>
-              </DialogTitle>
-              <Divider color="#265073" />
-              {open && options.length > 0 && (
-                <Box id="modal-description" sx={{ mt: 2 }}>
-                  <Box style={{ width: "100%", boxSizing: "border-box" }}>
-                    <Box
-                      sx={{
-                        mt: 2,
-                        mx: 2,
-                        overflowX: "hidden",
-                        height: "200px",
-                      }}
-                    >
-                      <FormGroup sx={{ marginLeft: 7 }}>
-                        <Grid container spacing={1}>
-                          {options.map((option) => (
-                            <Grid item xs={6} key={option.id}>
-                              <FormControlLabel
-                                key={option.id}
-                                control={
-                                  <Checkbox
-                                    key={option.id}
-                                    checked={selectedCheckboxes.some(
-                                      (checkbox) => checkbox.id === option.id
-                                    )}
-                                    onChange={() =>
-                                      handleCheckboxChange(option.id)
-                                    }
-                                    style={{ color: "#265073" }}
-                                  />
-                                }
-                                label={
-                                  <span
-                                    style={{
-                                      maxWidth: "150px",
-                                      overflow: "hidden",
-                                      display: "inline-block",
-                                      whiteSpace: "unset",
-                                      textOverflow: "ellipsis",
-                                      wordBreak: "break-all",
-                                    }}
-                                  >
-                                    {option.name}
-                                  </span>
-                                }
-                              />
-                            </Grid>
-                          ))}
-                        </Grid>
-                      </FormGroup>
-                    </Box>
-                  </Box>
-                  <Box
-                    style={{
-                      position: "sticky",
-                      bottom: 0,
-                      backgroundColor: "white",
-                      zIndex: 1,
-                      padding: "10px",
-                    }}
-                  >
-                    <Divider color="#265073" />
-                    <DialogActions style={{ margin: "0 16px 10px 0" }}>
-                      <PrimaryButton
-                        startIcon={<SaveIcon />}
-                        type="submit"
-                        onClick={() => handleSubmitModal(selectedCheckboxes)}
-                      >
-                        Save
-                      </PrimaryButton>
-                      <SecondaryButton
-                        startIcon={<CloseIcon />}
-                        type="submit"
-                        onClick={() => {
-                          handleCancelClick();
-                          setOpen(false);
-                        }}
-                      >
-                        Cancel
-                      </SecondaryButton>
-                    </DialogActions>
-                  </Box>
-                </Box>
-              )}
-            </Box>
-          </Modal>
-        )}
-      </Box>
     </Container>
   );
 };
