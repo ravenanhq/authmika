@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -6,7 +7,13 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { GroupsDto } from './dto/groups.dto';
+import {
+  GroupCreateSuccessDto,
+  GroupDeleteSuccessDto,
+  GroupsData,
+  GroupsDto,
+  GroupUpdateSuccessDto,
+} from './dto/groups.dto';
 import { InjectModel } from '@nestjs/sequelize';
 import { Groups } from 'src/db/model/groups.model';
 import { Op } from 'sequelize';
@@ -18,9 +25,13 @@ export class GroupsService {
     private groupModel: typeof Groups,
   ) {}
 
-  async getGroupList(): Promise<Groups[]> {
+  async getGroupList(): Promise<GroupsData[]> {
     try {
       const groups = await this.groupModel.findAll({ where: { status: 1 } });
+
+      if (groups && groups.length == 0) {
+        throw new NotFoundException('No groups found');
+      }
       return groups;
     } catch (error) {
       throw new HttpException(
@@ -32,15 +43,15 @@ export class GroupsService {
 
   async create(
     groupsDto: GroupsDto,
-    user: { userId: any },
-  ): Promise<{ message: string; statusCode: number; data: object }> {
+    user: { userId: number },
+  ): Promise<GroupCreateSuccessDto> {
     const { name } = groupsDto;
     try {
       const existingGroup = await this.groupModel.findOne({
         where: { name: name },
       });
       if (existingGroup) {
-        throw new NotFoundException('Name already exists.');
+        throw new ConflictException('Name already exists.');
       } else {
         const newGroup = await this.groupModel.create({
           name: name,
@@ -56,21 +67,21 @@ export class GroupsService {
       });
       return {
         message: 'Group created successfully',
-        statusCode: HttpStatus.OK,
-        data: { groups },
+        statusCode: HttpStatus.CREATED,
+        data: groups,
       };
     } catch (error) {
       if (error instanceof HttpException) {
         return {
           message: error.message,
           statusCode: HttpStatus.CONFLICT,
-          data: {},
+          data: null,
         };
       } else {
         return {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: {},
+          data: null,
         };
       }
     }
@@ -80,19 +91,19 @@ export class GroupsService {
     groupsDto: GroupsDto,
     user: { userId: any },
     id: number,
-  ): Promise<{ message: string; statusCode: number; data: object }> {
+  ): Promise<GroupUpdateSuccessDto> {
     const { name } = groupsDto;
     try {
       const existingGroup = await this.groupModel.findOne({
         where: { id: id },
       });
       if (existingGroup) {
-        const existingUsername = await this.groupModel.findOne({
+        const existingGroupname = await this.groupModel.findOne({
           where: { name: name },
         });
         if (
-          existingUsername &&
-          existingUsername.id.toString() !== id.toString()
+          existingGroupname &&
+          existingGroupname.id.toString() !== id.toString()
         ) {
           throw new UnprocessableEntityException('Name already exists.');
         }
@@ -113,7 +124,7 @@ export class GroupsService {
         return {
           message: 'Group not found.',
           statusCode: HttpStatus.NOT_FOUND,
-          data: {},
+          data: null,
         };
       }
     } catch (error) {
@@ -121,21 +132,19 @@ export class GroupsService {
         return {
           message: error.message,
           statusCode: HttpStatus.CONFLICT,
-          data: {},
+          data: null,
         };
       } else {
         return {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: {},
+          data: null,
         };
       }
     }
   }
 
-  async delete(
-    id: number,
-  ): Promise<{ message: string; statusCode: number; data: object }> {
+  async delete(id: number): Promise<GroupDeleteSuccessDto> {
     try {
       const group = await this.groupModel.findOne({
         where: {
@@ -161,14 +170,14 @@ export class GroupsService {
         return {
           message: 'Group not found.',
           statusCode: HttpStatus.NOT_FOUND,
-          data: {},
+          data: null,
         };
       }
     } catch (error) {
       return {
         message: 'An error occurred while deleting the group.',
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        data: {},
+        data: null,
       };
     }
   }

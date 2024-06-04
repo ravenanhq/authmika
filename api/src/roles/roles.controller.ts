@@ -15,13 +15,47 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { RolesService } from './roles.service';
-import { RolesDto } from './dto/roles.dto';
+import {
+  RolesCreateSuccessDto,
+  RolesDataDto,
+  RolesDeleteSuccessDto,
+  RolesDto,
+  RolesUpdateSuccessDto,
+} from './dto/roles.dto';
 import { AuthGuard } from '@nestjs/passport';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
+import { GroupUpdateSuccessDto } from 'src/groups/dto/groups.dto';
 
 @Controller('roles')
 export class RolesController {
   constructor(private roleService: RolesService) {}
 
+  @ApiTags('Roles')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    isArray: true,
+    type: RolesDataDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Get all available roles' })
   @Get()
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
@@ -30,7 +64,6 @@ export class RolesController {
       const activeRoles = await this.roleService.getRoleList();
       return activeRoles;
     } catch (error) {
-      console.error('Error fetching active role:', error);
       throw new HttpException(
         'Internal Server Error',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -38,7 +71,31 @@ export class RolesController {
     }
   }
 
-  @Post(':id')
+  @ApiTags('Roles')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: RolesCreateSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Create a new role' })
+  @Post()
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe())
@@ -50,14 +107,56 @@ export class RolesController {
     return this.roleService.create(rolesDto, req.user);
   }
 
+  @ApiTags('Roles')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: RolesDeleteSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Delete a role' })
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
-  async remove(
-    @Param('id') id: number,
-  ): Promise<{ message: string; statusCode: number }> {
+  async remove(@Param('id') id: number): Promise<RolesDeleteSuccessDto> {
     return this.roleService.delete(id);
   }
 
+  @ApiTags('Roles')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: RolesUpdateSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Update a role' })
   @Put(':id')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
@@ -66,22 +165,7 @@ export class RolesController {
     @Body() rolesDto: RolesDto,
     @Request() req,
     @Param('id') id: number,
-  ): Promise<{ message: string; statusCode: number }> {
+  ): Promise<RolesUpdateSuccessDto> {
     return this.roleService.update(rolesDto, req.user, id);
-  }
-
-  @Get('get-active-roles')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(AuthGuard('jwt'))
-  async getActiveRoles() {
-    try {
-      const activeRoles = await this.roleService.getRoleList();
-      return activeRoles;
-    } catch (error) {
-      throw new HttpException(
-        'Error assigning roles to users',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
   }
 }
