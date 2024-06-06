@@ -174,6 +174,7 @@ const RoleListPage = () => {
         setLoading(false);
       }
     } catch (error: any) {
+      setLoading(false);
       console.log(error);
     }
   };

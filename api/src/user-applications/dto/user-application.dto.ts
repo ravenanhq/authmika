@@ -33,7 +33,6 @@ export class UserApplicationGetBodyDto {
   @ApiProperty({
     example: 1,
   })
-  @IsNotEmpty({ message: 'User id is required' })
   userId: number;
 }
 
