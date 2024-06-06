@@ -55,7 +55,7 @@ const UserList = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
   const [invalidEmail, setInvalidEmail] = useState("");
-  const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null); 
+  const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
 
   useEffect(() => {
     restrictMenuAccess();
@@ -210,6 +210,7 @@ const UserList = () => {
         setLoading(false);
       }
     } catch (error: any) {
+      setLoading(false);
       console.log(error);
     }
   };

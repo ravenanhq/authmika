@@ -153,10 +153,14 @@ const ApplicationList = () => {
           image={`${config.service}/assets/images/${
             params.value ? params.value : "no_image.jpg"
           }`}
-          sx={{ width: "20%", padding: "10px","@media (max-width: 1200px)": {
-            padding: "0px",
-            width: "40%",
-          }, }}
+          sx={{
+            width: "20%",
+            padding: "10px",
+            "@media (max-width: 1200px)": {
+              padding: "0px",
+              width: "40%",
+            },
+          }}
         />
       ),
     },
@@ -325,6 +329,7 @@ const ApplicationList = () => {
         setLoading(false);
       }
     } catch (error: any) {
+      setLoading(false);
       console.log(error);
     }
   };

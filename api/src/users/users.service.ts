@@ -10,7 +10,20 @@ import {
 import { InjectModel } from '@nestjs/sequelize';
 import { Op, Optional } from 'sequelize';
 import { Users } from 'src/db/model/users.model';
-import { UsersDto } from './dto/users.dto';
+import {
+  AddUserByApi,
+  AddUsersDto,
+  AddUserSuccessDto,
+  DeactivateUserSuccessDto,
+  DeleteUserSuccessDto,
+  GetUserSuccessDto,
+  UpdatePasswordDataDto,
+  UpdatePasswordSuccessDto,
+  UpdateUserSuccessDto,
+  UsersDto,
+  VerifyCurrentPasswordSuccessDto,
+  VerifyOtpSuccessDto,
+} from './dto/users.dto';
 import { hash } from 'bcrypt';
 import { UserApplications } from 'src/db/model/user-applications.model';
 import { compare } from 'bcrypt';
@@ -159,9 +172,7 @@ export class UsersService {
     }
   }
 
-  async create(
-    userDto: UsersDto,
-  ): Promise<{ message: string; statusCode: number; data: object }> {
+  async create(userDto: AddUsersDto): Promise<AddUserSuccessDto> {
     const password = randomBytes(10).toString('hex');
 
     const { firstName, lastName, email, mobile, role } = userDto;
@@ -219,48 +230,45 @@ export class UsersService {
       });
       return {
         message: 'User created successfully',
-        statusCode: HttpStatus.OK,
-        data: { users },
+        statusCode: HttpStatus.CREATED,
+        data: users,
       };
     } catch (error) {
       if (error instanceof HttpException) {
         return {
           message: error.message,
           statusCode: HttpStatus.CONFLICT,
-          data: {},
+          data: null,
         };
       } else {
         return {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: {},
+          data: null,
         };
       }
     }
   }
 
-  async verifyOtp(
-    id: number,
-    otp: string,
-  ): Promise<{ success: boolean; error?: string }> {
+  async verifyOtp(id: number, otp: string): Promise<VerifyOtpSuccessDto> {
     try {
       const existingUser = await this.userModel.findOne({
         where: { id: id },
       });
       if (!existingUser || !existingUser.otp || !existingUser.otp_expiration) {
-        return { success: false, error: 'OTP not found or expired' };
+        return { success: false, message: 'OTP not found or expired' };
       }
 
       const { otp: storedOTP, otp_expiration: expirationTimestamp } =
         existingUser;
       const currentTime = Date.now();
       if (currentTime > expirationTimestamp) {
-        return { success: false, error: 'OTP has expired' };
+        return { success: false, message: 'OTP has expired' };
       }
       const isMatch = storedOTP === Number(otp);
       return {
         success: isMatch,
-        error: isMatch ? 'OTP is valid' : 'Invalid OTP',
+        message: isMatch ? 'OTP is valid' : 'Invalid OTP',
       };
     } catch (error) {
       console.error('Error verifying OTP:', error);
@@ -269,14 +277,21 @@ export class UsersService {
   }
 
   async createFromApi(
-    userDto: UsersDto,
-    clientSecretId: any,
-    clientSecretKey: any,
+    data: AddUserByApi,
     user: {
-      id: any;
+      id: number;
     },
   ): Promise<{ message: string; statusCode: number }> {
-    const { firstName, lastName, email, password, mobile, role } = userDto;
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      mobile,
+      role,
+      clientSecretId,
+      clientSecretKey,
+    } = data;
     try {
       if (!clientSecretId || !clientSecretKey) {
         throw new BadRequestException('Client secret id and key are required.');
@@ -366,9 +381,8 @@ export class UsersService {
   async savePassword(
     email: string,
     id: number,
-    queryParams: ResetPasswordDto,
+    password: string,
   ): Promise<{ message: string; statusCode: number; user: object }> {
-    const { password } = queryParams;
     try {
       const user = await this.userModel.findOne({
         where: { email },
@@ -455,7 +469,7 @@ export class UsersService {
         );
       }
       return {
-        message: 'User activation email sent successfully',
+        message: 'User activation email resent successfully',
         statusCode: HttpStatus.OK,
       };
     } catch (error) {
@@ -473,9 +487,7 @@ export class UsersService {
     }
   }
 
-  async show(
-    id: number,
-  ): Promise<{ data: object; message: string; statusCode: number }> {
+  async show(id: number): Promise<GetUserSuccessDto> {
     try {
       const user = await this.userModel.findOne({
         where: {
@@ -491,14 +503,14 @@ export class UsersService {
         };
       } else {
         return {
-          data: [],
+          data: null,
           message: 'User not found.',
           statusCode: HttpStatus.NOT_FOUND,
         };
       }
     } catch (error) {
       return {
-        data: [],
+        data: null,
         message: error.message,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       };
@@ -509,7 +521,8 @@ export class UsersService {
     userDto: UsersDto,
     user: { id: any },
     id: number,
-  ): Promise<{ message: string; statusCode: number; data: object }> {
+  ): Promise<UpdateUserSuccessDto> {
+    console.log(userDto);
     const { firstName, lastName, email, password, mobile, role } = userDto;
     try {
       const existingUser = await this.userModel.findOne({
@@ -547,7 +560,7 @@ export class UsersService {
         return {
           message: 'User not found.',
           statusCode: HttpStatus.NOT_FOUND,
-          data: {},
+          data: null,
         };
       }
     } catch (error) {
@@ -555,13 +568,13 @@ export class UsersService {
         return {
           message: error.message,
           statusCode: HttpStatus.CONFLICT,
-          data: {},
+          data: null,
         };
       } else {
         return {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: {},
+          data: null,
         };
       }
     }
@@ -570,7 +583,7 @@ export class UsersService {
   async verifyCurrentPassword(
     id: number,
     currentPassword: string,
-  ): Promise<{ message: string; statusCode: number }> {
+  ): Promise<VerifyCurrentPasswordSuccessDto> {
     try {
       const existingUser = await this.userModel.findOne({
         where: { id: id },
@@ -583,7 +596,7 @@ export class UsersService {
         if (!isPasswordMatch) {
           return {
             message: 'Current password is incorrect.',
-            statusCode: 422,
+            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
           };
         }
         return {
@@ -612,12 +625,11 @@ export class UsersService {
   }
 
   async updatePassword(
-    userDto: UsersDto,
+    data: UpdatePasswordDataDto,
     user: { id: any; password: string | undefined },
     id: number,
-    currentPassword: string,
-  ): Promise<{ message: string; statusCode: number }> {
-    const { password } = userDto;
+  ): Promise<UpdatePasswordSuccessDto> {
+    const { currentPassword, password } = data;
     try {
       const existingUser = await this.userModel.findOne({
         where: { id: id },
@@ -662,9 +674,7 @@ export class UsersService {
     }
   }
 
-  async updateStatus(
-    id: number,
-  ): Promise<{ message: string; statusCode: number }> {
+  async updateStatus(id: number): Promise<DeactivateUserSuccessDto> {
     try {
       const existingUser = await this.userModel.findOne({
         where: { id: id },
@@ -712,7 +722,7 @@ export class UsersService {
       if (!passwordReset)
         throw new HttpException(
           {
-            message: ' The verification link appears to be invalid.',
+            message: 'The verification link appears to be invalid.',
             statusCode: HttpStatus.NOT_FOUND,
           },
           HttpStatus.NOT_FOUND,
@@ -770,9 +780,7 @@ export class UsersService {
     }
   }
 
-  async deleteUser(
-    id: number,
-  ): Promise<{ message: string; statusCode: number; data: object }> {
+  async deleteUser(id: number): Promise<DeleteUserSuccessDto> {
     try {
       const user = await Users.findOne({
         where: { id: id },
@@ -809,14 +817,14 @@ export class UsersService {
         return {
           message: 'User not found.',
           statusCode: HttpStatus.NOT_FOUND,
-          data: {},
+          data: null,
         };
       }
     } catch (error) {
       return {
         message: error.message,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        data: {},
+        data: null,
       };
     }
   }
@@ -828,7 +836,7 @@ export class UsersService {
     lastName: string;
     url: string;
   }) {
-    const { id, email, firstName, lastName, url } = params;
+    const { id, email, firstName, lastName } = params;
     try {
       const user = await Users.findOne({
         where: { id: id },
@@ -844,7 +852,6 @@ export class UsersService {
         otp,
         firstName,
         lastName,
-        url,
       );
       if (emailSent) {
         return { success: true, message: 'OTP resent successfully' };

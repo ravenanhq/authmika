@@ -110,7 +110,7 @@ export default function AddUserModal({
 
   const getRoles = async () => {
     try {
-      const response = await RolesApi.updateRole();
+      const response = await RolesApi.getAllRoleApi();
       if (response) {
         const roleData = response;
         setRoles(roleData);

@@ -8,7 +8,13 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Roles } from 'src/db/model/roles.model';
-import { RolesDto } from './dto/roles.dto';
+import {
+  RolesCreateSuccessDto,
+  RolesDataDto,
+  RolesDeleteSuccessDto,
+  RolesDto,
+  RolesUpdateSuccessDto,
+} from './dto/roles.dto';
 import { Op } from 'sequelize';
 import { Users } from 'src/db/model/users.model';
 
@@ -21,7 +27,7 @@ export class RolesService {
     private userModel: typeof Users,
   ) {}
 
-  async getRoleList(): Promise<Roles[]> {
+  async getRoleList(): Promise<RolesDataDto[]> {
     try {
       const role = await this.rolesModel.findAll({ where: { status: 1 } });
       return role;
@@ -36,7 +42,7 @@ export class RolesService {
   async create(
     rolesDto: RolesDto,
     user: { userId: any },
-  ): Promise<{ message: string; statusCode: number; data: object }> {
+  ): Promise<RolesCreateSuccessDto> {
     const { name } = rolesDto;
     try {
       const existingUserRole = await this.rolesModel.findOne({
@@ -60,20 +66,20 @@ export class RolesService {
       return {
         message: 'Role created successfully',
         statusCode: HttpStatus.OK,
-        data: { roles },
+        data: roles,
       };
     } catch (error) {
       if (error instanceof HttpException) {
         return {
           message: error.message,
           statusCode: HttpStatus.CONFLICT,
-          data: {},
+          data: null,
         };
       } else {
         return {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: {},
+          data: null,
         };
       }
     }
@@ -83,7 +89,7 @@ export class RolesService {
     rolesDto: RolesDto,
     user: { userId: any },
     id: number,
-  ): Promise<{ message: string; statusCode: number; data: object }> {
+  ): Promise<RolesUpdateSuccessDto> {
     const { name } = rolesDto;
     try {
       const existingRole = await this.rolesModel.findOne({
@@ -116,7 +122,7 @@ export class RolesService {
         return {
           message: 'Role not found.',
           statusCode: HttpStatus.NOT_FOUND,
-          data: {},
+          data: null,
         };
       }
     } catch (error) {
@@ -124,21 +130,19 @@ export class RolesService {
         return {
           message: error.message,
           statusCode: HttpStatus.CONFLICT,
-          data: {},
+          data: null,
         };
       } else {
         return {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: {},
+          data: null,
         };
       }
     }
   }
 
-  async delete(
-    id: number,
-  ): Promise<{ message: string; statusCode: number; data: object }> {
+  async delete(id: number): Promise<RolesDeleteSuccessDto> {
     try {
       const role = await this.rolesModel.findOne({
         where: {
@@ -175,14 +179,14 @@ export class RolesService {
         return {
           message: 'Role not found.',
           statusCode: HttpStatus.NOT_FOUND,
-          data: {},
+          data: null,
         };
       }
     } catch (error) {
       return {
         message: 'An error occurred while deleting the role.',
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        data: {},
+        data: null,
       };
     }
   }

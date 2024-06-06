@@ -2,6 +2,10 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { UserApplications } from 'src/db/model/user-applications.model';
 import { Applications } from 'src/db/model/applications.model';
+import {
+  UserApplicationDeleteSuccessDto,
+  UserApplicationGetSuccessDto,
+} from './dto/user-application.dto';
 
 interface MyArray<T> extends Array<T> {}
 
@@ -18,11 +22,9 @@ export class UserApplicationService {
     return this.userApplictionsModel.findAll({});
   }
 
-  async getApplicationsByUserId(userId?: number): Promise<{
-    id?: number;
-    userId?: number;
-    application: object;
-  }> {
+  async getApplicationsByUserId(
+    userId?: number,
+  ): Promise<UserApplicationGetSuccessDto> {
     try {
       const whereCondition: any = {};
       if (userId) {
@@ -171,7 +173,7 @@ export class UserApplicationService {
   async deleteUserApplicationMapping(
     userId: number,
     applicationId: number,
-  ): Promise<{ message: string; statusCode: number }> {
+  ): Promise<UserApplicationDeleteSuccessDto> {
     const isMapAvailable = await this.userApplictionsModel.findOne({
       where: {
         userId: userId,

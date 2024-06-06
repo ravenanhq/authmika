@@ -159,6 +159,7 @@ const GroupListPage = () => {
         setLoading(false);
       }
     } catch (error: any) {
+      setLoading(false);
       console.log(error);
     }
   };
@@ -384,7 +385,7 @@ const GroupListPage = () => {
         onClose={handleDeleteGroupModalClose}
         onDeleteConfirm={() => handleDeleteGroup(selectedRow)}
         rowData={selectedRow}
-       />
+      />
     </Card>
   );
 };

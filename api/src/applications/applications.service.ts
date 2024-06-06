@@ -3,6 +3,7 @@ import {
   HttpStatus,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -10,7 +11,13 @@ import { InjectModel } from '@nestjs/sequelize';
 import { Applications } from 'src/db/model/applications.model';
 import { randomBytes } from 'crypto';
 import { Optional } from 'sequelize';
-import { ApplicationsDto } from './dto/applications.dto';
+import {
+  ApplicationCreateDataDto,
+  ApplicationDeleteSuccessDto,
+  ApplicationGetSuccessDto,
+  ApplicationsDto,
+  ApplicationUpdateSuccessDto,
+} from './dto/applications.dto';
 import { UserApplications } from 'src/db/model/user-applications.model';
 import { AuthClients } from 'src/db/model/auth-clients.model';
 import * as fs from 'fs';
@@ -26,9 +33,13 @@ export class ApplicationsService {
   ) {}
 
   async getApplications() {
-    return this.applicationsModel.findAll({
+    const applications = await this.applicationsModel.findAll({
       where: { isActive: true },
     });
+    if (applications && applications.length == 0) {
+      throw new NotFoundException('No applications found');
+    }
+    return applications;
   }
 
   async createNewApplication(
@@ -70,7 +81,7 @@ export class ApplicationsService {
   }
 
   async create(
-    applicationDto: ApplicationsDto,
+    applicationDto: ApplicationCreateDataDto,
     user: { id: any },
   ): Promise<{ message: string; statusCode: number; data: object }> {
     const { name, application, base_url, call_back_url, logo_path, file } =
@@ -115,7 +126,9 @@ export class ApplicationsService {
         });
 
         if (!newApplication) {
-          throw new InternalServerErrorException('User creation failed.');
+          throw new InternalServerErrorException(
+            'Application creation failed.',
+          );
         }
       }
 
@@ -145,9 +158,7 @@ export class ApplicationsService {
     }
   }
 
-  async show(
-    id: number,
-  ): Promise<{ data: object; message: string; statusCode: number }> {
+  async show(id: number): Promise<ApplicationGetSuccessDto> {
     try {
       const application = await this.applicationsModel.findOne({
         where: {
@@ -163,14 +174,14 @@ export class ApplicationsService {
         };
       } else {
         return {
-          data: [],
+          data: null,
           message: 'Application not found.',
           statusCode: HttpStatus.NOT_FOUND,
         };
       }
     } catch (error) {
       return {
-        data: [],
+        data: null,
         message: error.message,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       };
@@ -181,7 +192,7 @@ export class ApplicationsService {
     applicationDto: ApplicationsDto,
     user: { id: any },
     id: number,
-  ): Promise<{ message: string; statusCode: number; data: object }> {
+  ): Promise<ApplicationUpdateSuccessDto> {
     const { name, application, base_url, call_back_url, logo_path, file } =
       applicationDto;
     try {
@@ -248,7 +259,7 @@ export class ApplicationsService {
         return {
           message: 'Application not found.',
           statusCode: HttpStatus.NOT_FOUND,
-          data: {},
+          data: null,
         };
       }
     } catch (error) {
@@ -256,21 +267,19 @@ export class ApplicationsService {
         return {
           message: error.message,
           statusCode: HttpStatus.CONFLICT,
-          data: {},
+          data: null,
         };
       } else {
         return {
           message: error.message,
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: {},
+          data: null,
         };
       }
     }
   }
 
-  async deleteApplication(
-    id: number,
-  ): Promise<{ message: string; statusCode: number; data: object }> {
+  async deleteApplication(id: number): Promise<ApplicationDeleteSuccessDto> {
     try {
       const application = await this.applicationsModel.findOne({
         where: {
@@ -310,14 +319,14 @@ export class ApplicationsService {
         return {
           message: 'Application not found.',
           statusCode: HttpStatus.NOT_FOUND,
-          data: {},
+          data: null,
         };
       }
     } catch (error) {
       return {
         message: error.message,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        data: {},
+        data: null,
       };
     }
   }

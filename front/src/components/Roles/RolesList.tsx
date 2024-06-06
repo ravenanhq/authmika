@@ -60,8 +60,8 @@ const RoleListPage = () => {
     setAddRoleModalOpen(false);
   };
 
-  const handleAddRole = (editedData: RowData) => {
-    addRole(editedData.id, editedData);
+  const handleAddRole = (data: RowData) => {
+    addRole(data);
   };
   const handleDelete = (rowData: SetStateAction<null>) => {
     setSelectedRow(rowData);
@@ -131,9 +131,9 @@ const RoleListPage = () => {
     },
   ];
 
-  const addRole = async (id: any, newRole: RowData) => {
+  const addRole = async (newRole: RowData) => {
     try {
-      const response = await RolesApi.addRoleApi(id, newRole);
+      const response = await RolesApi.addRoleApi(newRole);
       setUniqueAlert("");
       if (response) {
         if (response.statusCode == 409) {
@@ -174,6 +174,7 @@ const RoleListPage = () => {
         setLoading(false);
       }
     } catch (error: any) {
+      setLoading(false);
       console.log(error);
     }
   };
