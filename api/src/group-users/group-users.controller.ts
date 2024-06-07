@@ -25,6 +25,8 @@ import {
   GroupApplicationGetSuccessDto,
   GroupApplicationGetBodyDto,
   GroupApplicationCreateDto,
+  GroupApplicationCreateBodyDto,
+  AssignUserstoGroupBodyDto,
 } from './dto/group-users.dto';
 
 @Controller('group-users')
@@ -90,16 +92,13 @@ export class GroupUsersController {
     status: 500,
     description: 'Internal server error',
   })
-  @ApiOperation({ summary: 'Group and User map' })
+  @ApiOperation({ summary: 'Assign users to group' })
   @Post()
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
-  async create(
-    @Body('groupId') groupId: number,
-    @Body('userId') userId: Array<number>,
-  ) {
-    return this.groupusersService.createUser(groupId, userId);
+  async create(@Body() body: AssignUserstoGroupBodyDto) {
+    return this.groupusersService.createUser(body.groupId, body.userId);
   }
 
   @ApiTags('Group-Users')
@@ -196,15 +195,15 @@ export class GroupUsersController {
     status: 500,
     description: 'Internal server error',
   })
-  @ApiOperation({ summary: 'Assign a group to application' })
+  @ApiOperation({ summary: 'Assign applications to group' })
   @Post('assign-application')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
-  async createApp(
-    @Body('groupId') groupId: number,
-    @Body('applicationId') applicationId: Array<number>,
-  ) {
-    return this.groupusersService.createApplication(groupId, applicationId);
+  async createApp(@Body() body: GroupApplicationCreateBodyDto) {
+    return this.groupusersService.createApplication(
+      body.groupId,
+      body.applicationId,
+    );
   }
 }

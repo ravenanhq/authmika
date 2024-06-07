@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty } from 'class-validator';
 
 export class GroupUsersData {
   @ApiProperty({ type: 'number', example: 1 })
@@ -101,4 +102,33 @@ export class GroupApplicationCreateDto {
     example: 200,
   })
   statusCode: number;
+}
+
+export class GroupApplicationCreateBodyDto {
+  @ApiProperty({
+    example: 1,
+  })
+  @IsNotEmpty({ message: 'Group id is required' })
+  groupId: number;
+
+  @ApiProperty({
+    example: ['1', '2', '3'],
+    type: Array,
+  })
+  @IsNotEmpty({ message: 'Application id is required' })
+  applicationId: Array<number>;
+}
+export class AssignUserstoGroupBodyDto {
+  @ApiProperty({
+    example: 1,
+  })
+  @IsNotEmpty({ message: 'Group id is required' })
+  groupId: number;
+
+  @ApiProperty({
+    example: ['1', '2', '3'],
+    type: Array,
+  })
+  @IsNotEmpty({ message: 'User id is required' })
+  userId: Array<number>;
 }
