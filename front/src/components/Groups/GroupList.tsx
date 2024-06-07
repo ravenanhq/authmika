@@ -74,6 +74,13 @@ const GroupListPage = () => {
     setSelectedRow(null);
   };
 
+  const handleView = (rowData: RowData) => {
+    const data = JSON.stringify(rowData);
+    localStorage.setItem("group-data", data);
+    const url = `/groups/${rowData.id}`;
+    window.location.href = url;
+  };
+
   const columns: GridColDef[] = [
     {
       field: "name",
@@ -103,6 +110,9 @@ const GroupListPage = () => {
       sortable: false,
       renderCell: (params) => (
         <>
+         <IconButton aria-label="view" onClick={() => handleView(params.row)}>
+            <Visibility />
+          </IconButton>
           <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
             <EditIcon />
           </IconButton>
@@ -159,7 +169,6 @@ const GroupListPage = () => {
         setLoading(false);
       }
     } catch (error: any) {
-      setLoading(false);
       console.log(error);
     }
   };
@@ -385,7 +394,7 @@ const GroupListPage = () => {
         onClose={handleDeleteGroupModalClose}
         onDeleteConfirm={() => handleDeleteGroup(selectedRow)}
         rowData={selectedRow}
-      />
+       />
     </Card>
   );
 };

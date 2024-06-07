@@ -19,6 +19,7 @@ import { AuthClientsModule } from './auth-clients/auth-clients.module';
 import { UserApplicationsController } from './user-applications/user-application.controller';
 import { GroupsModule } from './groups/groups.module';
 import { RolesModule } from './roles/roles.module';
+import { GroupUsersModule } from './group-users/group-users.module';
 
 dotenv.config();
 
@@ -47,6 +48,7 @@ dotenv.config();
     AuthClientsModule,
     GroupsModule,
     RolesModule,
+    GroupUsersModule,
   ],
   controllers: [AppController, AuthController, UserApplicationsController],
   providers: [

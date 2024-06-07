@@ -133,6 +133,15 @@ export class UserApi {
     return res.data;
   }
 
+  static async getApplicationsByGroupId(groupId: number) {
+    const res = await axios.post(
+      `${config.service}/group-users/get-group-applications`,
+      {
+        groupId: groupId,
+      }
+    );
+    return res.data;
+  }
   static async getApplicationsByUserId(userId: number) {
     const res = await axios.post(
       `${config.service}/user-applications/get-user-applications`,
@@ -142,7 +151,6 @@ export class UserApi {
     );
     return res.data;
   }
-
   static async getApplicationByKey(data: any) {
     const res = await axios.post(
       `${config.service}/application/get-application`,
@@ -227,6 +235,57 @@ export class UserApi {
 
   static async updateStatus(id: number) {
     const res = await axios.post(`${config.service}/users/update-status/${id}`);
+    return res.data;
+  }
+
+  static async getUsersById(groupId: number) {
+    const res = await axios.post(
+      `${config.service}/group-users/get-group-users`,
+      {
+        groupId: groupId,
+      }
+    );
+    return res.data;
+  }
+
+  static async userGroupMapping(
+    groupId: number,
+    userId: Array<string>
+  ) {
+    try {
+      const res: any = await axios.post(
+        `${config.service}/group-users`,
+        {
+          groupId: groupId,
+          userId: userId,
+        }
+      );
+      return res.data;
+    } catch (error: any) {
+      return error.response.data;
+    }
+  }
+
+  static async groupApplicationMapping(
+    groupId: number,
+    applicationId: Array<string>
+  ) {
+    try {
+      const res: any = await axios.post(
+        `${config.service}/group-users/assign-application`,
+        {
+          groupId: groupId,
+          applicationId: applicationId,
+        }
+      );
+      return res.data;
+    } catch (error: any) {
+      return error.response.data;
+    }
+  }
+
+  static async getAllUsers() {
+    const res = await axios.get(`${config.service}/group-users`);
     return res.data;
   }
 }
