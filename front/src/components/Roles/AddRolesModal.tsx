@@ -45,6 +45,7 @@ export default function AddRolesModal({
 
   const clearForm = () => {
     setName("");
+    setErrors({});
   };
 
   const validateForm = () => {

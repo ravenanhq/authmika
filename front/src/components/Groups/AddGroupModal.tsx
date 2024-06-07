@@ -45,6 +45,7 @@ export default function AddGroupModal({
 
   const clearForm = () => {
     setName("");
+    setErrors({});
   };
 
   const validateForm = () => {

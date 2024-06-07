@@ -372,6 +372,11 @@ const ApplicationList = () => {
           color: "#fff",
         },
         gridWidth: "500px",
+        "@media (max-width: 1366px) and (max-height: 768px)": {
+          ".MuiDataGrid-virtualScroller": {
+            overflowY: "hidden",
+          }
+        },
       }}
     >
       <Snackbar autoHideDuration={3000} message={message} />
