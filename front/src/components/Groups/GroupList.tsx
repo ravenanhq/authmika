@@ -43,7 +43,6 @@ const GroupListPage = () => {
   const [isAddGroupModalOpen, setAddGroupModalOpen] = useState(false);
   const [uniqueAlert, setUniqueAlert] = useState("");
   const [alertShow, setAlertShow] = useState("");
-  const filteredRows = rows.filter((row) => row.id);
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
   const [deleteGroupModalOpen, setDeleteGroupModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -110,7 +109,7 @@ const GroupListPage = () => {
       sortable: false,
       renderCell: (params) => (
         <>
-         <IconButton aria-label="view" onClick={() => handleView(params.row)}>
+          <IconButton aria-label="view" onClick={() => handleView(params.row)}>
             <Visibility />
           </IconButton>
           <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
@@ -134,9 +133,9 @@ const GroupListPage = () => {
       if (response) {
         if (response.statusCode == 409) {
           setUniqueAlert(response.message);
-        } else if (response.statusCode == 200) {
-          setRows(response.data.groups);
-          const sortedGroups = [...response.data.groups].sort((a, b) => {
+        } else if (response.statusCode == 201) {
+          setRows(response.data);
+          const sortedGroups = [...response.data].sort((a, b) => {
             return (
               new Date(b.created_at).getTime() -
               new Date(a.created_at).getTime()
@@ -288,7 +287,7 @@ const GroupListPage = () => {
         "@media (max-width: 1366px) and (max-height: 768px)": {
           ".MuiDataGrid-virtualScroller": {
             overflowY: "hidden",
-          }
+          },
         },
       }}
     >
@@ -344,7 +343,7 @@ const GroupListPage = () => {
               </Grid>
             </Grid>
             <StyledDataGrid
-              rows={filteredRows}
+              rows={rows}
               columns={columns.filter(
                 (column) => column.field !== "created_at"
               )}
@@ -399,7 +398,7 @@ const GroupListPage = () => {
         onClose={handleDeleteGroupModalClose}
         onDeleteConfirm={() => handleDeleteGroup(selectedRow)}
         rowData={selectedRow}
-       />
+      />
     </Card>
   );
 };

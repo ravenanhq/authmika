@@ -42,7 +42,6 @@ const RoleListPage = () => {
   const [isAddRoleModalOpen, setAddRoleModalOpen] = useState(false);
   const [uniqueAlert, setUniqueAlert] = useState("");
   const [alertShow, setAlertShow] = useState("");
-  const filteredRows = rows.filter((row) => row.id);
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
   const [deleteRoleModalOpen, setDeleteRoleModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -138,9 +137,9 @@ const RoleListPage = () => {
       if (response) {
         if (response.statusCode == 409) {
           setUniqueAlert(response.message);
-        } else if (response.statusCode == 200) {
-          setRows(response.data.roles);
-          const sortedRoles = [...response.data.roles].sort((a, b) => {
+        } else if (response.statusCode == 201) {
+          setRows(response.data);
+          const sortedRoles = [...response.data].sort((a, b) => {
             return (
               new Date(b.created_at).getTime() -
               new Date(a.created_at).getTime()
@@ -332,7 +331,7 @@ const RoleListPage = () => {
               </Grid>
             </Grid>
             <StyledDataGrid
-              rows={filteredRows}
+              rows={rows}
               columns={columns.filter(
                 (column) => column.field !== "created_at"
               )}
