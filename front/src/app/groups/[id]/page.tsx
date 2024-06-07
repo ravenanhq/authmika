@@ -226,9 +226,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   const onSubmit = async (formData: ICreateListProps | ICreateListProps[]) => {
     const formDataArray = Array.isArray(formData) ? formData : [formData];
     const applicationIds: string[] = formDataArray.map((formDataItem) => {
-      const id =
-        formDataItem.id !== undefined ? formDataItem.id.toString() : "";
-      return id;
+      return formDataItem.id.toString();
     });
 
     try {
@@ -248,7 +246,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
 
     try {
       await UserApi.userGroupMapping(id!, userIds);
-      getUsersByGroupId(id);
+      getApplicationsByGroupId(id);
     } catch (error) {
       console.error("Error submitting data:", error);
     }
@@ -477,9 +475,18 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                   </TableHead>
                   <TableBody>
                     {loading && (
-                      <div style={{ textAlign: "center", marginTop: "5%" }}>
-                        <CircularProgress />
-                      </div>
+                      <TableRow>
+                        <TableCell
+                          colSpan={2}
+                          style={{
+                            textAlign: "center",
+                            paddingTop: "5%",
+                            border: "none",
+                          }}
+                        >
+                          <CircularProgress />
+                        </TableCell>
+                      </TableRow>
                     )}
                     {!loading && (
                       <TableRow sx={{ marginTop: "0px" }}>
@@ -500,7 +507,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                               {userOptions
                                 .filter((option) =>
                                   option.firstName
-                                    .toLowerCase()
+                                    ?.toLowerCase()
                                     .includes(userSearchTerm.toLowerCase())
                                 )
                                 .map((option) => (
@@ -697,9 +704,18 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                   </TableHead>
                   <TableBody>
                     {loading && (
-                      <div style={{ textAlign: "center", marginTop: "5%" }}>
-                        <CircularProgress />
-                      </div>
+                      <TableRow>
+                        <TableCell
+                          colSpan={2}
+                          style={{
+                            textAlign: "center",
+                            paddingTop: "5%",
+                            border: "none",
+                          }}
+                        >
+                          <CircularProgress />
+                        </TableCell>
+                      </TableRow>
                     )}
                     {!loading && (
                       <TableRow sx={{ marginTop: "0px" }}>
@@ -720,7 +736,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                               {options
                                 .filter((option) =>
                                   option.name
-                                    .toLowerCase()
+                                    ?.toLowerCase()
                                     .includes(searchTerm.toLowerCase())
                                 )
                                 .map((option) => (

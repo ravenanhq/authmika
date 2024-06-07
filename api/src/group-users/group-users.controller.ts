@@ -12,11 +12,45 @@ import {
 } from '@nestjs/common';
 import { GroupUsersService } from './group-users.service';
 import { AuthGuard } from '@nestjs/passport';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  GroupUsersData,
+  GroupAndUserMap,
+  GroupUserApplicationGetSuccessDto,
+  GroupApplicationGetSuccessDto,
+  GroupApplicationGetBodyDto,
+  GroupApplicationCreateDto,
+} from './dto/group-users.dto';
 
 @Controller('group-users')
 export class GroupUsersController {
   constructor(private readonly groupusersService: GroupUsersService) {}
 
+  @ApiTags('Group-Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: GroupUsersData,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Get all group-users' })
   @Get()
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
@@ -33,6 +67,30 @@ export class GroupUsersController {
     }
   }
 
+  @ApiTags('Group-Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: GroupAndUserMap,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Group and User map' })
   @Post()
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
@@ -44,16 +102,33 @@ export class GroupUsersController {
     return this.groupusersService.createUser(groupId, userId);
   }
 
+  @ApiTags('Group-Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: GroupUserApplicationGetSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Assign user by group id' })
   @Post('get-group-users')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
   async getUserListByGroupId(
-    @Body() requestBody: { groupId: number },
-  ): Promise<{
-    groupId?: number;
-    userId?: number;
-  }> {
+    @Body() requestBody: GroupUserApplicationGetSuccessDto,
+  ): Promise<GroupUserApplicationGetSuccessDto> {
     try {
       const userGroups = await this.groupusersService.getUsersByGroupId(
         requestBody.groupId,
@@ -64,16 +139,33 @@ export class GroupUsersController {
     }
   }
 
+  @ApiTags('Group-Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: GroupApplicationGetSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Get all user applications by group id' })
   @Post('get-group-applications')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
   async getApplicationListByGroupId(
-    @Body() requestBody: { groupId: number },
-  ): Promise<{
-    groupId?: number;
-    id?: number;
-  }> {
+    @Body() requestBody: GroupApplicationGetBodyDto,
+  ): Promise<GroupApplicationGetSuccessDto> {
     try {
       const userApplications =
         await this.groupusersService.getApplicationsByGroupId(
@@ -85,6 +177,26 @@ export class GroupUsersController {
     }
   }
 
+  @ApiTags('Group-Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: GroupApplicationCreateDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Assign a group to application' })
   @Post('assign-application')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
