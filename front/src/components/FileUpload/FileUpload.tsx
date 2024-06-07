@@ -35,7 +35,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, imageFile }) => {
     const files = event.target.files;
     if (files && files.length > 0) {
       if (!files[0].type.startsWith("image/")) {
-        setErrorMessage("Please select an image file.");
+        setErrorMessage("Only PNG, JPEG and JPG files are allowed.");
       } else if (!["image/png", "image/jpeg"].includes(files[0].type)) {
         setErrorMessage("Only PNG, JPEG and JPG files are allowed.");
       } else if (files[0].size > MAX_FILE_SIZE_KB * 1024) {
