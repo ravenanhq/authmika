@@ -124,7 +124,11 @@ export class GroupUsersService {
     }
   }
 
-  async createApplication(groupId: number, applicationId: MyArray<number>) {
+  async userAndApplicationAssigning(
+    groupId: number,
+    userId: MyArray<string>,
+    applicationId: MyArray<string>,
+  ) {
     if (groupId == undefined || groupId == null) {
       return {
         message: 'group Id not supplied.',
@@ -136,30 +140,56 @@ export class GroupUsersService {
     const groupUsers = await this.groupUsersModel.findAll({
       where: whereCondition,
     });
+
+    if (!Array.isArray(userId) || userId.length === 0) {
+      return {
+        message: 'No user IDs provided.',
+        statusCode: HttpStatus.OK,
+      };
+    }
     if (!Array.isArray(applicationId) || applicationId.length === 0) {
       return {
         message: 'No applications provided.',
         statusCode: HttpStatus.OK,
       };
     }
+    const numericUserIds: number[] = userId.map((id) => {
+      const numericId = parseInt(id, 10);
+      if (isNaN(numericId)) {
+        throw new Error(`Invalid user ID: ${id}`);
+      }
+      return numericId;
+    });
+    await this.groupUsersModel.destroy({
+      where: {
+        groupId: groupId,
+      },
+    });
+
     for (const groupUser of groupUsers) {
       await this.userApplictionsModel.destroy({
         where: {
           userId: groupUser.userId,
         },
       });
+    }
 
-      for (const item of applicationId) {
+    for (const numericUserId of numericUserIds) {
+      for (const appId of applicationId) {
         await this.userApplictionsModel.create({
-          userId: groupUser.userId,
-          applicationId: item,
+          userId: numericUserId,
+          applicationId: appId,
+        });
+        await this.groupUsersModel.create({
+          groupId: groupId,
+          userId: numericUserId,
         });
       }
     }
 
     return {
-      message: 'Group and application mapped successfully',
-      statusCode: HttpStatus.OK,
+      message: 'User and application assigned successfully',
+      statusCode: HttpStatus.CREATED,
     };
   }
 }

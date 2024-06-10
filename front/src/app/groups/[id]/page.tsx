@@ -12,7 +12,6 @@ import {
   FormControlLabel,
   FormGroup,
   Grid,
-  IconButton,
   Paper,
   Table,
   TableBody,
@@ -29,7 +28,6 @@ import React, { useState, useEffect } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import { Container } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
-import CloseIcon from "@mui/icons-material/Close";
 export interface RowData {
   name: string;
   id: number;
@@ -61,6 +59,10 @@ interface User {
   firstName: string;
   lastName: string;
 }
+interface AlertState {
+  severity: "success" | "info" | "warning" | "error";
+  message: string;
+}
 
 const GroupView = ({ params }: { params: IGroupView }) => {
   const [applications, setApplications] = React.useState<Application[]>([]);
@@ -79,15 +81,8 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   const [userSearchTerm, setUserSearchTerm] = React.useState<string>("");
   const [id, setId] = useState<number | undefined>(params.id);
   const theme = useTheme();
-  const [message, setMessage] = useState<{
-    text: string;
-    type: "success" | "error";
-  } | null>(null);
-  const [appmessage, setAppMessage] = useState<{
-    text: string;
-    type: "success" | "error";
-  } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [alertShow, setAlertShow] = useState<AlertState | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -209,44 +204,46 @@ const GroupView = ({ params }: { params: IGroupView }) => {
       })
     : [];
 
-  const submitApplication = async (selectedCheckboxes: ICreateListProps[]) => {
-    await onSubmit(selectedCheckboxes);
-    setOpen(false);
-    setAppMessage({ text: "Application saved successfully!", type: "success" });
-  };
-
-  const handleSubmitUser = async (
+  const submitApplication = async (
+    selectedCheckboxes: ICreateListProps[],
     selectedUsersCheckboxes: ICreateUserProps[]
   ) => {
-    await onSubmitUser(selectedUsersCheckboxes);
+    await onSubmit(selectedCheckboxes, selectedUsersCheckboxes);
     setOpen(false);
-    setMessage({ text: "User saved successfully!", type: "success" });
   };
 
-  const onSubmit = async (formData: ICreateListProps | ICreateListProps[]) => {
+  const onSubmit = async (
+    formData: ICreateListProps | ICreateListProps[],
+    formDataUser: ICreateUserProps | ICreateUserProps[]
+  ) => {
     const formDataArray = Array.isArray(formData) ? formData : [formData];
     const applicationIds: string[] = formDataArray.map((formDataItem) => {
       return formDataItem.id.toString();
     });
-
-    try {
-      await UserApi.groupApplicationMapping(id!, applicationIds);
-    } catch (error) {
-      console.error("Error submitting data:", error);
-    }
-  };
-
-  const onSubmitUser = async (
-    formData: ICreateUserProps | ICreateUserProps[]
-  ) => {
-    const formDataArray = Array.isArray(formData) ? formData : [formData];
-    const userIds: string[] = formDataArray.map((formDataItem) => {
-      return formDataItem.id.toString();
+    const formDataArrayUser = Array.isArray(formDataUser)
+      ? formDataUser
+      : [formDataUser];
+    const userIds: string[] = formDataArrayUser.map((formDataItemUser) => {
+      return formDataItemUser.id.toString();
     });
 
     try {
-      await UserApi.userGroupMapping(id!, userIds);
-      getApplicationsByGroupId(id);
+      const res = await UserApi.groupApplicationMapping(
+        id!,
+        userIds,
+        applicationIds
+      );
+      if (res.statusCode === 200 && res.message) {
+        setAlertShow({
+          severity: "error",
+          message: res.message,
+        });
+      } else if (res.statusCode === 201 && res.message) {
+        setAlertShow({
+          severity: "success",
+          message: res.message,
+        });
+      }
     } catch (error) {
       console.error("Error submitting data:", error);
     }
@@ -296,11 +293,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
     window.location.href = "/groups";
   };
 
-  const handleClose = () => {
-    setMessage(null);
-    setAppMessage(null);
-  };
-
   if (!groupData) {
     return null;
   }
@@ -342,6 +334,21 @@ const GroupView = ({ params }: { params: IGroupView }) => {
           </TableBody>
         </Table>
       </Box>
+      {alertShow && (
+        <Alert
+          severity={alertShow.severity}
+          onClose={() => {
+            setAlertShow(null);
+          }}
+          sx={{
+            width: "30%",
+            margin: "0 auto",
+            paddingLeft: "1rem",
+          }}
+        >
+          {alertShow.message}
+        </Alert>
+      )}
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Box sx={{ p: 0 }}>
@@ -385,28 +392,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                   },
               }}
             >
-              {message && (
-                <Alert
-                  severity={message.type}
-                  action={
-                    <IconButton
-                      size="small"
-                      aria-label="close"
-                      color="inherit"
-                      onClick={handleClose}
-                    >
-                      <CloseIcon fontSize="small" />
-                    </IconButton>
-                  }
-                  sx={{
-                    width: "90%",
-                    margin: "0 auto",
-                    paddingLeft: "1rem",
-                  }}
-                >
-                  {message.text}
-                </Alert>
-              )}
               <Card
                 sx={{
                   width: "60%",
@@ -458,9 +443,13 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                               width: {
                                 xs: "100%",
                                 sm: "75%",
-                                md: "50%",
-                                lg: "340px",
+                                md: "70%",
+                                lg: "270px",
                               },
+                              "@media (min-width: 1366px) and (max-width: 1024px)":
+                                {
+                                  width: "40%",
+                                },
                               height: "40px",
                               "& .MuiInputBase-root": {
                                 height: "100%",
@@ -551,7 +540,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                                 ))}
                               {userOptions.filter((option) =>
                                 option.firstName
-                                  .toLowerCase()
+                                  ?.toLowerCase()
                                   .includes(userSearchTerm.toLowerCase())
                               ).length === 0 && (
                                 <Typography>No users available</Typography>
@@ -563,28 +552,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                     )}
                   </TableBody>
                 </Table>
-              </Card>
-              <Card
-                sx={{
-                  width: "60%",
-                  margin: "auto",
-                  position: "sticky",
-                  marginTop: "15px",
-                  marginBottom: "20px",
-                  border: "none",
-                  boxShadow: "none",
-                  [theme.breakpoints.down("md")]: {
-                    width: "100%",
-                  },
-                }}
-              >
-                <PrimaryButton
-                  startIcon={<SaveIcon />}
-                  type="submit"
-                  onClick={() => handleSubmitUser(selectedUsersCheckboxes)}
-                >
-                  Save
-                </PrimaryButton>
               </Card>
             </Card>
           </Box>
@@ -614,28 +581,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                 },
               }}
             >
-              {appmessage && (
-                <Alert
-                  severity={appmessage.type}
-                  action={
-                    <IconButton
-                      size="small"
-                      aria-label="close"
-                      color="inherit"
-                      onClick={handleClose}
-                    >
-                      <CloseIcon fontSize="small" />
-                    </IconButton>
-                  }
-                  sx={{
-                    width: "90%",
-                    margin: "0 auto",
-                    paddingLeft: "1rem",
-                  }}
-                >
-                  {appmessage.text}
-                </Alert>
-              )}
               <Card
                 sx={{
                   width: "60%",
@@ -687,8 +632,8 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                               width: {
                                 xs: "100%",
                                 sm: "75%",
-                                md: "50%",
-                                lg: "340px",
+                                md: "70%",
+                                lg: "270px",
                               },
                               height: "40px",
                               "& .MuiInputBase-root": {
@@ -778,9 +723,10 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                                     }
                                   />
                                 ))}
+
                               {options.filter((option) =>
                                 option.name
-                                  .toLowerCase()
+                                  ?.toLowerCase()
                                   .includes(searchTerm.toLowerCase())
                               ).length === 0 && (
                                 <Typography>
@@ -795,28 +741,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                   </TableBody>
                 </Table>
               </Card>
-              <Card
-                sx={{
-                  width: "60%",
-                  margin: "auto",
-                  position: "sticky",
-                  marginTop: "15px",
-                  marginBottom: "20px",
-                  border: "none",
-                  boxShadow: "none",
-                  [theme.breakpoints.down("md")]: {
-                    width: "100%",
-                  },
-                }}
-              >
-                <PrimaryButton
-                  startIcon={<SaveIcon />}
-                  type="submit"
-                  onClick={() => submitApplication(selectedCheckboxes)}
-                >
-                  Save
-                </PrimaryButton>
-              </Card>
             </Card>
           </Box>
           <Box
@@ -830,7 +754,18 @@ const GroupView = ({ params }: { params: IGroupView }) => {
             }}
             display="flex"
             justifyContent="flex-end"
+            gap="15px"
           >
+            <PrimaryButton
+              startIcon={<SaveIcon />}
+              variant="contained"
+              onClick={() =>
+                submitApplication(selectedCheckboxes, selectedUsersCheckboxes)
+              }
+              sx={{ height: "50%", marginTop: "auto" }}
+            >
+              Save
+            </PrimaryButton>
             <BackButton
               variant="contained"
               onClick={handleBackButtonClick}
