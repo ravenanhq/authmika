@@ -222,13 +222,14 @@ const UserList = () => {
       if (response) {
         if (response.statusCode == 409) {
           setInvalidEmail(response.message);
-        } else if (response.statusCode == 200) {
+        } else if (response.statusCode == 201) {
           setRows(response.data);
           const newUserId = Math.floor(Math.random() * 1000);
           const newUserData = {
             ...newUser,
             firstName: newUser.firstName,
             lastName: newUser.lastName,
+            status: 2,
             id: newUserId,
           };
           const currentUsers = [...rows];
@@ -242,7 +243,6 @@ const UserList = () => {
           setRows(sortedUsers);
           handleCloseAddUserModal();
           setAlertShow(response.message);
-          window.location.reload();
         }
       }
     } catch (error: any) {
