@@ -116,7 +116,14 @@ export class GroupApplicationCreateBodyDto {
     type: Array,
   })
   @IsNotEmpty({ message: 'Application id is required' })
-  applicationId: Array<number>;
+  applicationId: Array<string>;
+
+  @ApiProperty({
+    example: ['1', '2', '3'],
+    type: Array,
+  })
+  @IsNotEmpty({ message: 'User id is required' })
+  userId: Array<string>;
 }
 export class AssignUserstoGroupBodyDto {
   @ApiProperty({

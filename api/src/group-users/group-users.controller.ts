@@ -196,13 +196,14 @@ export class GroupUsersController {
     description: 'Internal server error',
   })
   @ApiOperation({ summary: 'Assign applications to group' })
-  @Post('assign-application')
+  @Post('assign-user-and-application')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
   async createApp(@Body() body: GroupApplicationCreateBodyDto) {
-    return this.groupusersService.createApplication(
+    return this.groupusersService.userAndApplicationAssigning(
       body.groupId,
+      body.userId,
       body.applicationId,
     );
   }

@@ -29,7 +29,6 @@ import {
   ApiResponse,
   ApiOperation,
 } from '@nestjs/swagger';
-import { GroupUpdateSuccessDto } from 'src/groups/dto/groups.dto';
 
 @Controller('roles')
 export class RolesController {
@@ -74,7 +73,7 @@ export class RolesController {
   @ApiTags('Roles')
   @ApiBearerAuth()
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: 'Success',
     type: RolesCreateSuccessDto,
   })

@@ -65,7 +65,7 @@ export class RolesService {
       });
       return {
         message: 'Role created successfully',
-        statusCode: HttpStatus.OK,
+        statusCode: HttpStatus.CREATED,
         data: roles,
       };
     } catch (error) {

@@ -127,7 +127,7 @@ export class UsersController {
   @ApiTags('Users')
   @ApiBearerAuth()
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: 'Success',
     type: AddUserSuccessDto,
   })

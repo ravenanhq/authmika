@@ -190,6 +190,7 @@ export class UsersService {
           password: await hash(password, 10),
           mobile: mobile,
           role: role,
+          status: 2,
           createdBy: null,
         });
 
