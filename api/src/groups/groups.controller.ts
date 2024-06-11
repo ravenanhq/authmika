@@ -72,7 +72,7 @@ export class GroupsController {
   @ApiTags('Groups')
   @ApiBearerAuth()
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: 'Success',
     type: GroupCreateSuccessDto,
   })

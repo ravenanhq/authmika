@@ -10,6 +10,7 @@ import {
   Card,
   CardContent,
   Checkbox,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -45,7 +46,7 @@ import LocalPostOfficeIcon from "@mui/icons-material/LocalPostOffice";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import DeActivateModal from "@/components/User/DeActivateModal";
 import EditUserModal from "@/components/User/EditUserModal";
-import EditNoteIcon from '@mui/icons-material/EditNote';
+import EditNoteIcon from "@mui/icons-material/EditNote";
 
 interface IUserView {
   id?: number;
@@ -122,9 +123,10 @@ const UserView = ({ params }: { params: IUserView }) => {
   } | null>(null);
   const [deactivateModalOpen, setDeactivateModalOpen] =
     useState<boolean>(false);
-    const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [invalidEmail, setInvalidEmail] = useState("");
   const [alertShow, setAlertShow] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const handleEditModalClose = () => {
     setEditModalOpen(false);
@@ -273,6 +275,7 @@ const UserView = ({ params }: { params: IUserView }) => {
     try {
       const res = await UserApi.getApplication();
       setOptions(res);
+      setLoading(false);
     } catch (error: any) {
       console.log(error);
     }
@@ -306,6 +309,7 @@ const UserView = ({ params }: { params: IUserView }) => {
     formData: ICreateListProps | ICreateListProps[]
   ) => {
     const formDataArray = Array.isArray(formData) ? formData : [formData];
+    console.log("form", formDataArray);
     const applicationIds: string[] = formDataArray.map((formDataItem) => {
       return formDataItem.id.toString();
     });
@@ -325,13 +329,22 @@ const UserView = ({ params }: { params: IUserView }) => {
     } else {
       const selectedOption = options.find((opt) => opt.id === optionId);
       if (selectedOption) {
-        setSelectedCheckboxes((prevSelected) => [
-          ...prevSelected,
-          {
-            name: selectedOption.name,
-            id: selectedOption.id,
-          },
-        ]);
+        setSelectedCheckboxes((prevSelected) => {
+          const updatedSelection = [
+            ...prevSelected,
+            {
+              name: selectedOption.name,
+              id: selectedOption.id,
+            },
+          ];
+
+          const uniqueSelection = Array.from(
+            new Map(
+              updatedSelection.map((checkbox) => [checkbox.id, checkbox])
+            ).values()
+          );
+          return uniqueSelection;
+        });
       }
     }
   };
@@ -463,7 +476,7 @@ const UserView = ({ params }: { params: IUserView }) => {
 
   return (
     <Container maxWidth="xl">
-            {alertShow && (
+      {alertShow && (
         <Alert
           severity="success"
           onClose={() => {
@@ -689,9 +702,9 @@ const UserView = ({ params }: { params: IUserView }) => {
                   style={{ maxWidth: "100%", height: "120%" }}
                 >
                   <TableBody sx={{ height: "100%" }}>
-                  <TableRow>
-                      <TableCell ></TableCell>
-                      <TableCell align="right">
+                    <TableRow>
+                      <TableCell></TableCell>
+                      <TableCell align="right" sx={{ paddingTop: 0 }}>
                         <EditUserModal
                           open={editModalOpen}
                           onClose={handleEditModalClose}
@@ -699,8 +712,11 @@ const UserView = ({ params }: { params: IUserView }) => {
                           onEdit={handleEditSave}
                           uniqueEmail={invalidEmail}
                         />
-                        <IconButton aria-label="edit" onClick={() => handleEdit()}>
-                          <EditNoteIcon />
+                        <IconButton
+                          aria-label="edit"
+                          onClick={() => handleEdit()}
+                        >
+                          <EditNoteIcon sx={{ color: "#1C658C" }} />
                         </IconButton>
                       </TableCell>
                     </TableRow>
@@ -784,11 +800,11 @@ const UserView = ({ params }: { params: IUserView }) => {
             >
               Assigned Applications
             </Typography>
-            <Divider sx={{ marginBottom: 1, flexGrow: 2 }} color="#265073" />
+            <Divider sx={{ marginBottom: 2, flexGrow: 2 }} color="#265073" />
             <Card
               sx={{
                 width: "100%",
-                height: "30%",
+                height: "80%",
                 margin: "auto",
                 position: "sticky",
                 [theme.breakpoints.down("md")]: {
@@ -799,15 +815,21 @@ const UserView = ({ params }: { params: IUserView }) => {
               <Card
                 sx={{
                   width: "60%",
-                  height: "355px",
+                  height: "365px",
                   margin: "auto",
                   position: "sticky",
-                  marginTop: "15px",
+                  marginTop: "45px",
                   marginBottom: "20px",
                   overflow: "hidden",
                   [theme.breakpoints.down("md")]: {
                     width: "100%",
                   },
+                  "@media (width: 1366px) and (height: 1024px),(width: 1280px) and (height: 853px),(width: 1280px) and (height: 800px),(width: 1368px) and (height: 912px)":
+                    {
+                      height: "370px",
+                      marginTop: "70px",
+                      marginBottom: "40px",
+                    },
                 }}
               >
                 <Table stickyHeader style={{ maxWidth: "100%" }}>
@@ -863,90 +885,125 @@ const UserView = ({ params }: { params: IUserView }) => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    <TableRow sx={{ marginTop: "0px" }}>
-                      <TableCell colSpan={2}>
-                        <TableContainer
-                          component={Paper}
-                          sx={{
-                            width: "100%",
-                            height: "260px",
-                            marginTop: "2px",
-                            marginBottom: "0px",
-                            overflowY: "auto",
+                    {loading && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={2}
+                          style={{
+                            textAlign: "center",
+                            paddingTop: "5%",
                             border: "none",
-                            boxShadow: "none",
                           }}
                         >
-                          <FormGroup>
-                            {options
-                              .filter((option) =>
+                          <CircularProgress />
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {!loading && (
+                      <TableRow sx={{ marginTop: "0px" }}>
+                        <TableCell colSpan={2}>
+                          <TableContainer
+                            component={Paper}
+                            sx={{
+                              width: "100%",
+                              height: "260px",
+                              marginTop: "2px",
+                              marginBottom: "0px",
+                              overflowY: "auto",
+                              border: "none",
+                              boxShadow: "none",
+                            }}
+                          >
+                            <FormGroup>
+                              {options
+                                .filter((option) =>
+                                  option.name
+                                    .toLowerCase()
+                                    .includes(searchTerm.toLowerCase())
+                                )
+                                .map((option) => (
+                                  <FormControlLabel
+                                    key={option.id}
+                                    control={
+                                      <Checkbox
+                                        checked={selectedCheckboxes.some(
+                                          (checkbox) =>
+                                            checkbox.id === option.id
+                                        )}
+                                        onChange={() =>
+                                          handleCheckboxChange(option.id)
+                                        }
+                                        style={{
+                                          color: "#265073",
+                                          marginBottom: "0px",
+                                          marginTop: "0px",
+                                        }}
+                                      />
+                                    }
+                                    label={
+                                      <span
+                                        style={{
+                                          maxWidth: "300px",
+                                          overflow: "hidden",
+                                          display: "inline-block",
+                                          whiteSpace: "unset",
+                                          textOverflow: "ellipsis",
+                                          wordBreak: "break-all",
+                                          marginTop: "0px",
+                                          marginBottom: "0px",
+                                          paddingTop: "3px",
+                                          paddingBottom: "0px",
+                                        }}
+                                      >
+                                        {option.name}
+                                      </span>
+                                    }
+                                  />
+                                ))}
+                              {options.filter((option) =>
                                 option.name
                                   .toLowerCase()
                                   .includes(searchTerm.toLowerCase())
-                              )
-                              .map((option) => (
-                                <FormControlLabel
-                                  key={option.id}
-                                  control={
-                                    <Checkbox
-                                      checked={selectedCheckboxes.some(
-                                        (checkbox) => checkbox.id === option.id
-                                      )}
-                                      onChange={() =>
-                                        handleCheckboxChange(option.id)
-                                      }
-                                      style={{
-                                        color: "#265073",
-                                        marginBottom: "0px",
-                                        marginTop: "0px",
-                                      }}
-                                    />
-                                  }
-                                  label={
-                                    <span
-                                      style={{
-                                        maxWidth: "300px",
-                                        overflow: "hidden",
-                                        display: "inline-block",
-                                        whiteSpace: "unset",
-                                        textOverflow: "ellipsis",
-                                        wordBreak: "break-all",
-                                        marginTop: "0px",
-                                        marginBottom: "0px",
-                                        paddingTop: "3px",
-                                        paddingBottom: "0px",
-                                      }}
-                                    >
-                                      {option.name}
-                                    </span>
-                                  }
-                                />
-                              ))}
-                            {options.filter((option) =>
-                              option.name
-                                .toLowerCase()
-                                .includes(searchTerm.toLowerCase())
-                            ).length === 0 && (
-                              <Typography>No applications available</Typography>
-                            )}
-                          </FormGroup>
-                        </TableContainer>
-                      </TableCell>
-                    </TableRow>
+                              ).length === 0 && (
+                                <Typography>
+                                  No applications available
+                                </Typography>
+                              )}
+                            </FormGroup>
+                          </TableContainer>
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </Card>
-              <Box
+              <Card
                 sx={{
-                  marginBottom: "16px",
-                  marginLeft: "140px",
-                  width: {
-                    xs: "100%",
-                    sm: "75%",
-                    md: "50%",
-                    lg: "390px",
+                  width: "60%",
+                  margin: "auto",
+                  position: "sticky",
+                  marginTop: "25px",
+                  marginBottom: "22px",
+                  border: "none",
+                  boxShadow: "none",
+                  [theme.breakpoints.down("md")]: {
+                    width: "100%",
                   },
-                  mx: { xs: "auto", md: 17, lg: "19", xl: "1" },
+                  [theme.breakpoints.down("lg")]: {
+                    marginLeft: "15px",
+                  },
+                  "@media (width: 914px) and (height: 412px),(width: 912px) and (height: 1368px),(width: 915px) and (height: 412px),(width: 932px) and (height: 430px),(width: 1180px) and (height: 820px)":
+                    {
+                      marginLeft: "155px",
+                    },
+                  "@media (width: 1180px) and (height: 820px),(width: 1024px) and (height: 768px)":
+                    {
+                      marginLeft: "200px",
+                    },
+                  "@media (width: 1024px) and (height: 1366px),(width: 1024px) and (height: 600px),(width: 1024px) and (height: 768px)":
+                    {
+                      marginLeft: "180px",
+                    },
                 }}
               >
                 <PrimaryButton
@@ -956,7 +1013,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                 >
                   Save
                 </PrimaryButton>
-              </Box>
+              </Card>
             </Card>
             <Box display="flex" justifyContent="flex-end">
               <BackButton

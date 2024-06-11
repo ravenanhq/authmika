@@ -268,13 +268,15 @@ export class UserApi {
 
   static async groupApplicationMapping(
     groupId: number,
+    userId: Array<string>,
     applicationId: Array<string>
   ) {
     try {
       const res: any = await axios.post(
-        `${config.service}/group-users/assign-application`,
+        `${config.service}/group-users/assign-user-and-application`,
         {
           groupId: groupId,
+          userId: userId,
           applicationId: applicationId,
         }
       );

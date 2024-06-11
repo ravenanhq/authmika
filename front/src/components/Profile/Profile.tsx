@@ -45,10 +45,11 @@ interface Errors {
   currentPassword?: string;
   password?: string;
   uniqueEmail?: string;
+  verifyCurrentPassword?: string;
 }
 
 interface Error {
-  currentPassword?: string;
+  verifyCurrentPassword?: string;
 }
 interface RowData {
   id: number;
@@ -101,6 +102,7 @@ const ProfilePage = () => {
   const [alertShow, setAlertShow] = useState("");
   const [passwordAlert, setPasswordAlert] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
+  const [verifyCurrentPassword, setverifyCurrentPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState<string>("");
@@ -320,8 +322,8 @@ const ProfilePage = () => {
 
   const validatePassword = () => {
     let newErrors: Error = {};
-    if (!currentPassword.trim()) {
-      newErrors.currentPassword = "Current Password is required";
+    if (!verifyCurrentPassword.trim()) {
+      newErrors.verifyCurrentPassword = "Current Password is required";
     }
     setError(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -848,7 +850,7 @@ const ProfilePage = () => {
                     <IconButton
                       onClick={() => {
                         handleClose();
-                        setPassword("");
+                        setverifyCurrentPassword("");
                         setTwoFactorPasswordAlert(null);
                       }}
                       sx={{
@@ -898,14 +900,14 @@ const ProfilePage = () => {
                       required
                       margin="normal"
                       id="password"
-                      value={currentPassword}
+                      value={verifyCurrentPassword}
                       type={showPassword4 ? "text" : "password"}
                       onChange={(e) => {
-                        setCurrentPassword(e.target.value);
+                        setverifyCurrentPassword(e.target.value);
                         setError({});
                       }}
-                      error={!!error.currentPassword}
-                      helperText={error.currentPassword}
+                      error={!!error.verifyCurrentPassword}
+                      helperText={error.verifyCurrentPassword}
                       sx={{ marginBottom: 3 }}
                       InputProps={{
                         endAdornment: (
@@ -934,7 +936,7 @@ const ProfilePage = () => {
                           startIcon={<CloseIcon />}
                           onClick={() => {
                             handleClose();
-                            setPassword("");
+                            setverifyCurrentPassword("");
                             setError({});
                             setTwoFactorPasswordAlert(null);
                           }}
