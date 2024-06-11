@@ -257,13 +257,22 @@ const GroupView = ({ params }: { params: IGroupView }) => {
     } else {
       const selectedOption = options.find((opt) => opt.id === optionId);
       if (selectedOption) {
-        setSelectedCheckboxes((prevSelected) => [
-          ...prevSelected,
-          {
-            name: selectedOption.name,
-            id: selectedOption.id,
-          },
-        ]);
+        setSelectedCheckboxes((prevSelected) => {
+          const updatedSelection = [
+            ...prevSelected,
+            {
+              name: selectedOption.name,
+              id: selectedOption.id,
+            },
+          ];
+
+          const uniqueSelection = Array.from(
+            new Map(
+              updatedSelection.map((checkbox) => [checkbox.id, checkbox])
+            ).values()
+          );
+          return uniqueSelection;
+        });
       }
     }
   };
@@ -276,14 +285,24 @@ const GroupView = ({ params }: { params: IGroupView }) => {
     } else {
       const selectedUserOption = userOptions.find((opt) => opt.id === optionId);
       if (selectedUserOption) {
-        setSelectedUsersCheckboxes((prevSelected) => [
-          ...prevSelected,
-          {
-            firstName: selectedUserOption.firstName,
-            lastName: selectedUserOption.lastName,
-            id: selectedUserOption.id,
-          },
-        ]);
+        setSelectedUsersCheckboxes((prevSelected) => {
+          const updatedSelection = [
+            ...prevSelected,
+            {
+              firstName: selectedUserOption.firstName,
+              lastName: selectedUserOption.lastName,
+              id: selectedUserOption.id,
+            },
+          ];
+
+          const uniqueSelection = Array.from(
+            new Map(
+              updatedSelection.map((checkbox) => [checkbox.id, checkbox])
+            ).values()
+          );
+
+          return uniqueSelection;
+        });
       }
     }
   };

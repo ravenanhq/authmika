@@ -175,14 +175,15 @@ export class GroupUsersService {
     }
 
     for (const numericUserId of numericUserIds) {
+      await this.groupUsersModel.create({
+        groupId: groupId,
+        userId: numericUserId,
+      });
+
       for (const appId of applicationId) {
         await this.userApplictionsModel.create({
           userId: numericUserId,
           applicationId: appId,
-        });
-        await this.groupUsersModel.create({
-          groupId: groupId,
-          userId: numericUserId,
         });
       }
     }
