@@ -309,7 +309,6 @@ const UserView = ({ params }: { params: IUserView }) => {
     formData: ICreateListProps | ICreateListProps[]
   ) => {
     const formDataArray = Array.isArray(formData) ? formData : [formData];
-    console.log("form", formDataArray);
     const applicationIds: string[] = formDataArray.map((formDataItem) => {
       return formDataItem.id.toString();
     });

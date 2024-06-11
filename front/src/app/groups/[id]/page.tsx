@@ -374,14 +374,14 @@ const GroupView = ({ params }: { params: IGroupView }) => {
             <Typography
               variant="h5"
               component="h2"
-              sx={{ marginBottom: 1, marginTop: 1, textAlign: "center" }}
+              sx={{ marginBottom: 3, marginTop: 1, textAlign: "center" }}
             >
               Assigned Users
             </Typography>
             <Card
               sx={{
                 width: "85%",
-                height: "30%",
+                height: "50%",
                 margin: "auto",
                 position: "sticky",
                 [theme.breakpoints.down("md")]: {
@@ -414,10 +414,10 @@ const GroupView = ({ params }: { params: IGroupView }) => {
               <Card
                 sx={{
                   width: "60%",
-                  height: "355px",
+                  height: "365px",
                   margin: "auto",
                   position: "sticky",
-                  marginTop: "15px",
+                  marginTop: "35px",
                   marginBottom: "20px",
                   overflow: "hidden",
                   [theme.breakpoints.down("md")]: {
@@ -584,7 +584,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
             <Typography
               variant="h5"
               component="h2"
-              sx={{ marginBottom: 1, marginTop: 1, textAlign: "center" }}
+              sx={{ marginBottom: 3, marginTop: 1, textAlign: "center" }}
               position="sticky"
             >
               Assigned Applications
@@ -592,7 +592,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
             <Card
               sx={{
                 width: "85%",
-                height: "30%",
+                height: "50%",
                 margin: "auto",
                 position: "sticky",
                 [theme.breakpoints.down("md")]: {
@@ -603,10 +603,10 @@ const GroupView = ({ params }: { params: IGroupView }) => {
               <Card
                 sx={{
                   width: "60%",
-                  height: "355px",
+                  height: "365px",
                   margin: "auto",
                   position: "sticky",
-                  marginTop: "15px",
+                  marginTop: "35px",
                   marginBottom: "20px",
                   overflow: "hidden",
                   [theme.breakpoints.down("md")]: {
