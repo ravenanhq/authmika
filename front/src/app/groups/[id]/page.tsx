@@ -178,12 +178,18 @@ const GroupView = ({ params }: { params: IGroupView }) => {
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
+    if (searchTerm.trim() !== "") {
+      setIsSearchTermPresent(true);
+    }
   };
 
   const handleUserSearchChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setUserSearchTerm(event.target.value);
+    if (userSearchTerm.trim() !== "") {
+      setIsUserSearchTermPresent(true);
+    }
   };
 
   const filteredApplications = applications
@@ -310,14 +316,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
       }
     }
   };
-
-  if (searchTerm.trim() !== "") {
-    setIsSearchTermPresent(true);
-  }
-
-  if (searchTerm.trim() !== "") {
-    setIsUserSearchTermPresent(true);
-  }
 
   const handleBackButtonClick = () => {
     localStorage.clear();
@@ -575,12 +573,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                                     }
                                   />
                                 ))}
-                              {/* {userOptions.filter((option) =>
-                                option.firstName
-                                  ?.toLowerCase()
-                                  .includes(userSearchTerm.toLowerCase())
-                              ).length === 0 && ( */}
-
                               {userOptions.filter((option) =>
                                 option.firstName
                                   ?.toLowerCase()
