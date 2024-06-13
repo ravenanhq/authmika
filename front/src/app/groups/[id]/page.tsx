@@ -83,6 +83,8 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [alertShow, setAlertShow] = useState<AlertState | null>(null);
+  const [isSearchTermPresent, setIsSearchTermPresent] = useState(false);
+  const [isUserSearchTermPresent, setIsUserSearchTermPresent] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -94,8 +96,8 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   }, []);
 
   useEffect(() => {
-    getApplication();
     getUser();
+    getApplication();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -152,9 +154,10 @@ const GroupView = ({ params }: { params: IGroupView }) => {
 
   const getApplication = async () => {
     try {
-      const res = await UserApi.getApplication();
+      let res = await UserApi.getApplication();
       setOptions(res);
       setLoading(false);
+      setIsSearchTermPresent(true);
     } catch (error: any) {
       console.log(error);
     }
@@ -162,10 +165,11 @@ const GroupView = ({ params }: { params: IGroupView }) => {
 
   const getUser = async () => {
     try {
-      const res = await UserApi.getAllUsers();
+      let res = await UserApi.getAllUsers();
       if (res) {
         setUserOptions(res);
         setLoading(false);
+        setIsUserSearchTermPresent(true);
       }
     } catch (error: any) {
       console.log(error);
@@ -174,12 +178,18 @@ const GroupView = ({ params }: { params: IGroupView }) => {
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
+    if (searchTerm.trim() !== "") {
+      setIsSearchTermPresent(true);
+    }
   };
 
   const handleUserSearchChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setUserSearchTerm(event.target.value);
+    if (userSearchTerm.trim() !== "") {
+      setIsUserSearchTermPresent(true);
+    }
   };
 
   const filteredApplications = applications
@@ -360,9 +370,14 @@ const GroupView = ({ params }: { params: IGroupView }) => {
             setAlertShow(null);
           }}
           sx={{
-            width: "30%",
             margin: "0 auto",
-            paddingLeft: "1rem",
+            width: {
+              xs: "90%",
+              sm: "70%",
+              md: "50%",
+              lg: "40%",
+              xl: "30%",
+            },
           }}
         >
           {alertShow.message}
@@ -396,10 +411,11 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                   width: "100%",
                   margin: "auto",
                 },
-                "@media (min-width: 768px) and (max-width: 1024px)": {
-                  width: "99%",
-                  margin: "0rem",
-                },
+                "@media (min-width: 768px) and (max-width: 1024px),(width: 736px) and (height: 414px)":
+                  {
+                    width: "99%",
+                    margin: "0rem",
+                  },
                 "@media (min-width: 912px) and (max-width: 1200px)": {
                   width: "170%",
                   margin: "5rem",
@@ -561,9 +577,10 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                                 option.firstName
                                   ?.toLowerCase()
                                   .includes(userSearchTerm.toLowerCase())
-                              ).length === 0 && (
-                                <Typography>No users available</Typography>
-                              )}
+                              ).length === 0 &&
+                                isUserSearchTermPresent && (
+                                  <Typography>No users available</Typography>
+                                )}
                             </FormGroup>
                           </TableContainer>
                         </TableCell>
@@ -742,16 +759,16 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                                     }
                                   />
                                 ))}
-
                               {options.filter((option) =>
                                 option.name
                                   ?.toLowerCase()
                                   .includes(searchTerm.toLowerCase())
-                              ).length === 0 && (
-                                <Typography>
-                                  No applications available
-                                </Typography>
-                              )}
+                              ).length === 0 &&
+                                isSearchTermPresent && (
+                                  <Typography>
+                                    No applications available
+                                  </Typography>
+                                )}
                             </FormGroup>
                           </TableContainer>
                         </TableCell>

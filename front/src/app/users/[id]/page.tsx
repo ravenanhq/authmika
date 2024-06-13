@@ -89,6 +89,10 @@ interface ICreatePasswordProps {
   showConfirmPassword: boolean;
   id?: number;
 }
+interface AlertState {
+  severity: "success" | "info" | "warning" | "error";
+  message: string;
+}
 
 const UserView = ({ params }: { params: IUserView }) => {
   const [applications, setApplications] = React.useState<Application[]>([]);
@@ -127,6 +131,7 @@ const UserView = ({ params }: { params: IUserView }) => {
   const [invalidEmail, setInvalidEmail] = useState("");
   const [alertShow, setAlertShow] = useState("");
   const [loading, setLoading] = useState(true);
+  const [saveAlert, setSaveAlert] = useState<AlertState | null>(null);
 
   const handleEditModalClose = () => {
     setEditModalOpen(false);
@@ -313,7 +318,13 @@ const UserView = ({ params }: { params: IUserView }) => {
       return formDataItem.id.toString();
     });
     try {
-      await UserApi.userApplicationMapping(id!, applicationIds);
+      const res = await UserApi.userApplicationMapping(id!, applicationIds);
+      if (res.statusCode === 200 && res.message) {
+        setSaveAlert({
+          severity: "success",
+          message: res.message,
+        });
+      }
       getApplicationsByUserId(id);
     } catch (error) {
       console.error("Error submitting data:", error);
@@ -496,6 +507,16 @@ const UserView = ({ params }: { params: IUserView }) => {
           onClose={clearError}
         >
           {error.message}
+        </Alert>
+      )}
+           {saveAlert && (
+        <Alert
+          severity={saveAlert.severity}
+          onClose={() => {
+            setSaveAlert(null);
+          }}
+        >
+          {saveAlert.message}
         </Alert>
       )}
       <Grid container spacing={2}>
