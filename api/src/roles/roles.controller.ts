@@ -96,7 +96,7 @@ export class RolesController {
   @ApiOperation({ summary: 'Create a new role' })
   @Post()
   @UsePipes(new ValidationPipe())
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ValidationPipe())
   @UseGuards(AuthGuard('jwt'))
   async create(

@@ -85,10 +85,6 @@ export class GroupApplicationGetBodyDto {
   @ApiProperty({
     example: 1,
   })
-  userId: number;
-  @ApiProperty({
-    example: 1,
-  })
   groupId: number;
 }
 

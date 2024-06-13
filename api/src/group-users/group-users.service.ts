@@ -141,6 +141,13 @@ export class GroupUsersService {
       where: whereCondition,
     });
 
+    if (groupUsers.length === 0) {
+      return {
+        message: 'Group user not found.',
+        statusCode: HttpStatus.OK,
+      };
+    }
+
     if (!Array.isArray(userId) || userId.length === 0) {
       return {
         message: 'No user IDs provided.',

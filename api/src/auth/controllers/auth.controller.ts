@@ -12,15 +12,10 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '../auth.guard';
 import { AuthService } from '../services/auth.service';
-import {
-  LoginDto,
-  LoginSuccessDto,
-  QuickSignInDto,
-  QuickSignInSuccessDto,
-  UserDataDto,
-} from '../dto/login.dto';
+import { LoginDto, LoginSuccessDto, QuickSignInDto } from '../dto/login.dto';
 import {
   ApiBearerAuth,
+  ApiExcludeEndpoint,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -56,34 +51,15 @@ export class AuthController {
     );
   }
 
-  @ApiTags('Auth')
   @ApiBearerAuth()
-  @ApiResponse({
-    status: 200,
-    description: 'Success',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-  })
-  @ApiOperation({ summary: 'Logged in user profile' })
+  @ApiExcludeEndpoint()
   @UseGuards(AuthGuard)
   @Get('profile')
   getProfile(@Request() req) {
     return req.user;
   }
 
-  @ApiTags('Auth')
-  @ApiResponse({
-    status: 200,
-    description: 'Success',
-    type: QuickSignInSuccessDto,
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-  })
-  @ApiOperation({ summary: 'Get quick sign in url' })
+  @ApiExcludeEndpoint()
   @Post('quick-sign-in-url')
   getQuickSignInUrl(@Body() body: QuickSignInDto) {
     return this.authService.quickSignIn(body.userId, body.applicationId);

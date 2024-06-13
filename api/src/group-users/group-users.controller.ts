@@ -14,13 +14,13 @@ import { GroupUsersService } from './group-users.service';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
+  ApiExcludeEndpoint,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import {
   GroupUsersData,
-  GroupAndUserMap,
   GroupUserApplicationGetSuccessDto,
   GroupApplicationGetSuccessDto,
   GroupApplicationGetBodyDto,
@@ -69,30 +69,8 @@ export class GroupUsersController {
     }
   }
 
-  @ApiTags('Group-Users')
   @ApiBearerAuth()
-  @ApiResponse({
-    status: 200,
-    description: 'Success',
-    type: GroupAndUserMap,
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Not found',
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Conflict',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
-  @ApiOperation({ summary: 'Assign users to group' })
+  @ApiExcludeEndpoint()
   @Post()
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)

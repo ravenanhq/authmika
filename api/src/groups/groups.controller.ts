@@ -95,7 +95,7 @@ export class GroupsController {
   @ApiOperation({ summary: 'Create a new group' })
   @Post()
   @UsePipes(new ValidationPipe())
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ValidationPipe())
   @UseGuards(AuthGuard('jwt'))
   async create(

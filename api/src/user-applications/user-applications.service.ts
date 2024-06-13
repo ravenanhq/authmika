@@ -199,10 +199,13 @@ export class UserApplicationService {
         };
       }
     } else {
-      return {
-        message: 'No mapping found',
-        statusCode: HttpStatus.NOT_FOUND,
-      };
+      throw new HttpException(
+        {
+          message: 'No mapping found',
+          statusCode: HttpStatus.NOT_FOUND,
+        },
+        HttpStatus.NOT_FOUND,
+      );
     }
   }
 }

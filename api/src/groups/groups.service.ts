@@ -72,17 +72,23 @@ export class GroupsService {
       };
     } catch (error) {
       if (error instanceof HttpException) {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.CONFLICT,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            message: error.message,
+            statusCode: HttpStatus.CONFLICT,
+            data: null,
+          },
+          HttpStatus.CONFLICT,
+        );
       } else {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            message: error.message,
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            data: null,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
     }
   }
@@ -121,25 +127,34 @@ export class GroupsService {
           data: groups,
         };
       } else {
-        return {
-          message: 'Group not found.',
-          statusCode: HttpStatus.NOT_FOUND,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            message: 'Group not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+            data: null,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
       if (error instanceof HttpException) {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.CONFLICT,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            message: error.message,
+            statusCode: HttpStatus.CONFLICT,
+            data: null,
+          },
+          HttpStatus.CONFLICT,
+        );
       } else {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            message: error.message,
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            data: null,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
     }
   }
@@ -167,18 +182,24 @@ export class GroupsService {
           data: groups,
         };
       } else {
-        return {
-          message: 'Group not found.',
-          statusCode: HttpStatus.NOT_FOUND,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            message: 'Group not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+            data: null,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
-      return {
-        message: 'An error occurred while deleting the group.',
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        data: null,
-      };
+      throw new HttpException(
+        {
+          message: 'An error occurred while deleting the group.',
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          data: null,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
