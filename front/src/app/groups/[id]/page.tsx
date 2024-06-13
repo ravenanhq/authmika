@@ -83,7 +83,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [alertShow, setAlertShow] = useState<AlertState | null>(null);
-  let isSearchTermPresent = false;
+  const [isSearchTermPresent, setIsSearchTermPresent] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -96,10 +96,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
 
   useEffect(() => {
     getUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     getApplication();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -157,9 +153,10 @@ const GroupView = ({ params }: { params: IGroupView }) => {
 
   const getApplication = async () => {
     try {
-      const res = await UserApi.getApplication();
+      let res = await UserApi.getApplication();
       setOptions(res);
       setLoading(false);
+      setIsSearchTermPresent(true);
     } catch (error: any) {
       console.log(error);
     }
@@ -313,7 +310,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   };
 
   if (searchTerm.trim() !== "") {
-    isSearchTermPresent = true;
+setIsSearchTermPresent(true);
   }
 
   const handleBackButtonClick = () => {
@@ -757,12 +754,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                                     }
                                   />
                                 ))}
-
-                              {/* {options.filter((option) =>
-                                option.name
-                                  ?.toLowerCase()
-                                  .includes(searchTerm.toLowerCase())
-                              ).length === 0 && ( */}
                               {options.filter((option) =>
                                 option.name
                                   ?.toLowerCase()

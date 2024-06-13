@@ -103,7 +103,8 @@ const ProfilePage = () => {
   const [passwordAlert, setPasswordAlert] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [verifyCurrentPassword, setVerifyCurrentPassword] = useState("");
-  const [verifyPasswordAlert, setVerifyPasswordAlert] =useState<AlertState | null>(null);
+  const [verifyPasswordAlert, setVerifyPasswordAlert] =
+    useState<AlertState | null>(null);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState<string>("");
@@ -287,8 +288,6 @@ const ProfilePage = () => {
           currentPassword: verifyCurrentPassword,
         };
         const response = await UserApi.checkCurrentPassword(id, updatedData);
-        console.log("pp",response);
-
         setPasswordAlert("");
         if (response) {
           if (response.statusCode === 409) {
@@ -858,7 +857,8 @@ const ProfilePage = () => {
                       onClick={() => {
                         handleClose();
                         setVerifyCurrentPassword("");
-                        setVerifyPasswordAlert(null);                      }}
+                        setVerifyPasswordAlert(null);
+                      }}
                       sx={{
                         backgroundColor: "#FF9843",
                         color: "#fff",

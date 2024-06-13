@@ -151,8 +151,6 @@ export class GroupUsersService {
       where: whereCondition,
     });
 
-    console.log('gh', groupId);
-
     if (!Array.isArray(userId) || userId.length === 0) {
       return {
         message: 'No user IDs provided.',
