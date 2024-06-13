@@ -83,6 +83,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [alertShow, setAlertShow] = useState<AlertState | null>(null);
+  let isSearchTermPresent = false;
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -94,8 +95,12 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   }, []);
 
   useEffect(() => {
-    getApplication();
     getUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    getApplication();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -307,6 +312,10 @@ const GroupView = ({ params }: { params: IGroupView }) => {
     }
   };
 
+  if (searchTerm.trim() !== "") {
+    isSearchTermPresent = true;
+  }
+
   const handleBackButtonClick = () => {
     localStorage.clear();
     window.location.href = "/groups";
@@ -360,9 +369,14 @@ const GroupView = ({ params }: { params: IGroupView }) => {
             setAlertShow(null);
           }}
           sx={{
-            width: "30%",
             margin: "0 auto",
-            paddingLeft: "1rem",
+            width: {
+              xs: "90%",
+              sm: "70%",
+              md: "50%",
+              lg: "40%",
+              xl: "30%",
+            },
           }}
         >
           {alertShow.message}
@@ -396,10 +410,11 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                   width: "100%",
                   margin: "auto",
                 },
-                "@media (min-width: 768px) and (max-width: 1024px)": {
-                  width: "99%",
-                  margin: "0rem",
-                },
+                "@media (min-width: 768px) and (max-width: 1024px),(width: 736px) and (height: 414px)":
+                  {
+                    width: "99%",
+                    margin: "0rem",
+                  },
                 "@media (min-width: 912px) and (max-width: 1200px)": {
                   width: "170%",
                   margin: "5rem",
@@ -743,15 +758,21 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                                   />
                                 ))}
 
+                              {/* {options.filter((option) =>
+                                option.name
+                                  ?.toLowerCase()
+                                  .includes(searchTerm.toLowerCase())
+                              ).length === 0 && ( */}
                               {options.filter((option) =>
                                 option.name
                                   ?.toLowerCase()
                                   .includes(searchTerm.toLowerCase())
-                              ).length === 0 && (
-                                <Typography>
-                                  No applications available
-                                </Typography>
-                              )}
+                              ).length === 0 &&
+                                isSearchTermPresent && (
+                                  <Typography>
+                                    No applications available
+                                  </Typography>
+                                )}
                             </FormGroup>
                           </TableContainer>
                         </TableCell>

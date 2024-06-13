@@ -135,18 +135,23 @@ export class GroupUsersService {
         statusCode: HttpStatus.OK,
       };
     }
+    if (!groupId) {
+      throw new HttpException(
+        {
+          message: 'Invalid group ID.',
+          statusCode: HttpStatus.BAD_REQUEST,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const whereCondition: any = { groupId };
 
     const groupUsers = await this.groupUsersModel.findAll({
       where: whereCondition,
     });
 
-    if (groupUsers.length === 0) {
-      return {
-        message: 'Group user not found.',
-        statusCode: HttpStatus.OK,
-      };
-    }
+    console.log('gh', groupId);
 
     if (!Array.isArray(userId) || userId.length === 0) {
       return {
@@ -195,9 +200,13 @@ export class GroupUsersService {
       }
     }
 
-    return {
-      message: 'User and application assigned successfully',
-      statusCode: HttpStatus.CREATED,
-    };
+    throw new HttpException(
+      {
+        message: 'User and application assigned successfully',
+        statusCode: HttpStatus.CREATED,
+        data: null,
+      },
+      HttpStatus.CREATED,
+    );
   }
 }

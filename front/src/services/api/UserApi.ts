@@ -161,7 +161,7 @@ export class UserApi {
     return res.data;
   }
 
-  static async verifyCurrentPassword(id: number, updatedData: any) {
+  static async checkCurrentPassword(id: number, updatedData: any) {
     const res = await axios.post(
       `${config.service}/users/verify-current-password/${id}`,
       updatedData
