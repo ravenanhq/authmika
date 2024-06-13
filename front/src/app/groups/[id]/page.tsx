@@ -84,6 +84,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   const [loading, setLoading] = useState(true);
   const [alertShow, setAlertShow] = useState<AlertState | null>(null);
   const [isSearchTermPresent, setIsSearchTermPresent] = useState(false);
+  const [isUserSearchTermPresent, setIsUserSearchTermPresent] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -164,10 +165,11 @@ const GroupView = ({ params }: { params: IGroupView }) => {
 
   const getUser = async () => {
     try {
-      const res = await UserApi.getAllUsers();
+      let res = await UserApi.getAllUsers();
       if (res) {
         setUserOptions(res);
         setLoading(false);
+        setIsUserSearchTermPresent(true);
       }
     } catch (error: any) {
       console.log(error);
@@ -310,7 +312,11 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   };
 
   if (searchTerm.trim() !== "") {
-setIsSearchTermPresent(true);
+    setIsSearchTermPresent(true);
+  }
+
+  if (searchTerm.trim() !== "") {
+    setIsUserSearchTermPresent(true);
   }
 
   const handleBackButtonClick = () => {
@@ -569,13 +575,20 @@ setIsSearchTermPresent(true);
                                     }
                                   />
                                 ))}
+                              {/* {userOptions.filter((option) =>
+                                option.firstName
+                                  ?.toLowerCase()
+                                  .includes(userSearchTerm.toLowerCase())
+                              ).length === 0 && ( */}
+
                               {userOptions.filter((option) =>
                                 option.firstName
                                   ?.toLowerCase()
                                   .includes(userSearchTerm.toLowerCase())
-                              ).length === 0 && (
-                                <Typography>No users available</Typography>
-                              )}
+                              ).length === 0 &&
+                                isUserSearchTermPresent && (
+                                  <Typography>No users available</Typography>
+                                )}
                             </FormGroup>
                           </TableContainer>
                         </TableCell>
