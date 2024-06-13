@@ -9,9 +9,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-export class UserApplicationController {}
 import { UserApplicationService } from './user-applications.service';
 import { AuthGuard } from '@nestjs/passport';
+
 import {
   ApiBearerAuth,
   ApiOperation,

@@ -61,7 +61,7 @@ export class ResetPasswordService {
     const hashedPassword = await hash(password, 10);
     const updatedUser = await this.userModel.update(
       { password: hashedPassword, status: 1 },
-      { where: { email } },
+      { where: { email, status: 1 } },
     );
 
     if (updatedUser[0] === 1) {

@@ -236,17 +236,23 @@ export class UsersService {
       };
     } catch (error) {
       if (error instanceof HttpException) {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.CONFLICT,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            message: error.message,
+            statusCode: HttpStatus.CONFLICT,
+            data: null,
+          },
+          HttpStatus.CONFLICT,
+        );
       } else {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            message: error.message,
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            data: null,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
     }
   }
@@ -257,7 +263,14 @@ export class UsersService {
         where: { id: id },
       });
       if (!existingUser || !existingUser.otp || !existingUser.otp_expiration) {
-        return { success: false, message: 'OTP not found or expired' };
+        throw new HttpException(
+          {
+            success: false,
+            message: 'OTP not found or expired',
+            statusCode: HttpStatus.NOT_FOUND,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       const { otp: storedOTP, otp_expiration: expirationTimestamp } =
@@ -267,10 +280,14 @@ export class UsersService {
         return { success: false, message: 'OTP has expired' };
       }
       const isMatch = storedOTP === Number(otp);
-      return {
-        success: isMatch,
-        message: isMatch ? 'OTP is valid' : 'Invalid OTP',
-      };
+      throw new HttpException(
+        {
+          success: isMatch,
+          message: isMatch ? 'OTP is valid' : 'Invalid OTP',
+          statusCode: HttpStatus.NOT_FOUND,
+        },
+        HttpStatus.NOT_FOUND,
+      );
     } catch (error) {
       console.error('Error verifying OTP:', error);
       throw new Error('An error occurred while verifying OTP');
@@ -366,19 +383,18 @@ export class UsersService {
       };
     } catch (error) {
       if (error instanceof HttpException) {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.CONFLICT,
-        };
+        throw error;
       } else {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        };
+        throw new HttpException(
+          {
+            message: error.message,
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
     }
   }
-
   async savePassword(
     email: string,
     id: number,
@@ -491,9 +507,7 @@ export class UsersService {
   async show(id: number): Promise<GetUserSuccessDto> {
     try {
       const user = await this.userModel.findOne({
-        where: {
-          id,
-        },
+        where: { id },
       });
 
       if (user) {
@@ -503,18 +517,24 @@ export class UsersService {
           statusCode: HttpStatus.OK,
         };
       } else {
-        return {
-          data: null,
-          message: 'User not found.',
-          statusCode: HttpStatus.NOT_FOUND,
-        };
+        throw new HttpException(
+          {
+            message: 'User not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+            data: null,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
-      return {
-        data: null,
-        message: error.message,
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      };
+      throw new HttpException(
+        {
+          message: error.message || 'Internal server error',
+          statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+          data: null,
+        },
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -558,25 +578,27 @@ export class UsersService {
           data: users,
         };
       } else {
-        return {
-          message: 'User not found.',
-          statusCode: HttpStatus.NOT_FOUND,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            message: 'User not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+            data: null,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
       if (error instanceof HttpException) {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.CONFLICT,
-          data: null,
-        };
+        throw error;
       } else {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            message: error.message,
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            data: null,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
     }
   }
@@ -595,10 +617,13 @@ export class UsersService {
           existingUser.password,
         );
         if (!isPasswordMatch) {
-          return {
-            message: 'Current password is incorrect.',
-            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-          };
+          throw new HttpException(
+            {
+              message: 'Current password is incorrect.',
+              statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+            },
+            HttpStatus.UNPROCESSABLE_ENTITY,
+          );
         }
         return {
           message: 'Password verified successfully.',
@@ -635,42 +660,41 @@ export class UsersService {
       const existingUser = await this.userModel.findOne({
         where: { id: id },
       });
-      if (existingUser) {
-        const isPasswordMatch = await compare(
-          currentPassword,
-          existingUser.password,
-        );
-        if (!isPasswordMatch) {
-          return {
-            message: 'Current password is incorrect.',
-            statusCode: 422,
-          };
-        }
-        const hashedPassword = await hash(password, 10);
-        existingUser.password = hashedPassword;
-        existingUser.updatedBy = user ? user.id : null;
-        await existingUser.save();
-        return {
-          message: 'Password updated successfully.',
-          statusCode: HttpStatus.OK,
-        };
-      } else {
-        return {
-          message: 'User not found.',
-          statusCode: HttpStatus.NOT_FOUND,
-        };
+
+      if (!existingUser) {
+        throw new NotFoundException('User not found.');
       }
+
+      const isPasswordMatch = await compare(
+        currentPassword,
+        existingUser.password,
+      );
+      if (!isPasswordMatch) {
+        throw new UnprocessableEntityException(
+          'Current password is incorrect.',
+        );
+      }
+
+      const hashedPassword = await hash(password, 10);
+      existingUser.password = hashedPassword;
+      existingUser.updatedBy = user ? user.id : null;
+      await existingUser.save();
+
+      return {
+        message: 'Password updated successfully.',
+        statusCode: HttpStatus.OK,
+      };
     } catch (error) {
       if (error instanceof HttpException) {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.CONFLICT,
-        };
+        throw error;
       } else {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        };
+        throw new HttpException(
+          {
+            message: error.message,
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
     }
   }
@@ -815,18 +839,28 @@ export class UsersService {
           };
         }
       } else {
-        return {
-          message: 'User not found.',
-          statusCode: HttpStatus.NOT_FOUND,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            message: 'User not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+            data: null,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
-      return {
-        message: error.message,
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        data: null,
-      };
+      if (error instanceof HttpException) {
+        throw error;
+      } else {
+        throw new HttpException(
+          {
+            message: error.message,
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            data: null,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
     }
   }
 

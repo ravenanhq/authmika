@@ -4,7 +4,6 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
@@ -173,18 +172,24 @@ export class ApplicationsService {
           statusCode: HttpStatus.OK,
         };
       } else {
-        return {
-          data: null,
-          message: 'Application not found.',
-          statusCode: HttpStatus.NOT_FOUND,
-        };
+        throw new HttpException(
+          {
+            data: null,
+            message: 'Application not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
-      return {
-        data: null,
-        message: error.message,
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      };
+      throw new HttpException(
+        {
+          data: null,
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -256,25 +261,34 @@ export class ApplicationsService {
           data: existingApplication,
         };
       } else {
-        return {
-          message: 'Application not found.',
-          statusCode: HttpStatus.NOT_FOUND,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            data: null,
+            message: 'Application not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
       if (error instanceof HttpException) {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.CONFLICT,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            data: null,
+            message: error.message,
+            statusCode: HttpStatus.CONFLICT,
+          },
+          HttpStatus.CONFLICT,
+        );
       } else {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            data: null,
+            message: error.message,
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
     }
   }
@@ -296,11 +310,14 @@ export class ApplicationsService {
         });
 
         if (userApplication) {
-          return {
-            message: 'The application cannot be deleted as a mapping exists.',
-            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            data: [],
-          };
+          throw new HttpException(
+            {
+              data: [],
+              message: 'The application cannot be deleted as a mapping exists.',
+              statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+            },
+            HttpStatus.UNPROCESSABLE_ENTITY,
+          );
         } else {
           application.isActive = false;
           await application.save();
@@ -316,18 +333,24 @@ export class ApplicationsService {
           };
         }
       } else {
-        return {
-          message: 'Application not found.',
-          statusCode: HttpStatus.NOT_FOUND,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            data: null,
+            message: 'Application not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
-      return {
-        message: error.message,
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        data: null,
-      };
+      throw new HttpException(
+        {
+          data: null,
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -342,6 +365,13 @@ export class ApplicationsService {
           where: { id: clientId },
         });
 
+        if (!clientModel) {
+          throw new NotFoundException({
+            message: 'clientId not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+          });
+        }
+
         const application = await Applications.findOne({
           where: {
             clientSecretId: clientModel.clientSecretId,
@@ -350,7 +380,7 @@ export class ApplicationsService {
         });
 
         if (!application) {
-          throw new UnauthorizedException('Application not found.');
+          throw new NotFoundException('Application not found.');
         }
         return {
           message: 'Success',
@@ -359,11 +389,14 @@ export class ApplicationsService {
         };
       }
     } catch (error) {
-      return {
-        message: error.message,
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        applicationId: null,
-      };
+      throw new HttpException(
+        {
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          applicationId: null,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

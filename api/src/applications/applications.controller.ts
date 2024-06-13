@@ -17,16 +17,15 @@ import { ApplicationsService } from './applications.service';
 import {
   ApplicationsDataDto,
   ApplicationsDto,
-  ApplicationCreateSuccessDto,
   ApplicationCreateDataDto,
   ApplicationGetSuccessDto,
   ApplicationUpdateSuccessDto,
   ApplicationDeleteSuccessDto,
-  GetApplicationIdSuccessDto,
 } from './dto/applications.dto';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
+  ApiExcludeEndpoint,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -179,26 +178,8 @@ export class ApplicationsController {
     return this.applicationService.deleteApplication(id);
   }
 
-  @ApiTags('Applications')
   @ApiBearerAuth()
-  @ApiResponse({
-    status: 200,
-    description: 'Success',
-    type: GetApplicationIdSuccessDto,
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Not found',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
-  @ApiOperation({ summary: 'Get a application id by client Id' })
+  @ApiExcludeEndpoint()
   @Get('get/:clientId')
   @UseGuards(AuthGuard('jwt'))
   getApplicationId(@Param('clientId') clientId: number) {

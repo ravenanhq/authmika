@@ -28,7 +28,6 @@ import {
   ResendActivationEmailDataDto,
   ResendActivationEmailSuccessDto,
   ResendOtpParams,
-  ResendOtpSuccessDto,
   SavePasswordBodyDto,
   UpdatePasswordDataDto,
   UpdatePasswordSuccessDto,
@@ -141,7 +140,7 @@ export class UsersController {
   })
   @ApiOperation({ summary: 'Create a new user' })
   @Post()
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.CREATED)
   @UseGuards(AuthGuard('jwt'))
   async create(@Body() usersDto: AddUsersDto): Promise<AddUserSuccessDto> {
     return this.userService.create(usersDto);
@@ -399,22 +398,8 @@ export class UsersController {
     return this.userService.createFromApi(data, req.user);
   }
 
-  @ApiTags('Users')
   @ApiBearerAuth()
-  @ApiResponse({
-    status: 200,
-    description: 'Success',
-    type: VerifyOtpSuccessDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Not found',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
-  @ApiOperation({ summary: 'Verify user otp' })
+  @ApiExcludeEndpoint()
   @Post('verify-otp/:id/:otp')
   @UseGuards(AuthGuard('jwt'))
   async verifyOtp(
@@ -540,26 +525,8 @@ export class UsersController {
     return this.userService.deleteUser(id);
   }
 
-  @ApiTags('Users')
   @ApiBearerAuth()
-  @ApiResponse({
-    status: 200,
-    description: 'Success',
-    type: ResendOtpSuccessDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Not found',
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Conflict',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal server error',
-  })
-  @ApiOperation({ summary: 'Resent otp to user' })
+  @ApiExcludeEndpoint()
   @Post('resend-otp')
   @UseGuards(AuthGuard('jwt'))
   async resendOtp(@Body() body: ResendOtpParams) {
