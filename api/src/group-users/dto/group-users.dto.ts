@@ -62,6 +62,14 @@ export class GroupUserApplicationGetSuccessDto {
     example: 1,
   })
   groupId?: number;
+  userId?: number;
+}
+
+export class GroupUserApplicationGetResSuccessDto {
+  @ApiProperty({
+    example: 1,
+  })
+  groupId?: number;
 
   @ApiProperty({
     example: 1,
@@ -74,11 +82,6 @@ export class GroupApplicationGetSuccessDto {
     example: 1,
   })
   id?: number;
-
-  @ApiProperty({
-    example: 1,
-  })
-  groupId?: number;
 }
 
 export class GroupApplicationGetBodyDto {
