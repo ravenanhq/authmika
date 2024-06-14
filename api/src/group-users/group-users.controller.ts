@@ -27,6 +27,7 @@ import {
   GroupApplicationCreateDto,
   GroupApplicationCreateBodyDto,
   AssignUserstoGroupBodyDto,
+  GroupUserApplicationGetResSuccessDto,
 } from './dto/group-users.dto';
 
 @Controller('group-users')
@@ -84,7 +85,7 @@ export class GroupUsersController {
   @ApiResponse({
     status: 200,
     description: 'Success',
-    type: GroupUserApplicationGetSuccessDto,
+    type: GroupUserApplicationGetResSuccessDto,
   })
   @ApiResponse({
     status: 401,
@@ -98,7 +99,7 @@ export class GroupUsersController {
     status: 500,
     description: 'Internal server error',
   })
-  @ApiOperation({ summary: 'Assign user by group id' })
+  @ApiOperation({ summary: 'Get user by group id' })
   @Post('get-group-users')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
@@ -135,7 +136,7 @@ export class GroupUsersController {
     status: 500,
     description: 'Internal server error',
   })
-  @ApiOperation({ summary: 'Get all user applications by group id' })
+  @ApiOperation({ summary: 'Get all applications by group id' })
   @Post('get-group-applications')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
