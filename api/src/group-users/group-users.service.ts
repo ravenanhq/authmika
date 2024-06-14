@@ -113,7 +113,13 @@ export class GroupUsersService {
           const detailedUserGroup = {
             id: userApp.applicationId,
           };
-          detailedUserGroups.push(detailedUserGroup);
+          const exists = detailedUserGroups.some(
+            (group: { id: number }) => group.id === userApp.applicationId,
+          );
+
+          if (!exists) {
+            detailedUserGroups.push(detailedUserGroup);
+          }
         }
       }
 
