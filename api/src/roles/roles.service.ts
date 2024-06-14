@@ -130,11 +130,14 @@ export class RolesService {
           data: roles,
         };
       } else {
-        return {
-          message: 'Role not found.',
-          statusCode: HttpStatus.NOT_FOUND,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            message: 'Role not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+            data: null,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
       if (error instanceof HttpException) {
@@ -193,18 +196,24 @@ export class RolesService {
           };
         }
       } else {
-        return {
-          message: 'Role not found.',
-          statusCode: HttpStatus.NOT_FOUND,
-          data: null,
-        };
+        throw new HttpException(
+          {
+            message: 'Role not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+            data: null,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
-      return {
-        message: 'An error occurred while deleting the role.',
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        data: null,
-      };
+      throw new HttpException(
+        {
+          message: 'An error occurred while deleting the role.',
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          data: null,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

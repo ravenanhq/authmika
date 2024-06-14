@@ -280,14 +280,11 @@ export class UsersService {
         return { success: false, message: 'OTP has expired' };
       }
       const isMatch = storedOTP === Number(otp);
-      throw new HttpException(
-        {
-          success: isMatch,
-          message: isMatch ? 'OTP is valid' : 'Invalid OTP',
-          statusCode: HttpStatus.NOT_FOUND,
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      if (isMatch) {
+        return { success: true, message: 'OTP is valid' };
+      } else {
+        return { success: false, message: 'Invalid OTP' };
+      }
     } catch (error) {
       console.error('Error verifying OTP:', error);
       throw new Error('An error occurred while verifying OTP');
