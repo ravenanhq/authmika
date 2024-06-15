@@ -1,4 +1,4 @@
-import { UserApi } from "@/services/api/UserApi";
+import { UserServiceApi } from "@/services/api/UserServiceApi";
 import axios from "axios";
 import { NextAuthOptions, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -16,7 +16,7 @@ export const authOptions: NextAuthOptions = {
         };
         const user = { email, password, clientId };
         try {
-          const data = await UserApi.login(user);
+          const data = await UserServiceApi.login(user);
           return Promise.resolve(data as User);
         } catch (error) {
           if (axios.isAxiosError(error)) {
@@ -36,15 +36,15 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }) {
       if (user) {
-        token.accessToken = user.accessToken;
+        token.accessToken = user.access_token;
         token.user = user.user;
         token.apiToken = user.apiToken;
       }
       return token;
     },
-    async session({ session, token }: any) {
+    async session({ session, token }) {
       session.accessToken = token.accessToken;
       session.user = token.user;
       session.apiToken = token.apiToken;

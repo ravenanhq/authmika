@@ -40,6 +40,8 @@ export default function DrawerAppBar() {
     { label: "Dashboard", route: "/dashboard" },
     { label: "Users", route: "/users" },
     { label: "Applications", route: "/applications" },
+    { label: "Groups", route: "/groups" },
+    { label: "Roles", route: "/roles" },
   ]);
 
   useEffect(() => {
@@ -75,10 +77,6 @@ export default function DrawerAppBar() {
     setAnchorEl(null);
   };
 
-  const handleItemClick = (index: number) => {
-    setActiveIndex(index);
-  };
-
   const handleSetActivePage = (page: string) => {
     setActivePage(page);
   };
@@ -100,14 +98,20 @@ export default function DrawerAppBar() {
             sx={{
               textDecoration: "none",
               color: "inherit",
-              "&:hover": { color: "blue" },
-              backgroundColor: activeIndex === index ? "black" : "white",
             }}
           >
             <ListItemButton
               selected={activeIndex === index}
-              onClick={() => handleItemClick(index)}
-              sx={{ cursor: "pointer" }}
+              onClick={() => handleSetActivePage(item.route)}
+              sx={{
+                "&:hover": {
+                  backgroundColor: "#cfd1cd",
+                },
+                textDecoration: "none",
+                backgroundColor:
+                  activePage === item.route ? "#cfd1cd" : "inherit",
+                cursor: "pointer",
+              }}
             >
               <ListItemText primary={item.label} />
             </ListItemButton>

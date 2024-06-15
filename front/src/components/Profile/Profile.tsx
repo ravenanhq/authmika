@@ -45,8 +45,12 @@ interface Errors {
   currentPassword?: string;
   password?: string;
   uniqueEmail?: string;
+  verifyCurrentPassword?: string;
 }
 
+interface Error {
+  verifyCurrentPassword?: string;
+}
 interface RowData {
   id: number;
   email: string;
@@ -92,11 +96,15 @@ const ProfilePage = () => {
   });
 
   const [errors, setErrors] = useState<Errors>({});
+  const [error, setError] = useState<Errors>({});
   const [editedData, setEditedData] = useState<RowData>(InitialRowData);
   const [rows, setRows] = useState<RowData[]>([]);
   const [alertShow, setAlertShow] = useState("");
   const [passwordAlert, setPasswordAlert] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
+  const [verifyCurrentPassword, setVerifyCurrentPassword] = useState("");
+  const [verifyPasswordAlert, setVerifyPasswordAlert] =
+    useState<AlertState | null>(null);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState<string>("");
@@ -203,7 +211,8 @@ const ProfilePage = () => {
   };
 
   const handleClose = () => {
-    setErrors({});
+    setPassword("");
+    setError({});
     setOpen(false);
     setEnable(false);
   };
@@ -270,24 +279,28 @@ const ProfilePage = () => {
     }
   };
 
-  const verifyPassword = async (id: any, currentPassword: string) => {
+  const verifyPassword = async (id: any, verifyCurrentPassword: string) => {
     if (validatePassword()) {
       try {
         const updatedData = {
           ...editedData,
           id: id,
-          currentPassword: currentPassword,
+          currentPassword: verifyCurrentPassword,
         };
-        const response = await UserApi.verifyCurrentPassword(id, updatedData);
+        const response = await UserApi.checkCurrentPassword(id, updatedData);
         setPasswordAlert("");
         if (response) {
           if (response.statusCode === 409) {
+            setVerifyPasswordAlert({
+              severity: "error",
+              message: response.message,
+            });
             return false;
           } else if (response.statusCode === 200) {
             setRows(response.data);
             const updatedUserDetails = { ...userDetails, ...updatedData };
             setUserDetails(updatedUserDetails);
-            setPasswordAlert(response.message);
+            // setPasswordAlert(response.message);
             setEnable(true);
             setOpen(false);
             handleQRCodeVisibility();
@@ -299,7 +312,7 @@ const ProfilePage = () => {
             return false;
           }
         }
-        setCurrentPassword("");
+        setVerifyCurrentPassword("");
         setTwoFactorPasswordAlert(null);
       } catch (error: any) {
         if (
@@ -314,11 +327,11 @@ const ProfilePage = () => {
   };
 
   const validatePassword = () => {
-    let newErrors: Errors = {};
-    if (!currentPassword.trim()) {
-      newErrors.currentPassword = "Current Password is required";
+    let newErrors: Error = {};
+    if (!verifyCurrentPassword.trim()) {
+      newErrors.verifyCurrentPassword = "Current Password is required";
     }
-    setErrors(newErrors);
+    setError(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -484,7 +497,7 @@ const ProfilePage = () => {
             {alertShow && (
               <Alert
                 sx={{
-                  width: "60%",
+                  width: "95%",
                   margin: "auto",
                   mt: "30px",
                   [theme.breakpoints.down("md")]: {
@@ -635,7 +648,7 @@ const ProfilePage = () => {
             {passwordAlert && (
               <Alert
                 sx={{
-                  width: "60%",
+                  width: "95%",
                   margin: "auto",
                   mt: "30px",
                   [theme.breakpoints.down("md")]: {
@@ -843,7 +856,8 @@ const ProfilePage = () => {
                     <IconButton
                       onClick={() => {
                         handleClose();
-                        setTwoFactorPasswordAlert(null);
+                        setVerifyCurrentPassword("");
+                        setVerifyPasswordAlert(null);
                       }}
                       sx={{
                         backgroundColor: "#FF9843",
@@ -866,7 +880,7 @@ const ProfilePage = () => {
                       For your security, please confirm your password to
                       continue.
                     </Typography>
-                    {twofactorPasswordAlert && (
+                    {verifyPasswordAlert && (
                       <Alert
                         sx={{
                           width: "100%",
@@ -876,30 +890,30 @@ const ProfilePage = () => {
                             width: "100%",
                           },
                         }}
-                        severity={twofactorPasswordAlert.severity}
+                        severity={verifyPasswordAlert.severity}
                         onClose={() => {
-                          setTwoFactorPasswordAlert(null);
+                          setVerifyPasswordAlert(null);
                         }}
                       >
-                        {twofactorPasswordAlert.message}
+                        {verifyPasswordAlert.message}
                       </Alert>
                     )}
 
                     <TextField
                       label="Password"
-                      name="currentPassword"
+                      name="verifyCurrentPassword"
                       fullWidth
                       required
                       margin="normal"
-                      id="currentPassword"
-                      value={currentPassword}
+                      id="Password"
+                      value={verifyCurrentPassword}
                       type={showPassword4 ? "text" : "password"}
                       onChange={(e) => {
-                        setCurrentPassword(e.target.value);
-                        setErrors({});
+                        setVerifyCurrentPassword(e.target.value);
+                        setError({});
                       }}
-                      error={!!errors.currentPassword}
-                      helperText={errors.currentPassword}
+                      error={!!error.verifyCurrentPassword}
+                      helperText={error.verifyCurrentPassword}
                       sx={{ marginBottom: 3 }}
                       InputProps={{
                         endAdornment: (
@@ -928,7 +942,9 @@ const ProfilePage = () => {
                           startIcon={<CloseIcon />}
                           onClick={() => {
                             handleClose();
-                            setTwoFactorPasswordAlert(null);
+                            setVerifyCurrentPassword("");
+                            setError({});
+                            setVerifyPasswordAlert(null);
                           }}
                         >
                           Cancel
@@ -939,8 +955,8 @@ const ProfilePage = () => {
                           sx={{ position: "sticky", top: "20px" }}
                           startIcon={<CheckIcon />}
                           onClick={() => {
-                            verifyPassword(userId, currentPassword);
-                            setCurrentPassword("");
+                            verifyPassword(userId, verifyCurrentPassword);
+                            setVerifyCurrentPassword("");
                           }}
                         >
                           Confirm

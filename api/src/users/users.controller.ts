@@ -14,24 +14,64 @@ import {
   HttpException,
   Query,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
-import { UsersDto } from './dto/users.dto';
+import {
+  AddUserByApi,
+  AddUserByApiSuccessDto,
+  AddUsersDto,
+  AddUserSuccessDto,
+  CreatePasswordSuccessDto,
+  DeactivateUserSuccessDto,
+  DeleteUserSuccessDto,
+  GetUserSuccessDto,
+  ResendActivationEmailDataDto,
+  ResendActivationEmailSuccessDto,
+  ResendOtpParams,
+  SavePasswordBodyDto,
+  UpdatePasswordDataDto,
+  UpdatePasswordSuccessDto,
+  UpdateUserSuccessDto,
+  UserActivationQueryParamsDto,
+  UserActivationSuccessDto,
+  UsersDto,
+  VerifyCurrentPasswordDataDto,
+  VerifyCurrentPasswordSuccessDto,
+  VerifyOtpSuccessDto,
+} from './dto/users.dto';
 import { UsersService } from './users.service';
-import { ResetPasswordDto } from 'src/auth/dto/reset-password.dto';
-
-interface ResendOtpParams {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  url: string;
-}
+import {
+  ResetPasswordDto,
+  ResetPasswordSuccessDto,
+} from 'src/auth/dto/reset-password.dto';
+import { AuthGuard } from '@nestjs/passport';
+import {
+  ApiBearerAuth,
+  ApiExcludeEndpoint,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { UserDataDto } from 'src/auth/dto/login.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private userService: UsersService) {}
 
+  @ApiTags('Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiOperation({ summary: 'Get qr code' })
+  @ApiExcludeEndpoint()
   @Get('qrcode/:id')
+  @UseGuards(AuthGuard('jwt'))
   async generateQRCodeDataUrl(
     @Query('is_two_factor_enabled') is_two_factor_enabled: string,
     @Param('id') id: number,
@@ -54,8 +94,22 @@ export class UsersController {
   //   }
   // }
 
+  @ApiTags('Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: UserDataDto,
+    isArray: true,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiOperation({ summary: 'Get users' })
   @Get()
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async getUsers() {
     try {
       const activeUsers = await this.userService.getUsers();
@@ -69,13 +123,26 @@ export class UsersController {
     }
   }
 
+  @ApiTags('Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 201,
+    description: 'Success',
+    type: AddUserSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Create a new user' })
   @Post()
-  @UsePipes(new ValidationPipe())
-  @HttpCode(HttpStatus.OK)
-  @UsePipes(new ValidationPipe())
-  async create(
-    @Body() usersDto: UsersDto,
-  ): Promise<{ message: string; statusCode: number }> {
+  @HttpCode(HttpStatus.CREATED)
+  @UseGuards(AuthGuard('jwt'))
+  async create(@Body() usersDto: AddUsersDto): Promise<AddUserSuccessDto> {
     return this.userService.create(usersDto);
   }
 
@@ -91,17 +158,65 @@ export class UsersController {
   //   return this.userService.sendOtp(usersDto, req.user, id);
   // }
 
+  @ApiTags('Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: VerifyCurrentPasswordSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 422,
+    description: 'Current password is incorrect',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Verify current password' })
   @Post('verify-current-password/:id')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async verifyCurrentPassword(
-    @Request() req,
+    @Body() body: VerifyCurrentPasswordDataDto,
     @Param('id') id: number,
   ): Promise<{ message: string; statusCode: number }> {
-    const { currentPassword } = req.body;
+    const { currentPassword } = body;
     return this.userService.verifyCurrentPassword(id, currentPassword);
   }
 
+  @ApiTags('Users')
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: CreatePasswordSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 410,
+    description: 'Gone',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Create a password' })
   @Get('create-password/:token')
   @HttpCode(HttpStatus.OK)
   async createPassword(
@@ -116,28 +231,99 @@ export class UsersController {
     }
   }
 
+  @ApiTags('Users')
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: UserActivationSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 410,
+    description: 'Gone',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Activate a user' })
   @Get('active-users/:token')
   @HttpCode(HttpStatus.OK)
-  async aciveUsers(@Param('token') token: string, @Query() expires: number) {
+  async aciveUsers(
+    @Param('token') token: string,
+    @Query() queryParams: UserActivationQueryParamsDto,
+  ) {
     try {
-      const result = await this.userService.acitiveUsers(token, expires);
+      const result = await this.userService.acitiveUsers(
+        token,
+        queryParams.expires,
+      );
       return result;
     } catch (error) {
       return { message: 'An error occurred', statusCode: 500 };
     }
   }
 
+  @ApiTags('Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: GetUserSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Get a user by id' })
   @Get(':id')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async show(
     @Param('id') id: number,
   ): Promise<{ message: string; statusCode: number }> {
     return this.userService.show(id);
   }
 
+  @ApiTags('Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: UpdateUserSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Update a user by id' })
   @Put(':id')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async update(
     @Body() usersDto: UsersDto,
     @Request() req,
@@ -146,49 +332,80 @@ export class UsersController {
     return this.userService.update(usersDto, req.user, id);
   }
 
+  @ApiTags('Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: UpdatePasswordSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Update password by id' })
   @Post('update-password/:id')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
   async updatePassword(
-    @Body() usersDto: UsersDto,
+    @Body() data: UpdatePasswordDataDto,
     @Request() req,
     @Param('id') id: number,
   ): Promise<{ message: string; statusCode: number }> {
-    const { currentPassword } = req.body;
-    return this.userService.updatePassword(
-      usersDto,
-      req.user,
-      id,
-      currentPassword,
-    );
+    return this.userService.updatePassword(data, req.user, id);
   }
 
+  @ApiTags('Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: AddUserByApiSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Create user from api' })
   @Post('create-from-api')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
-  @UsePipes(new ValidationPipe())
+  @UseGuards(AuthGuard('jwt'))
   async createFromApi(
-    @Body() usersDto: UsersDto,
-    @Body('clientSecretKey') clientSecretKey: any,
-    @Body('clientSecretId') clientSecretId: any,
+    @Body() data: AddUserByApi,
     @Request() req,
   ): Promise<{
     message: string;
     statusCode: number;
   }> {
-    return this.userService.createFromApi(
-      usersDto,
-      clientSecretId,
-      clientSecretKey,
-      req.user,
-    );
+    return this.userService.createFromApi(data, req.user);
   }
 
+  @ApiBearerAuth()
+  @ApiExcludeEndpoint()
   @Post('verify-otp/:id/:otp')
+  @UseGuards(AuthGuard('jwt'))
   async verifyOtp(
     @Param('id') id: number,
     @Param('otp') otp: string,
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<VerifyOtpSuccessDto> {
     try {
       const result = await this.userService.verifyOtp(id, otp);
       return result;
@@ -196,7 +413,7 @@ export class UsersController {
       if (error instanceof NotFoundException) {
         return {
           success: false,
-          error: error.message || 'An error occurred while verifying OTP',
+          message: error.message || 'An error occurred while verifying OTP',
         };
       } else {
         throw error;
@@ -204,32 +421,70 @@ export class UsersController {
     }
   }
 
+  @ApiTags('Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: ResendActivationEmailSuccessDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Resend user activation link to user' })
   @Post('send-resend-link')
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe())
+  @UseGuards(AuthGuard('jwt'))
   async sendResendLinkToUser(
-    @Body('email') email: string,
-    @Body('firstName') firstName: string,
-    @Body('lastName') lastName: string,
+    @Body() body: ResendActivationEmailDataDto,
   ): Promise<{
     message: string;
     statusCode: number;
   }> {
-    return this.userService.sendResendLinkToUser(email, firstName, lastName);
+    return this.userService.sendResendLinkToUser(
+      body.email,
+      body.firstName,
+      body.lastName,
+    );
   }
 
+  @ApiTags('Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: ResetPasswordSuccessDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Save user password' })
   @Post('save-password')
+  @UseGuards(AuthGuard('jwt'))
   async savePassword(
-    @Body('email') email: string,
-    @Body('id') id: number,
-    @Body() resetPasswordDto: ResetPasswordDto,
+    @Body() body: SavePasswordBodyDto,
   ): Promise<{ message: string; error?: string }> {
     try {
       const result = await this.userService.savePassword(
-        email,
-        id,
-        resetPasswordDto,
+        body.email,
+        body.id,
+        body.password,
       );
       return result;
     } catch (error) {
@@ -244,17 +499,39 @@ export class UsersController {
     }
   }
 
+  @ApiTags('Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: DeleteUserSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Delete a user by id' })
   @Delete(':id')
-  async remove(
-    @Param('id') id: number,
-  ): Promise<{ message: string; statusCode: number }> {
+  @UseGuards(AuthGuard('jwt'))
+  async remove(@Param('id') id: number): Promise<DeleteUserSuccessDto> {
     return this.userService.deleteUser(id);
   }
 
+  @ApiBearerAuth()
+  @ApiExcludeEndpoint()
   @Post('resend-otp')
-  async resendOtp(@Body() params: ResendOtpParams) {
+  @UseGuards(AuthGuard('jwt'))
+  async resendOtp(@Body() body: ResendOtpParams) {
     try {
-      const result = await this.userService.resendOtp(params);
+      const result = await this.userService.resendOtp(body);
       return result;
     } catch (error) {
       console.error('Error resending OTP:', error);
@@ -263,5 +540,35 @@ export class UsersController {
         message: 'An error occurred while resending OTP',
       };
     }
+  }
+
+  @ApiTags('Users')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: DeactivateUserSuccessDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Deactivate user' })
+  @Post('update-status/:id')
+  @UsePipes(new ValidationPipe())
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  async updateStatus(
+    @Param('id') id: number,
+  ): Promise<DeactivateUserSuccessDto> {
+    return this.userService.updateStatus(id);
   }
 }

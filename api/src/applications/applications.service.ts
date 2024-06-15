@@ -3,16 +3,24 @@ import {
   HttpStatus,
   Injectable,
   InternalServerErrorException,
-  UnauthorizedException,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Applications } from 'src/db/model/applications.model';
 import { randomBytes } from 'crypto';
 import { Optional } from 'sequelize';
-import { ApplicationsDto } from './dto/applications.dto';
+import {
+  ApplicationCreateDataDto,
+  ApplicationDeleteSuccessDto,
+  ApplicationGetSuccessDto,
+  ApplicationsDto,
+  ApplicationUpdateSuccessDto,
+} from './dto/applications.dto';
 import { UserApplications } from 'src/db/model/user-applications.model';
 import { AuthClients } from 'src/db/model/auth-clients.model';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class ApplicationsService {
@@ -24,9 +32,13 @@ export class ApplicationsService {
   ) {}
 
   async getApplications() {
-    return this.applicationsModel.findAll({
+    const applications = await this.applicationsModel.findAll({
       where: { isActive: true },
     });
+    if (applications && applications.length == 0) {
+      throw new NotFoundException('No applications found');
+    }
+    return applications;
   }
 
   async createNewApplication(
@@ -68,28 +80,29 @@ export class ApplicationsService {
   }
 
   async create(
-    applicationDto: ApplicationsDto,
+    applicationDto: ApplicationCreateDataDto,
     user: { id: any },
   ): Promise<{ message: string; statusCode: number; data: object }> {
-    const { name, application, base_url, call_back_url } = applicationDto;
+    const { name, application, base_url, call_back_url, logo_path, file } =
+      applicationDto;
     try {
-      const fileName = null;
-      // if (file) {
-      //   fileName = `${Date.now()}_` + logo_path;
-      //   const targetPath = path.join(
-      //     __dirname,
-      //     '../../..',
-      //     'front/public/assets/images',
-      //     fileName,
-      //   );
-      //   const base64Image = file.split(';base64,').pop();
+      let fileName = null;
+      if (file) {
+        fileName = `${Date.now()}_` + logo_path;
+        const targetPath = path.join(
+          __dirname,
+          '../../..',
+          'api/public/assets/images',
+          fileName,
+        );
+        const base64Image = file.split(';base64,').pop();
 
-      //   fs.writeFile(targetPath, base64Image, { encoding: 'base64' }, (err) => {
-      //     if (err) {
-      //       console.error('Error saving image:', err);
-      //     }
-      //   });
-      // }
+        fs.writeFile(targetPath, base64Image, { encoding: 'base64' }, (err) => {
+          if (err) {
+            console.error('Error saving image:', err);
+          }
+        });
+      }
 
       const clientSecretKey = randomBytes(32).toString('hex');
       const clientSecretId = randomBytes(16).toString('hex');
@@ -112,7 +125,9 @@ export class ApplicationsService {
         });
 
         if (!newApplication) {
-          throw new InternalServerErrorException('User creation failed.');
+          throw new InternalServerErrorException(
+            'Application creation failed.',
+          );
         }
       }
 
@@ -142,9 +157,7 @@ export class ApplicationsService {
     }
   }
 
-  async show(
-    id: number,
-  ): Promise<{ data: object; message: string; statusCode: number }> {
+  async show(id: number): Promise<ApplicationGetSuccessDto> {
     try {
       const application = await this.applicationsModel.findOne({
         where: {
@@ -159,18 +172,24 @@ export class ApplicationsService {
           statusCode: HttpStatus.OK,
         };
       } else {
-        return {
-          data: [],
-          message: 'Application not found.',
-          statusCode: HttpStatus.NOT_FOUND,
-        };
+        throw new HttpException(
+          {
+            data: null,
+            message: 'Application not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
-      return {
-        data: [],
-        message: error.message,
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      };
+      throw new HttpException(
+        {
+          data: null,
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -178,44 +197,48 @@ export class ApplicationsService {
     applicationDto: ApplicationsDto,
     user: { id: any },
     id: number,
-  ): Promise<{ message: string; statusCode: number; data: object }> {
-    const { name, application, base_url, call_back_url } = applicationDto;
+  ): Promise<ApplicationUpdateSuccessDto> {
+    const { name, application, base_url, call_back_url, logo_path, file } =
+      applicationDto;
     try {
       const existingApplication = await this.applicationsModel.findOne({
         where: { id: id },
       });
       if (existingApplication) {
-        const fileName = null;
-        // if (file) {
-        //   const absolutePath = path.resolve(
-        //     __dirname,
-        //     '../../..',
-        //     'front/public/assets/images',
-        //     existingApplication.logoPath,
-        //   );
-        //   await fs.promises.unlink(absolutePath);
+        let fileName = null;
+        if (file) {
+          if (existingApplication.logoPath) {
+            const absolutePath = path.resolve(
+              __dirname,
+              '../../..',
+              'api/public/assets/images',
+              existingApplication.logoPath,
+            );
 
-        //   fileName = `${Date.now()}_` + logo_path;
-        //   const targetPath = path.join(
-        //     __dirname,
-        //     '../../..',
-        //     'front/public/assets/images',
-        //     fileName,
-        //   );
-        //   const base64Image = file.split(';base64,').pop();
+            await fs.promises.unlink(absolutePath);
+          }
+          fileName = `${Date.now()}_` + logo_path;
+          const targetPath = path.join(
+            __dirname,
+            '../../..',
+            'api/public/assets/images',
+            fileName,
+          );
+          const base64Image = file.split(';base64,').pop();
 
-        //   fs.writeFile(
-        //     targetPath,
-        //     base64Image,
-        //     { encoding: 'base64' },
-        //     (err) => {
-        //       if (err) {
-        //         console.error('Error saving image:', err);
-        //       }
-        //     },
-        //   );
-        // }
-
+          fs.writeFile(
+            targetPath,
+            base64Image,
+            { encoding: 'base64' },
+            (err) => {
+              if (err) {
+                console.error('Error saving image:', err);
+              }
+            },
+          );
+        } else {
+          fileName = logo_path;
+        }
         const fetchedApplication = await this.applicationsModel.findOne({
           where: { application: application },
         });
@@ -232,42 +255,45 @@ export class ApplicationsService {
         existingApplication.updatedBy = user ? user.id : null;
         await existingApplication.save();
 
-        const applications = await this.applicationsModel.findAll({
-          where: { isActive: true },
-        });
-
         return {
           message: 'Application updated successfully.',
           statusCode: HttpStatus.OK,
-          data: applications,
+          data: existingApplication,
         };
       } else {
-        return {
-          message: 'Application not found.',
-          statusCode: HttpStatus.NOT_FOUND,
-          data: {},
-        };
+        throw new HttpException(
+          {
+            data: null,
+            message: 'Application not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
       if (error instanceof HttpException) {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.CONFLICT,
-          data: {},
-        };
+        throw new HttpException(
+          {
+            data: null,
+            message: error.message,
+            statusCode: HttpStatus.CONFLICT,
+          },
+          HttpStatus.CONFLICT,
+        );
       } else {
-        return {
-          message: error.message,
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: {},
-        };
+        throw new HttpException(
+          {
+            data: null,
+            message: error.message,
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
     }
   }
 
-  async deleteApplication(
-    id: number,
-  ): Promise<{ message: string; statusCode: number; data: object }> {
+  async deleteApplication(id: number): Promise<ApplicationDeleteSuccessDto> {
     try {
       const application = await this.applicationsModel.findOne({
         where: {
@@ -284,11 +310,14 @@ export class ApplicationsService {
         });
 
         if (userApplication) {
-          return {
-            message: 'The application cannot be deleted as a mapping exists.',
-            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            data: [],
-          };
+          throw new HttpException(
+            {
+              data: [],
+              message: 'The application cannot be deleted as a mapping exists.',
+              statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+            },
+            HttpStatus.UNPROCESSABLE_ENTITY,
+          );
         } else {
           application.isActive = false;
           await application.save();
@@ -304,18 +333,24 @@ export class ApplicationsService {
           };
         }
       } else {
-        return {
-          message: 'Application not found.',
-          statusCode: HttpStatus.NOT_FOUND,
-          data: {},
-        };
+        throw new HttpException(
+          {
+            data: null,
+            message: 'Application not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
     } catch (error) {
-      return {
-        message: error.message,
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        data: {},
-      };
+      throw new HttpException(
+        {
+          data: null,
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -330,6 +365,13 @@ export class ApplicationsService {
           where: { id: clientId },
         });
 
+        if (!clientModel) {
+          throw new NotFoundException({
+            message: 'clientId not found.',
+            statusCode: HttpStatus.NOT_FOUND,
+          });
+        }
+
         const application = await Applications.findOne({
           where: {
             clientSecretId: clientModel.clientSecretId,
@@ -338,7 +380,7 @@ export class ApplicationsService {
         });
 
         if (!application) {
-          throw new UnauthorizedException('Application not found.');
+          throw new NotFoundException('Application not found.');
         }
         return {
           message: 'Success',
@@ -347,11 +389,14 @@ export class ApplicationsService {
         };
       }
     } catch (error) {
-      return {
-        message: error.message,
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        applicationId: null,
-      };
+      throw new HttpException(
+        {
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          applicationId: null,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

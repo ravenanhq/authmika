@@ -14,7 +14,7 @@ import {
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useForm } from "react-hook-form";
 import { ApiResponseDto } from "@/models/users.dto";
-import { UserApi } from "@/services/api/UserApi";
+import { UserServiceApi } from "@/services/api/UserServiceApi";
 import { useSearchParams } from "next/navigation";
 import ResetTvIcon from '@mui/icons-material/ResetTv';
 
@@ -78,7 +78,7 @@ const ResetPassword = () => {
       password: password!,
       confirmPassword: confirmPassword!,
     };
-    const res: ApiResponseDto = await UserApi.resetpassword(data);
+    const res: ApiResponseDto = await UserServiceApi.resetpassword(data);
     if (res.statusCode == 200) {
       setisPasswordReset(true);
     } else if (res.statusCode == 410) {

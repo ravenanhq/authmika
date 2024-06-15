@@ -9,6 +9,9 @@ const nextConfig = {
       },
     ];
   },
+  images: {
+    domains: ['localhost'],
+  },
 };
 
 require("dotenv").config();

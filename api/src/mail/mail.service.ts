@@ -83,7 +83,7 @@ export class MailService {
     otp: number,
     firstName: string,
     lastName: string,
-    url: string,
+    url?: string,
   ) {
     try {
       await this.mailerService.sendMail({
@@ -95,7 +95,6 @@ export class MailService {
           firstName: firstName,
           lastName: lastName,
           otp: otp,
-          url: url,
         },
       });
       return true;

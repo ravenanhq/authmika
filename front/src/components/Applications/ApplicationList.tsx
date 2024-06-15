@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Stack,
   Alert,
+  CardMedia,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { SetStateAction, useEffect, useState } from "react";
@@ -24,6 +25,7 @@ import EditApplicationModal from "./EditApplicationModal";
 import DeleteApplicationModal from "./DeleteApplicationModal";
 import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
+import { config } from "../../../config";
 
 export interface RowData {
   created_at: string | number | Date;
@@ -37,6 +39,7 @@ export interface RowData {
   file?: string;
   logoPath: string;
   logo_path: string;
+  formData?: FormData;
 }
 
 interface AlertState {
@@ -134,26 +137,33 @@ const ApplicationList = () => {
   };
 
   const columns: GridColDef[] = [
-    // {
-    //   field: "logoPath",
-    //   headerName: "Logo",
-    //   headerClassName: "application-header",
-    //   flex: 1,
-    //   minWidth: 100,
-    //   disableColumnMenu: true,
-    //   sortable: false,
-    //   renderCell: (params) => (
-    //     <CardMedia
-    //       component="img"
-    //       alt="Image"
-    //       height="auto"
-    //       image={
-    //         "/assets/images/" + (params.value ? params.value : "no_image.jpg")
-    //       }
-    //       style={{ width: "20%", padding: "10px" }}
-    //     />
-    //   ),
-    // },
+    {
+      field: "logoPath",
+      headerName: "Logo",
+      headerClassName: "application-header",
+      flex: 1,
+      minWidth: 100,
+      disableColumnMenu: true,
+      sortable: false,
+      renderCell: (params) => (
+        <CardMedia
+          component="img"
+          alt="logo"
+          height="auto"
+          image={`${config.service}/assets/images/${
+            params.value ? params.value : "no_image.jpg"
+          }`}
+          sx={{
+            width: "20%",
+            padding: "10px",
+            "@media (max-width: 1200px)": {
+              padding: "0px",
+              width: "40%",
+            },
+          }}
+        />
+      ),
+    },
     {
       field: "name",
       headerName: "Name",
@@ -253,11 +263,11 @@ const ApplicationList = () => {
         if (response.statusCode === 409) {
           setUniqueAlert(response.message);
         } else if (response.statusCode === 200) {
-          handleEditModalClose();
           const updatedRows = rows.map((row) =>
-            row.id === applicationId ? { ...row, ...updatedData } : row
+            row.id === applicationId ? { ...row, ...response.data } : row
           );
           setRows(updatedRows);
+          handleEditModalClose();
           setAlertShow(response.message);
         }
       }
@@ -319,6 +329,7 @@ const ApplicationList = () => {
         setLoading(false);
       }
     } catch (error: any) {
+      setLoading(false);
       console.log(error);
     }
   };
@@ -361,6 +372,11 @@ const ApplicationList = () => {
           color: "#fff",
         },
         gridWidth: "500px",
+        "@media (max-width: 1366px) and (max-height: 768px)": {
+          ".MuiDataGrid-virtualScroller": {
+            overflowY: "hidden",
+          }
+        },
       }}
     >
       <Snackbar autoHideDuration={3000} message={message} />

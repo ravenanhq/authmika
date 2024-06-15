@@ -1,4 +1,9 @@
-import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from '../../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -23,7 +28,7 @@ export class AuthService {
     if (
       !user ||
       !(await bcrypt.compare(pass, user?.password)) ||
-      user.status === 0
+      user.status != 1
     ) {
       throw new UnauthorizedException('Incorrect email or password.');
     }
@@ -41,7 +46,7 @@ export class AuthService {
       });
 
       if (!application) {
-        throw new UnauthorizedException('Application not found.');
+        throw new NotFoundException('Application not found.');
       }
 
       const userApplication = await UserApplications.findOne({

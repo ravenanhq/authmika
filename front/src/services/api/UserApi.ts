@@ -1,16 +1,6 @@
 import { config } from "../../../config";
-import {
-  ApiResponseDto,
-  SignInDto,
-  SingleSignInDto,
-  UsersDto,
-} from "@/models/users.dto";
-import axios from "axios";
-
-interface IForgotPasswordData {
-  email?: string;
-}
-
+import { ApiResponseDto } from "@/models/users.dto";
+import axios from "@/api/axios";
 interface IResetPasswordData {
   key?: string;
   expires?: string;
@@ -30,42 +20,9 @@ interface ResendOtpParams {
   lastName: string;
   url: string;
 }
-
-interface IClientData {
-  key: string;
-}
-
-interface ISingleSignInData {
-  message: string;
-  statusCode: number;
-  apiToken: string;
-  callBackUrl: string;
-}
-
 export class UserApi {
-  static async login(user: SignInDto): Promise<UsersDto> {
-    const res = await axios.post<UsersDto>(
-      `${config.service}/auth/login`,
-      user
-    );
-    return res.data;
-  }
-
-  static async quickSignIn(data: SingleSignInDto): Promise<ISingleSignInData> {
-    const res = await axios.post<ISingleSignInData>(
-      `${config.service}/auth/quick-sign-in-url`,
-      data
-    );
-    return res.data;
-  }
-
   static async getUsers() {
     const res = await axios.get(`${config.service}/users`);
-    return res.data;
-  }
-
-  static async create(newUser: any) {
-    const res = await axios.post(`${config.service}/users`, newUser);
     return res.data;
   }
 
@@ -85,30 +42,6 @@ export class UserApi {
   static async deleteUser(id: number) {
     const res = await axios.delete(`${config.service}/users/${id}`);
     return res.data;
-  }
-
-  static async forgotPassword(
-    data: IForgotPasswordData
-  ): Promise<ApiResponseDto> {
-    const res = await axios.post(`${config.service}/forgot-password`, data);
-    return res.data;
-  }
-
-  static async resetpassword(
-    data: IResetPasswordData
-  ): Promise<ApiResponseDto> {
-    const { key, ...payload } = data;
-
-    try {
-      const res: any = await axios.get<IResetPasswordData>(
-        `${config.service}/reset-password/${key}`,
-        { params: payload }
-      );
-
-      return res.data;
-    } catch (error: any) {
-      return error.response.data;
-    }
   }
 
   static async createPassword(
@@ -200,6 +133,15 @@ export class UserApi {
     return res.data;
   }
 
+  static async getApplicationsByGroupId(groupId: number) {
+    const res = await axios.post(
+      `${config.service}/group-users/get-group-applications`,
+      {
+        groupId: groupId,
+      }
+    );
+    return res.data;
+  }
   static async getApplicationsByUserId(userId: number) {
     const res = await axios.post(
       `${config.service}/user-applications/get-user-applications`,
@@ -209,7 +151,6 @@ export class UserApi {
     );
     return res.data;
   }
-
   static async getApplicationByKey(data: any) {
     const res = await axios.post(
       `${config.service}/application/get-application`,
@@ -220,7 +161,7 @@ export class UserApi {
     return res.data;
   }
 
-  static async verifyCurrentPassword(id: number, updatedData: any) {
+  static async checkCurrentPassword(id: number, updatedData: any) {
     const res = await axios.post(
       `${config.service}/users/verify-current-password/${id}`,
       updatedData
@@ -275,10 +216,7 @@ export class UserApi {
   }
 
   static async savePassword(data: any) {
-    const res = await axios.post(
-      `${config.service}/users/save-password`,
-      data
-    );
+    const res = await axios.post(`${config.service}/users/save-password`, data);
     return res.data;
   }
 
@@ -295,8 +233,61 @@ export class UserApi {
     }
   }
 
-  static async setClientDetails(data: IClientData): Promise<ApiResponseDto> {
-    const res = await axios.post(`${config.service}/auth-clients/create`, data);
+  static async updateStatus(id: number) {
+    const res = await axios.post(`${config.service}/users/update-status/${id}`);
+    return res.data;
+  }
+
+  static async getUsersById(groupId: number) {
+    const res = await axios.post(
+      `${config.service}/group-users/get-group-users`,
+      {
+        groupId: groupId,
+      }
+    );
+    return res.data;
+  }
+
+  static async userGroupMapping(
+    groupId: number,
+    userId: Array<string>
+  ) {
+    try {
+      const res: any = await axios.post(
+        `${config.service}/group-users`,
+        {
+          groupId: groupId,
+          userId: userId,
+        }
+      );
+      return res.data;
+    } catch (error: any) {
+      return error.response.data;
+    }
+  }
+
+  static async groupApplicationMapping(
+    groupId: number,
+    userId: Array<string>,
+    applicationId: Array<string>
+  ) {
+    try {
+      const res: any = await axios.post(
+        `${config.service}/group-users/assign-user-and-application`,
+        {
+          groupId: groupId,
+          userId: userId,
+          applicationId: applicationId,
+        }
+      );
+      return res.data;
+    } catch (error: any) {
+      return error.response.data;
+    }
+  }
+
+  static async getAllUsers() {
+    const res = await axios.get(`${config.service}/group-users`);
     return res.data;
   }
 }
