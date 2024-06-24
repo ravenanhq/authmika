@@ -3,7 +3,7 @@ import { IsNotEmpty } from 'class-validator';
 
 export class RolesDto {
   @ApiProperty({
-    example: 'ADMIN',
+    example: 'SUPER ADMIN',
   })
   @IsNotEmpty({ message: 'name cannot be blank' })
   name: string;
@@ -15,7 +15,7 @@ export class RolesDataDto {
   id: number;
 
   @ApiProperty({
-    example: 'ADMIN',
+    example: 'SUPER ADMIN',
   })
   name: string;
 

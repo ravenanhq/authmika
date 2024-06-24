@@ -220,9 +220,7 @@ const UserList = () => {
       const response = await UserServiceApi.create(newUser);
       setInvalidEmail("");
       if (response) {
-        if (response.statusCode == 409) {
-          setInvalidEmail(response.message);
-        } else if (response.statusCode == 201) {
+         if (response.statusCode == 201) {
           setRows(response.data);
           const newUserId = Math.floor(Math.random() * 1000);
           const newUserData = {
@@ -249,6 +247,8 @@ const UserList = () => {
       var response = error.response.data;
       if (response.statusCode == 422 && response.message.email) {
         setInvalidEmail(response.message.email);
+      } else if (response.statusCode == 409) {
+        setInvalidEmail(response.message);
       }
       console.log(error);
     }

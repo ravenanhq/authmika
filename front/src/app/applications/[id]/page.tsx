@@ -14,27 +14,84 @@ import {
   Divider,
   Container,
   CardMedia,
+  IconButton,
+  Alert,
 } from "@mui/material";
 import React from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useEffect, useState } from "react";
 import { config } from "../../../../config";
+import EditApplicationModal from "@/components/Applications/EditApplicationModal";
+import EditNoteIcon from "@mui/icons-material/EditNote";
+import { ApplicationApi } from "@/services/api/ApplicationApi";
+
 interface ApplicationData {
+  created_at: string | number | Date;
+  id: number;
   name: string;
-  logo_path: string;
-  client: string;
   application: string;
   baseUrl: string;
+  base_url: string;
   callBackUrl: string;
+  call_back_url: string;
+  file: string;
+  logoPath: string;
+  logo_path: string;
+  formData: FormData;
   clientSecretId: string;
   clientSecretKey: string;
-  logoPath: string;
+  client: string;
 }
 
 const ApplicationView = () => {
   const [applicationData, setApplicationData] =
     useState<ApplicationData | null>(null);
   const theme = useTheme();
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [uniqueAlert, setUniqueAlert] = useState("");
+  const [alertShow, setAlertShow] = useState("");
+
+  const handleEditModalClose = () => {
+    setEditModalOpen(false);
+    setUniqueAlert("");
+  };
+
+  const handleEditSave = (editedData: ApplicationData) => {
+    editedData["logo_path"] = editedData["logoPath"];
+    editedData["base_url"] = editedData["baseUrl"];
+    editedData["call_back_url"] = editedData["callBackUrl"];
+    editApplication(editedData.id, editedData);
+  };
+
+  const editApplication = async (applicationId: any, updatedData: any) => {
+    try {
+      const response = await ApplicationApi.updateApplication(
+        applicationId,
+        updatedData
+      );
+      setUniqueAlert("");
+      if (response) {
+        if (response.statusCode === 409) {
+          setUniqueAlert(response.setAlertShowmessage);
+        } else if (response.statusCode === 200) {
+          console.log('response.data', response.data);
+          setApplicationData(response.data);
+          handleEditModalClose();
+          response.message;
+        }
+      }
+    } catch (error: any) {
+      console.error(error);
+      var response = error.response.data;
+      if (response.statusCode === 422 && response.message.application) {
+        setUniqueAlert(response.message.application);
+      }
+    }
+  };
+
+  const handleEdit = () => {
+    setEditModalOpen(true);
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -70,6 +127,16 @@ const ApplicationView = () => {
 
   return (
     <Container maxWidth="xl">
+      {alertShow && (
+        <Alert
+          severity="success"
+          onClose={() => {
+            setAlertShow("");
+          }}
+        >
+          {alertShow}
+        </Alert>
+      )}
       <Box sx={{ p: 2 }}>
         <Typography
           variant="h5"
@@ -93,6 +160,21 @@ const ApplicationView = () => {
           <CardContent>
             <Table>
               <TableBody>
+                <TableRow>
+                  <TableCell></TableCell>
+                  <TableCell align="right">
+                    <EditApplicationModal
+                      open={editModalOpen}
+                      onClose={handleEditModalClose}
+                      rowData={applicationData}
+                      onEdit={handleEditSave}
+                      uniqueValidation={uniqueAlert}
+                    />
+                    <IconButton aria-label="edit" onClick={() => handleEdit()}>
+                      <EditNoteIcon style={{ fontSize: '30px' }} />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
                 <TableRow>
                   <TableCell>
                     <strong>Name:</strong>

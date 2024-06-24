@@ -21,7 +21,6 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddApplicationModal from "./AddApplicationModal";
-import EditApplicationModal from "./EditApplicationModal";
 import DeleteApplicationModal from "./DeleteApplicationModal";
 import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
@@ -30,16 +29,19 @@ import { config } from "../../../config";
 export interface RowData {
   created_at: string | number | Date;
   id: number;
-  name?: string;
-  application?: string;
-  baseUrl?: string;
-  base_url?: string;
-  callBackUrl?: string;
-  call_back_url?: string;
-  file?: string;
+  name: string;
+  application: string;
+  baseUrl: string;
+  base_url: string;
+  callBackUrl: string;
+  call_back_url: string;
+  file: string;
   logoPath: string;
   logo_path: string;
-  formData?: FormData;
+  formData: FormData;
+  clientSecretId: string;
+  clientSecretKey: string;
+  client: string;
 }
 
 interface AlertState {
@@ -50,7 +52,6 @@ interface AlertState {
 const ApplicationList = () => {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<RowData[]>([]);
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [message, setMessage] = useState("");
   const [isAddApplicationModalOpen, setAddApplicationModalOpen] =
@@ -89,26 +90,8 @@ const ApplicationList = () => {
     }
   };
 
-  const handleEdit = (rowData: SetStateAction<null>) => {
-    setSelectedRow(rowData);
-    setEditModalOpen(true);
-  };
-
   const handleAddApplication = (newApplication: RowData) => {
     addApplication(newApplication);
-  };
-
-  const handleEditModalClose = () => {
-    setEditModalOpen(false);
-    setSelectedRow(null);
-    setUniqueAlert("");
-  };
-
-  const handleEditSave = (editedData: RowData) => {
-    editedData["logo_path"] = editedData["logoPath"];
-    editedData["base_url"] = editedData["baseUrl"];
-    editedData["call_back_url"] = editedData["callBackUrl"];
-    editApplication(editedData.id, editedData);
   };
 
   const handleDelete = (rowData: SetStateAction<null>) => {
@@ -153,14 +136,10 @@ const ApplicationList = () => {
           image={`${config.service}/assets/images/${
             params.value ? params.value : "no_image.jpg"
           }`}
-          sx={{
-            width: "20%",
-            padding: "10px",
-            "@media (max-width: 1200px)": {
-              padding: "0px",
-              width: "40%",
-            },
-          }}
+          sx={{ width: "20%", padding: "10px","@media (max-width: 1200px)": {
+            padding: "0px",
+            width: "40%",
+          }, }}
         />
       ),
     },
@@ -209,9 +188,6 @@ const ApplicationList = () => {
           <IconButton aria-label="view" onClick={() => handleView(params.row)}>
             <Visibility />
           </IconButton>
-          <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
-            <EditIcon />
-          </IconButton>
           <IconButton
             aria-label="delete"
             onClick={() => handleDelete(params.row)}
@@ -249,34 +225,6 @@ const ApplicationList = () => {
         setUniqueAlert(response.message.application);
       }
       console.log(error);
-    }
-  };
-
-  const editApplication = async (applicationId: any, updatedData: any) => {
-    try {
-      const response = await ApplicationApi.updateApplication(
-        applicationId,
-        updatedData
-      );
-      setUniqueAlert("");
-      if (response) {
-        if (response.statusCode === 409) {
-          setUniqueAlert(response.message);
-        } else if (response.statusCode === 200) {
-          const updatedRows = rows.map((row) =>
-            row.id === applicationId ? { ...row, ...response.data } : row
-          );
-          setRows(updatedRows);
-          handleEditModalClose();
-          setAlertShow(response.message);
-        }
-      }
-    } catch (error: any) {
-      console.error(error);
-      var response = error.response.data;
-      if (response.statusCode === 422 && response.message.application) {
-        setUniqueAlert(response.message.application);
-      }
     }
   };
 
@@ -329,7 +277,6 @@ const ApplicationList = () => {
         setLoading(false);
       }
     } catch (error: any) {
-      setLoading(false);
       console.log(error);
     }
   };
@@ -372,11 +319,6 @@ const ApplicationList = () => {
           color: "#fff",
         },
         gridWidth: "500px",
-        "@media (max-width: 1366px) and (max-height: 768px)": {
-          ".MuiDataGrid-virtualScroller": {
-            overflowY: "hidden",
-          }
-        },
       }}
     >
       <Snackbar autoHideDuration={3000} message={message} />
@@ -466,14 +408,6 @@ const ApplicationList = () => {
           </>
         )}
       </CardContent>
-
-      <EditApplicationModal
-        open={editModalOpen}
-        onClose={handleEditModalClose}
-        rowData={selectedRow}
-        onEdit={handleEditSave}
-        uniqueValidation={uniqueAlert}
-      />
 
       <AddApplicationModal
         open={isAddApplicationModalOpen}

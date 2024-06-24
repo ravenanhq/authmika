@@ -22,7 +22,6 @@ import React from "react";
 import { GroupsApi } from "@/services/api/GroupsApi";
 import DeleteGroupModal from "./DeleteGroupModal";
 import EditGroupModal from "./EditGroupModal";
-import EditIcon from "@mui/icons-material/Edit";
 
 export interface RowData {
   id?: number;
@@ -112,9 +111,6 @@ const GroupListPage = () => {
           <IconButton aria-label="view" onClick={() => handleView(params.row)}>
             <Visibility />
           </IconButton>
-          <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
-            <EditIcon />
-          </IconButton>
           <IconButton
             aria-label="delete"
             onClick={() => handleDelete(params.row)}
@@ -131,9 +127,7 @@ const GroupListPage = () => {
       const response = await GroupsApi.addGroupApi(newGroup);
       setUniqueAlert("");
       if (response) {
-        if (response.statusCode == 409) {
-          setUniqueAlert(response.message);
-        } else if (response.statusCode == 201) {
+        if (response.statusCode == 201) {
           setRows(response.data);
           const sortedGroups = [...response.data].sort((a, b) => {
             return (
@@ -150,6 +144,8 @@ const GroupListPage = () => {
       var response = error.response.data;
       if (response.statusCode == 422 && response.message.name) {
         setUniqueAlert(response.message.name);
+      } else if (response.statusCode == 409) {
+        setUniqueAlert(response.message);
       }
       console.log(error);
     }
@@ -210,11 +206,6 @@ const GroupListPage = () => {
     setEditModalOpen(false);
     setSelectedRow(null);
     setUniqueAlert("");
-  };
-
-  const handleEdit = (rowData: SetStateAction<null>) => {
-    setSelectedRow(rowData);
-    setEditModalOpen(true);
   };
 
   const handleEditSave = (editedData: RowData) => {

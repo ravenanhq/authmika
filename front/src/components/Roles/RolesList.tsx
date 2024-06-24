@@ -135,9 +135,7 @@ const RoleListPage = () => {
       const response = await RolesApi.addRoleApi(newRole);
       setUniqueAlert("");
       if (response) {
-        if (response.statusCode == 409) {
-          setUniqueAlert(response.message);
-        } else if (response.statusCode == 201) {
+        if (response.statusCode == 201) {
           setRows(response.data);
           const sortedRoles = [...response.data].sort((a, b) => {
             return (
@@ -155,6 +153,8 @@ const RoleListPage = () => {
       var response = error.response.data;
       if (response.statusCode == 422 && response.message.name) {
         setUniqueAlert(response.message.name);
+      } else if (response.statusCode == 409) {
+        setUniqueAlert(response.message);
       }
       console.log(error);
     }
@@ -213,9 +213,7 @@ const RoleListPage = () => {
       const response = await RolesApi.updateRoleApi(id, updatedData);
       setUniqueAlert("");
       if (response) {
-        if (response.statusCode === 409) {
-          setUniqueAlert(response.message);
-        } else if (response.statusCode === 200) {
+        if (response.statusCode === 200) {
           const updatedRows = rows.map((row) =>
             row.id === id ? { ...row, ...updatedData } : row
           );
@@ -229,6 +227,8 @@ const RoleListPage = () => {
       var response = error.response.data;
       if (response.statusCode === 422 && response.message.application) {
         setUniqueAlert(response.message.application);
+      } else if (response.statusCode === 409) {
+        setUniqueAlert(response.message);
       }
     }
   };
