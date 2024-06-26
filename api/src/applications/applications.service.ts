@@ -111,7 +111,14 @@ export class ApplicationsService {
         where: { application: application },
       });
       if (existingApplication) {
-        throw new UnprocessableEntityException('application already exists.');
+        throw new HttpException(
+          {
+            message: 'aplication already exists',
+            statusCode: HttpStatus.CONFLICT,
+            data: null,
+          },
+          HttpStatus.CONFLICT,
+        );
       } else {
         const newApplication = await this.applicationsModel.create({
           name: name,

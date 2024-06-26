@@ -12,6 +12,7 @@ import {
   FormControlLabel,
   FormGroup,
   Grid,
+  IconButton,
   Paper,
   Table,
   TableBody,
@@ -28,6 +29,10 @@ import React, { useState, useEffect } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import { Container } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
+import CloseIcon from "@mui/icons-material/Close";
+import EditNoteIcon from "@mui/icons-material/EditNote";
+import { GroupsApi } from "@/services/api/GroupsApi";
+
 export interface RowData {
   name: string;
   id: number;
@@ -85,6 +90,11 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   const [alertShow, setAlertShow] = useState<AlertState | null>(null);
   const [isSearchTermPresent, setIsSearchTermPresent] = useState(false);
   const [isUserSearchTermPresent, setIsUserSearchTermPresent] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [data, setData] = useState<GroupData | null>(null);
+  const [name, setName] = useState<string>("");
+  const [uniqueAlert, setUniqueAlert] = useState<AlertState | null>(null);
+  const [rows, setRows] = useState<RowData[]>([]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -94,6 +104,14 @@ const GroupView = ({ params }: { params: IGroupView }) => {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (groupData) {
+      setData(groupData);
+      const savedName = localStorage.getItem("groupName") || groupData.name;
+      setName(savedName);
+    }
+  }, [groupData]);
 
   useEffect(() => {
     getUser();
@@ -322,6 +340,63 @@ const GroupView = ({ params }: { params: IGroupView }) => {
     window.location.href = "/groups";
   };
 
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleSaveClick = async () => {
+    setIsEditing(false);
+    if (data) {
+      const updatedData: GroupData = { ...data, name };
+      setData(updatedData);
+      try {
+        await editGroup(id, updatedData);
+        localStorage.setItem("groupName", name);
+      } catch (error) {
+        console.error("Error updating group:", error);
+      }
+    }
+  };
+
+  const editGroup = async (id: any, updatedData: any) => {
+    try {
+      const response = await GroupsApi.updateGroupApi(id, updatedData);
+      setUniqueAlert(null);
+      if (response) {
+        if (response.statusCode === 200) {
+          setRows(response);
+          setUniqueAlert({
+            severity: "success",
+            message: response.message,
+          });
+        }
+      }
+    } catch (error: any) {
+      var response = error.response.data;
+      if (response.statusCode == 422 && response.message.name) {
+        setUniqueAlert(response.message.name);
+      }
+      if (response.statusCode === 409) {
+        setUniqueAlert({
+          severity: "error",
+          message: response.message,
+        });
+      }
+      console.log(error);
+    }
+  };
+
+  const handleCancelClick = () => {
+    setIsEditing(false);
+    if (data) {
+      setName(data.name);
+    }
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+  };
+
   if (!groupData) {
     return null;
   }
@@ -357,7 +432,57 @@ const GroupView = ({ params }: { params: IGroupView }) => {
           <TableBody>
             <TableRow>
               <TableCell sx={{ fontSize: 30, border: "none" }}>
-                <strong>{groupData.name}</strong>
+                {isEditing ? (
+                  <TextField
+                    value={name}
+                    onChange={handleNameChange}
+                    variant="outlined"
+                    size="small"
+                  />
+                ) : (
+                  <strong>{name}</strong>
+                )}
+                <IconButton
+                  onClick={isEditing ? handleSaveClick : handleEditClick}
+                  sx={{
+                    backgroundColor: "#1C658C",
+                    color: "#fff",
+                    ":hover": {
+                      color: "#fff",
+                      backgroundColor: "#1C658C",
+                    },
+                    marginLeft: "10px"
+                  }}
+                >
+                  {isEditing ? (
+                    <SaveIcon
+                      sx={{ color: "white", width: "0.75em", height: "0.75em" }}
+                    />
+                  ) : (
+                    <EditNoteIcon
+                      sx={{ color: "white", width: "0.75em", height: "0.75em" }}
+                    />
+                  )}
+                </IconButton>
+
+                {isEditing && (
+                  <IconButton
+                    onClick={handleCancelClick}
+                    sx={{
+                      backgroundColor: "#FF9843",
+                      color: "#fff",
+                      ":hover": {
+                        color: "#fff",
+                        backgroundColor: "#FE7A36",
+                      },
+                      marginLeft: "5px"
+                    }}
+                  >
+                    <CloseIcon
+                      sx={{ color: "white", width: "0.75em", height: "0.75em" }}
+                    />
+                  </IconButton>
+                )}
               </TableCell>
             </TableRow>
           </TableBody>
@@ -381,6 +506,26 @@ const GroupView = ({ params }: { params: IGroupView }) => {
           }}
         >
           {alertShow.message}
+        </Alert>
+      )}
+      {uniqueAlert && (
+        <Alert
+          severity={uniqueAlert.severity}
+          onClose={() => {
+            setUniqueAlert(null);
+          }}
+          sx={{
+            margin: "0 auto",
+            width: {
+              xs: "90%",
+              sm: "70%",
+              md: "50%",
+              lg: "40%",
+              xl: "30%",
+            },
+          }}
+        >
+          {uniqueAlert.message}
         </Alert>
       )}
       <Grid container spacing={2}>

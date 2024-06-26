@@ -143,9 +143,7 @@ const UserView = ({ params }: { params: IUserView }) => {
       const response = await UserApi.update(id, updatedData);
       setInvalidEmail("");
       if (response) {
-        if (response.statusCode == 409) {
-          setInvalidEmail(response.message);
-        } else if (response && response.statusCode === 200) {
+        if (response && response.statusCode === 200) {
           const updatedRows = response.data.map((row: any) => {
             if (row.id === id) {
               return { ...row, ...updatedData };
@@ -161,6 +159,8 @@ const UserView = ({ params }: { params: IUserView }) => {
       var response = error.response.data;
       if (response.statusCode == 422 && response.message.email) {
         setInvalidEmail(response.message.email);
+      } else if (response.statusCode == 422) {
+        setInvalidEmail(response.message);
       }
 
       console.log(error);

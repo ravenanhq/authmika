@@ -5,7 +5,6 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  UnprocessableEntityException,
 } from '@nestjs/common';
 import {
   GroupCreateSuccessDto,
@@ -111,7 +110,14 @@ export class GroupsService {
           existingGroupname &&
           existingGroupname.id.toString() !== id.toString()
         ) {
-          throw new UnprocessableEntityException('Name already exists.');
+          throw new HttpException(
+            {
+              message: 'Name already exists',
+              statusCode: HttpStatus.CONFLICT,
+              data: null,
+            },
+            HttpStatus.CONFLICT,
+          );
         }
         existingGroup.name = name;
         existingGroup.updatedBy = user.userId;
