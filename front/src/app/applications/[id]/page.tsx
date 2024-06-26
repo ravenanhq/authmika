@@ -74,7 +74,6 @@ const ApplicationView = () => {
         if (response.statusCode === 409) {
           setUniqueAlert(response.setAlertShowmessage);
         } else if (response.statusCode === 200) {
-          console.log('response.data', response.data);
           setApplicationData(response.data);
           handleEditModalClose();
           response.message;

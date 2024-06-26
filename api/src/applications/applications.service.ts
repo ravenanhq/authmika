@@ -111,7 +111,6 @@ export class ApplicationsService {
         where: { application: application },
       });
       if (existingApplication) {
-        // throw new UnprocessableEntityException('application already exists.');
         throw new HttpException(
           {
             message: 'aplication already exists',

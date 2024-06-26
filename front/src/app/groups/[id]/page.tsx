@@ -361,7 +361,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   const editGroup = async (id: any, updatedData: any) => {
     try {
       const response = await GroupsApi.updateGroupApi(id, updatedData);
-      console.log("res", response);
       setUniqueAlert(null);
       if (response) {
         if (response.statusCode === 200) {
@@ -378,7 +377,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
         setUniqueAlert(response.message.name);
       }
       if (response.statusCode === 409) {
-        console.log("error");
         setUniqueAlert({
           severity: "error",
           message: response.message,
@@ -452,7 +450,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                     ":hover": {
                       color: "#fff",
                       backgroundColor: "#1C658C",
-                      // marginRight: "30px"
                     },
                     marginLeft: "10px"
                   }}
