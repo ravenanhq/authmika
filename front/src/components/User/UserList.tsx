@@ -310,11 +310,10 @@ const UserList = () => {
   }));
 
   return (
-    <Container maxWidth="xl">
       <Card
         sx={{
           boxShadow: "none",
-          marginTop: "5vh",
+          marginTop: "5%",
           "& .user-header": {
             backgroundColor: "#265073",
             color: "#fff",
@@ -423,7 +422,6 @@ const UserList = () => {
           uniqueEmail={invalidEmail}
         />
       </Card>
-    </Container>
   );
 };
 

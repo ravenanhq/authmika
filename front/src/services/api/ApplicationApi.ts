@@ -32,4 +32,11 @@ export class ApplicationApi {
         );
         return res.data;
     }
+
+    static async getUserId(id: number) {
+        const res = await axios.get(
+            `${config.service}/applications/users/${id}`
+        );
+        return res.data;
+    }
 }

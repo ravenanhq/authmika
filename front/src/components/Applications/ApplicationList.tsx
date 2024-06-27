@@ -42,6 +42,7 @@ export interface RowData {
   clientSecretId: string;
   clientSecretKey: string;
   client: string;
+  deleting: boolean;
 }
 
 interface AlertState {
