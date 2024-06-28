@@ -29,7 +29,7 @@ import EditNoteIcon from "@mui/icons-material/EditNote";
 import { ApplicationApi } from "@/services/api/ApplicationApi";
 import EditApplicationModal from "@/components/Applications/EditApplicationModal";
 import { config } from "../../../../config";
-import ForwardIcon from '@mui/icons-material/Forward';
+import ForwardIcon from "@mui/icons-material/Forward";
 
 interface ApplicationData {
   created_at: string | number | Date;
@@ -93,19 +93,22 @@ const ApplicationView = () => {
       );
       setUniqueAlert("");
       if (response) {
-        if (response.statusCode === 409) {
-          setUniqueAlert(response.setAlertShowmessage);
-        } else if (response.statusCode === 200) {
+        if (response && response.statusCode === 200) {
           setApplicationData(response.data);
+          setAlertShow(response.message);
           handleEditModalClose();
+        } else if (response && response.statusCode === 409) {
+          setAlertShow(response.message);
         }
       }
     } catch (error: any) {
-      console.error(error);
       const response = error.response.data;
       if (response.statusCode === 422 && response.message.application) {
         setUniqueAlert(response.message.application);
+      } else if (response.statusCode == 422) {
+        setUniqueAlert(response.message);
       }
+      console.log(error);
     }
   };
 
@@ -189,17 +192,17 @@ const ApplicationView = () => {
 
   return (
     <Container maxWidth="xl">
-      <Box sx={{ p: 2 ,margin:"auto"}}>
-      {uniqueAlert && (
-        <Alert
-          severity="success"
-          onClose={() => {
-            setUniqueAlert("");
-          }}
-        >
-          {uniqueAlert}
-        </Alert>
-      )}
+      <Box sx={{ p: 2, margin: "auto" }}>
+        {alertShow && (
+          <Alert
+            severity="success"
+            onClose={() => {
+              setAlertShow("");
+            }}
+          >
+            {alertShow}
+          </Alert>
+        )}
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <Card
@@ -234,7 +237,9 @@ const ApplicationView = () => {
                     uniqueValidation={uniqueAlert}
                   />
                   <IconButton aria-label="edit" onClick={handleEdit}>
-                    <EditNoteIcon style={{ fontSize: "30px" }} />
+                    <EditNoteIcon
+                      style={{ fontSize: "30px", color: "#1C658C" }}
+                    />
                   </IconButton>
                 </Box>
                 <Table>
@@ -329,10 +334,7 @@ const ApplicationView = () => {
                 >
                   Users
                 </Typography>
-                <Divider
-                  sx={{ marginBottom: 1, flexGrow: 1 }}
-                  color="#265073"
-                />
+                <Divider sx={{ marginBottom: 1 }} color="#265073" />
                 {loading ? (
                   <Box
                     display="flex"
@@ -343,34 +345,27 @@ const ApplicationView = () => {
                     <CircularProgress size={24} />
                   </Box>
                 ) : users.length > 0 ? (
-                  <Box sx={{ overflowY: "auto", flexGrow: 1 }}>
-                    <List>
-                      {users.map((user, index) => (
-                        <ListItem
-                          key={user.id}>
-                                  <ListItemIcon>
-                                  <ForwardIcon style={{ color: '#265073' }} />
-                                  </ListItemIcon>
-                               <ListItemText>
+                  <List sx={{ overflowY: "auto", flexGrow: 1 }}>
+                    {users.map((user, index) => (
+                      <ListItem key={user.id}>
+                        <ListItemIcon>
+                          <ForwardIcon style={{ color: "#265073" }} />
+                        </ListItemIcon>
+                        <ListItemText>
                           <Typography variant="body1">
                             {user.firstName} {user.lastName}
                           </Typography>
-                          </ListItemText>
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Box>
+                        </ListItemText>
+                      </ListItem>
+                    ))}
+                  </List>
                 ) : (
-                  <Box
-                    display="flex"
-                    sx={{ flexGrow: 1, height: "100%" }}
-                  >
+                  <Typography variant="body1" sx={{ flexGrow: 1 }}>
                     No users found
-                  </Box>
+                  </Typography>
                 )}
               </CardContent>
             </Card>
-
             <Card sx={{ height: "290px", marginTop: 2 }}>
               <CardContent
                 sx={{
@@ -386,10 +381,7 @@ const ApplicationView = () => {
                 >
                   Groups
                 </Typography>
-                <Divider
-                  sx={{ marginBottom: 1, flexGrow: 1 }}
-                  color="#265073"
-                />
+                <Divider sx={{ marginBottom: 1 }} color="#265073" />
                 {loading ? (
                   <Box
                     display="flex"
@@ -400,28 +392,22 @@ const ApplicationView = () => {
                     <CircularProgress size={24} />
                   </Box>
                 ) : groups.length > 0 ? (
-                  <Box sx={{ overflowY: "auto", flexGrow: 1 }}>
-                    <List>
-                      {groups.map((group, index) => (
-                        <ListItem
-                          key={group.id}>
-                            <ListItemIcon>
-                            <ForwardIcon style={{ color: '#265073' }} />
-                            </ListItemIcon>
-                               <ListItemText>
+                  <List sx={{ overflowY: "auto", flexGrow: 1 }}>
+                    {groups.map((group, index) => (
+                      <ListItem key={group.id}>
+                        <ListItemIcon>
+                          <ForwardIcon style={{ color: "#265073" }} />
+                        </ListItemIcon>
+                        <ListItemText>
                           <Typography variant="body1">{group.name}</Typography>
-                          </ListItemText>
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Box>
+                        </ListItemText>
+                      </ListItem>
+                    ))}
+                  </List>
                 ) : (
-                  <Box
-                    display="flex"
-                    sx={{ flexGrow: 1, height: "100%" }}
-                  >
-                    No groups are found
-                  </Box>
+                  <Typography variant="body1" sx={{ flexGrow: 1 }}>
+                    No groups found
+                  </Typography>
                 )}
               </CardContent>
             </Card>

@@ -108,7 +108,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
     if (groupData) {
       setData(groupData);
       const savedName = localStorage.getItem("groupName") || groupData.name;
-      setName(savedName);
+      setName(groupData.name);
     }
   }, [groupData]);
 
