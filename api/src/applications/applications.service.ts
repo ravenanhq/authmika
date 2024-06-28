@@ -21,6 +21,9 @@ import { UserApplications } from 'src/db/model/user-applications.model';
 import { AuthClients } from 'src/db/model/auth-clients.model';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Users } from 'src/db/model/users.model';
+import { GroupUsers } from 'src/db/model/group-users.model';
+import { Groups } from 'src/db/model/groups.model';
 
 @Injectable()
 export class ApplicationsService {
@@ -29,6 +32,12 @@ export class ApplicationsService {
     private userApplictionsModel: typeof UserApplications,
     @InjectModel(Applications)
     private applicationsModel: typeof Applications,
+    @InjectModel(Users)
+    private usersModel: typeof Users,
+    @InjectModel(GroupUsers)
+    private groupUsersModel: typeof GroupUsers,
+    @InjectModel(Groups)
+    private groupModel: typeof Groups,
   ) {}
 
   async getApplications() {
@@ -405,5 +414,49 @@ export class ApplicationsService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async getUsersAndGroupsByApplicationId(id: number) {
+    const application = await this.applicationsModel.findOne({
+      where: { id: id },
+    });
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
+
+    const userApplications = await this.userApplictionsModel.findAll({
+      where: { applicationId: id },
+    });
+
+    if (!userApplications || userApplications.length === 0) {
+      throw new NotFoundException('No users found for this application');
+    }
+
+    const userIds = userApplications.map(
+      (userApplication) => userApplication.userId,
+    );
+
+    const users = await this.usersModel.findAll({
+      where: {
+        id: userIds,
+      },
+      attributes: ['id', 'firstName', 'lastName'],
+    });
+
+    const groupIds = await this.groupUsersModel.findAll({
+      where: { userId: userIds },
+      attributes: ['groupId'],
+    });
+
+    const uniqueGroupIds = Array.from(
+      new Set(groupIds.map((item) => item.groupId)),
+    );
+
+    const groups = await this.groupModel.findAll({
+      where: { id: uniqueGroupIds },
+      attributes: ['id', 'name'],
+    });
+
+    return { users, groups };
   }
 }

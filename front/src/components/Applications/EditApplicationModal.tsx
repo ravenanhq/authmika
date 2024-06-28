@@ -36,6 +36,10 @@ const InitialRowData = {
   logo_path: "",
   created_at: "",
   deleting: false,
+  formData: new FormData(),
+  clientSecretId: "",
+  clientSecretKey: "",
+  client: "",
 };
 
 interface EditModalProps {

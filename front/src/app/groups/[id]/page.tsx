@@ -93,7 +93,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [data, setData] = useState<GroupData | null>(null);
   const [name, setName] = useState<string>("");
-  const [uniqueAlert, setUniqueAlert] = useState<AlertState | null>(null);
   const [rows, setRows] = useState<RowData[]>([]);
 
   useEffect(() => {
@@ -109,7 +108,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
     if (groupData) {
       setData(groupData);
       const savedName = localStorage.getItem("groupName") || groupData.name;
-      setName(savedName);
+      setName(groupData.name);
     }
   }, [groupData]);
 
@@ -361,28 +360,11 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   const editGroup = async (id: any, updatedData: any) => {
     try {
       const response = await GroupsApi.updateGroupApi(id, updatedData);
-      setUniqueAlert(null);
-      if (response) {
-        if (response.statusCode === 200) {
-          setRows(response);
-          setUniqueAlert({
-            severity: "success",
-            message: response.message,
-          });
-        }
+      if (response && response.statusCode === 200) {
+        setRows(response);
       }
     } catch (error: any) {
-      var response = error.response.data;
-      if (response.statusCode == 422 && response.message.name) {
-        setUniqueAlert(response.message.name);
-      }
-      if (response.statusCode === 409) {
-        setUniqueAlert({
-          severity: "error",
-          message: response.message,
-        });
-      }
-      console.log(error);
+      console.error(error);
     }
   };
 
@@ -451,7 +433,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                       color: "#fff",
                       backgroundColor: "#1C658C",
                     },
-                    marginLeft: "10px"
+                    marginLeft: "10px",
                   }}
                 >
                   {isEditing ? (
@@ -475,7 +457,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
                         color: "#fff",
                         backgroundColor: "#FE7A36",
                       },
-                      marginLeft: "5px"
+                      marginLeft: "5px",
                     }}
                   >
                     <CloseIcon
@@ -488,7 +470,9 @@ const GroupView = ({ params }: { params: IGroupView }) => {
           </TableBody>
         </Table>
       </Box>
-      {alertShow && (
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+        {alertShow && (
         <Alert
           severity={alertShow.severity}
           onClose={() => {
@@ -508,28 +492,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
           {alertShow.message}
         </Alert>
       )}
-      {uniqueAlert && (
-        <Alert
-          severity={uniqueAlert.severity}
-          onClose={() => {
-            setUniqueAlert(null);
-          }}
-          sx={{
-            margin: "0 auto",
-            width: {
-              xs: "90%",
-              sm: "70%",
-              md: "50%",
-              lg: "40%",
-              xl: "30%",
-            },
-          }}
-        >
-          {uniqueAlert.message}
-        </Alert>
-      )}
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
           <Box sx={{ p: 0 }}>
             <Typography
               variant="h5"

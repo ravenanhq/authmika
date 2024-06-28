@@ -69,4 +69,6 @@ export class Users extends Model {
 
   @Column({ type: DataType.BIGINT })
   otp_expiration: number;
+
+  isSelected: boolean;
 }

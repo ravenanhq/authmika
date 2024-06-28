@@ -485,8 +485,8 @@ const UserView = ({ params }: { params: IUserView }) => {
   };
 
   return (
-    <Container maxWidth="xl">
-      {alertShow && (
+    <div>
+       {alertShow && (
         <Alert
           severity="success"
           onClose={() => {
@@ -521,7 +521,7 @@ const UserView = ({ params }: { params: IUserView }) => {
       )}
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-          <Box sx={{ p: 2 }}>
+                 <Box sx={{ p: 2 }}>
             <Typography
               variant="h5"
               component="h2"
@@ -1048,7 +1048,7 @@ const UserView = ({ params }: { params: IUserView }) => {
           </Box>
         </Grid>
       </Grid>
-    </Container>
+      </div>
   );
 };
 

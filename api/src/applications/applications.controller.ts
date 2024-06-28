@@ -185,4 +185,30 @@ export class ApplicationsController {
   getApplicationId(@Param('clientId') clientId: number) {
     return this.applicationService.getApplication(clientId);
   }
+
+  @ApiTags('Applications')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Get users and groups by applicationId' })
+  @Get('users/:id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
+  async getUsersByApplicationId(@Param('id') id: number) {
+    return this.applicationService.getUsersAndGroupsByApplicationId(id);
+  }
 }
