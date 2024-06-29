@@ -288,14 +288,7 @@ export class ApplicationsService {
       }
     } catch (error) {
       if (error instanceof HttpException) {
-        throw new HttpException(
-          {
-            data: null,
-            message: error.message,
-            statusCode: HttpStatus.CONFLICT,
-          },
-          HttpStatus.CONFLICT,
-        );
+        throw error;
       } else {
         throw new HttpException(
           {

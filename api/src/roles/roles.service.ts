@@ -13,7 +13,9 @@ import {
   RolesDataDto,
   RolesDeleteSuccessDto,
   RolesDto,
+  RolesInUserUpdateSuccessDto,
   RolesUpdateSuccessDto,
+  UsersDataDto,
 } from './dto/roles.dto';
 import { Op } from 'sequelize';
 import { Users } from 'src/db/model/users.model';
@@ -214,6 +216,50 @@ export class RolesService {
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+  async getRolesByUsers(id: number): Promise<RolesInUserUpdateSuccessDto> {
+    try {
+      const existingRole = await this.rolesModel.findOne({
+        where: { id },
+      });
+
+      if (!existingRole) {
+        throw new HttpException('Role not found.', HttpStatus.NOT_FOUND);
+      }
+
+      const usersWithRole = await this.userModel.findAll({
+        where: { role: existingRole.name, status: { [Op.not]: [0] } },
+      });
+
+      const responseData: UsersDataDto[] = usersWithRole.map((user) => ({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role,
+        status: user.status,
+        createdAt: user.created_at,
+      }));
+
+      return {
+        message: 'Users fetched successfully.',
+        statusCode: HttpStatus.OK,
+        data: {
+          roles: [],
+          users: responseData,
+        },
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      } else {
+        throw new HttpException(
+          'Internal server error.',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
     }
   }
 }

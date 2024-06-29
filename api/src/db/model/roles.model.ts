@@ -32,4 +32,5 @@ export class Roles extends Model<Roles> {
 
   @Column({ field: 'updated_by', type: DataType.INTEGER })
   updatedBy: number;
+  firstName: any;
 }

@@ -21,4 +21,9 @@ export class RolesApi {
     const res = await axios.put(`${config.service}/roles/${id}`, updatedData);
     return res.data;
   }
+
+  static async getUsersByRole(id: number) {
+    const res = await axios.put(`${config.service}/roles/users/${id}`);
+    return res.data;
+  }
 }
