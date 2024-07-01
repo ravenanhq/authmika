@@ -22,7 +22,7 @@ export class RolesApi {
     return res.data;
   }
 
-  static async getUsersByRole(id: number) {
+  static async getUsers(id: number) {
     const res = await axios.put(`${config.service}/roles/users/${id}`);
     return res.data;
   }

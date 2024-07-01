@@ -1,6 +1,8 @@
 "use client";
 import {
+  Alert,
   Backdrop,
+  Box,
   Button,
   Card,
   CardContent,
@@ -23,13 +25,13 @@ import CloseIcon from "@mui/icons-material/Close";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import { RolesApi } from "@/services/api/RolesApi";
 import AddIcon from "@mui/icons-material/Add";
-import AddUserInRolesModal from "@/components/Roles/AddUserInRolesModal";
+import AddUserModal from "@/components/Roles/AddUserModal";
 import { UserServiceApi } from "@/services/api/UserServiceApi";
-import { Visibility } from "@mui/icons-material";
+import { SavedSearch, Visibility } from "@mui/icons-material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { UserApi } from "@/services/api/UserApi";
-import DeleteUserInRolesModal from "@/components/Roles/DeleteUserInRolesModal";
+import DeleteUserModal from "@/components/Roles/DeleteUserModal";
 
 export interface RowData {
   name: string;
@@ -70,6 +72,7 @@ const RoleView = ({ params }: { params: IRoleView }) => {
   const [roleData, setRoleData] = useState<RoleData | null>(null);
   const [invalidEmail, setInvalidEmail] = useState("");
   const [alertShow, setAlertShow] = useState("");
+  const [saveAlert, setSaveAlert] = useState<AlertState | null>(null);
   const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -79,18 +82,15 @@ const RoleView = ({ params }: { params: IRoleView }) => {
     if (typeof window !== "undefined") {
       const role = localStorage.getItem("role-data");
       if (role) {
-        setRoleData(JSON.parse(role));
+        const parsedRoleData = JSON.parse(role);
+        setRoleData(parsedRoleData);
+        setData(parsedRoleData);
+        const savedName = parsedRoleData.name || "";
+        setName(savedName);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (roleData) {
-      setData(roleData);
-      const savedName = localStorage.getItem("roleName") || roleData.name;
-      setName(roleData.name);
-    }
-  }, [roleData]);
 
   useEffect(() => {  
     if (id) {
@@ -103,7 +103,7 @@ const RoleView = ({ params }: { params: IRoleView }) => {
   const fetchUsers = async (id: number) => {
     setLoading(true);
     try {
-      const response = await RolesApi.getUsersByRole(id);
+      const response = await RolesApi.getUsers(id);
   
       if (response && response.data && response.data.users) {
         const sortedUsers = response.data.users.sort((a: RowData, b: RowData) => {
@@ -142,9 +142,16 @@ const RoleView = ({ params }: { params: IRoleView }) => {
     try {
       const response = await RolesApi.updateRoleApi(id, updatedData);
       if (response && response.statusCode === 200) {
-        setRows(response);
+        setRows(response.data.users);
       }
     } catch (error: any) {
+      var response = error.response.data;
+       if (response.statusCode == 409) {
+        setSaveAlert({
+          severity: "error",
+          message: response.message,
+        });      }
+
       console.error(error);
     }
   };
@@ -157,9 +164,21 @@ const RoleView = ({ params }: { params: IRoleView }) => {
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value);
-  };
-
+    const inputValue = e.target.value;
+    const filteredValue = inputValue
+      .toUpperCase()
+      .split("")
+      .filter((char) => /^[A-Z ]$/.test(char))
+      .join("");
+    setName(filteredValue);
+    const role = localStorage.getItem("role-data");
+    if (role) {
+      const parsedRoleData = JSON.parse(role);
+      parsedRoleData.name = filteredValue;
+      const data = JSON.stringify(parsedRoleData);
+      localStorage.setItem("role-data", data);
+     }
+};
   const handleAddUserClick = () => {
     setAddUserModalOpen(true);
   };
@@ -168,27 +187,24 @@ const RoleView = ({ params }: { params: IRoleView }) => {
     setAddUserModalOpen(false);
   };
 
-  const handleAddUser = (newUser: RowData) => {
-    addUser({ ...newUser, role: roleData?.name });
-  };
-
-  const addUser = async (newUser: RowData & { role: string | undefined }) => {
+  const handleAddUser = async (newUser: RowData) => {
+    const newUserData = { ...newUser, role: roleData?.name };
     setLoading(true);
     try {
-      const response = await UserServiceApi.create(newUser);
+      const response = await UserServiceApi.create(newUserData);
       setInvalidEmail("");
       if (response) {
         if (response.statusCode === 201) {
           const newUserId = Math.floor(Math.random() * 1000);
-          const newUserData = {
-            ...newUser,
+          const newUserDataWithId = {
+            ...newUserData,
             firstName: newUser.firstName,
             lastName: newUser.lastName,
             status: 2,
             id: newUserId,
           };
           const currentUsers = [...rows];
-          currentUsers.unshift(newUserData);
+          currentUsers.unshift(newUserDataWithId);
           const sortedUsers = currentUsers.sort((a, b) => {
             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
           });
@@ -209,7 +225,6 @@ const RoleView = ({ params }: { params: IRoleView }) => {
       setLoading(false);
     }
   };
-
   const handleView = (rowData: RowData) => {
     const data = JSON.stringify(rowData);
     localStorage.setItem("user-data", data);
@@ -385,12 +400,23 @@ const RoleView = ({ params }: { params: IRoleView }) => {
           gridWidth: "500px",
         }}
       >
+             {saveAlert && (
+                <Alert
+                  severity={saveAlert.severity}
+                  onClose={() => {
+                    setSaveAlert(null);
+                  }}
+                >
+                  {saveAlert.message}
+                </Alert>
+              )}
         <Snackbar autoHideDuration={12000} />
         <CardContent style={{ padding: "0" }}>
+        <Box>
           <Table>
             <TableBody>
               <TableRow>
-                <TableCell sx={{ fontSize: 30, border: "none" }}>
+                <TableCell sx={{ fontSize: 30, border: "none",padding:"0" }}>
                   {isEditing ? (
                     <TextField
                       value={name}
@@ -458,6 +484,7 @@ const RoleView = ({ params }: { params: IRoleView }) => {
               </TableRow>
             </TableBody>
           </Table>
+          </Box>
           <Grid
             container
             justifyContent="flex-end"
@@ -504,14 +531,14 @@ const RoleView = ({ params }: { params: IRoleView }) => {
             }}
           />
 
-          <DeleteUserInRolesModal
+          <DeleteUserModal
             open={deleteModalOpen}
             onClose={handleDeleteModalClose}
             onDeleteConfirm={() => handleDeleteConfirm(selectedRow)}
             rowData={selectedRow}
           />
 
-          <AddUserInRolesModal
+          <AddUserModal
             open={isAddUserModalOpen}
             onClose={handleCloseAddUserModal}
             onAddUser={handleAddUser}

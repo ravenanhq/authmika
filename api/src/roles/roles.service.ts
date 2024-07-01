@@ -122,14 +122,12 @@ export class RolesService {
         existingRole.updatedBy = user.userId;
         await existingRole.save();
 
-        const roles = await this.rolesModel.findAll({
-          where: { status: { [Op.or]: [1, 2] } },
-        });
-
         return {
           message: 'Role updated successfully.',
           statusCode: HttpStatus.OK,
-          data: roles,
+          data: {
+            users: [],
+          },
         };
       } else {
         throw new HttpException(
@@ -218,7 +216,7 @@ export class RolesService {
       );
     }
   }
-  async getRolesByUsers(id: number): Promise<RolesInUserUpdateSuccessDto> {
+  async getUserList(id: number): Promise<RolesInUserUpdateSuccessDto> {
     try {
       const existingRole = await this.rolesModel.findOne({
         where: { id },
@@ -247,7 +245,6 @@ export class RolesService {
         message: 'Users fetched successfully.',
         statusCode: HttpStatus.OK,
         data: {
-          roles: [],
           users: responseData,
         },
       };

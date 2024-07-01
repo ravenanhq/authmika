@@ -77,24 +77,6 @@ export class RolesDeleteSuccessDto {
   })
   data: RolesDataDto[];
 }
-
-export class RolesUpdateSuccessDto {
-  @ApiProperty({
-    example: 'Role updated successfully',
-  })
-  message: string;
-
-  @ApiProperty({
-    example: 200,
-  })
-  statusCode: number;
-
-  @ApiProperty({
-    isArray: true,
-    type: RolesDataDto,
-  })
-  data: RolesDataDto[];
-}
 export class UsersDataDto {
   @ApiProperty()
   id: number;
@@ -115,13 +97,31 @@ export class UsersDataDto {
   role: string;
 }
 
-export class RolesUsersDataDto {
+export class UsersInRoleDataDto {
   @ApiProperty({
     isArray: true,
-    type: RolesDataDto,
+    type: UsersDataDto,
   })
-  roles: RolesDataDto[];
+  users: UsersDataDto[];
+}
 
+export class RolesUpdateSuccessDto {
+  @ApiProperty({
+    example: 'Role updated successfully',
+  })
+  message: string;
+
+  @ApiProperty({
+    example: 200,
+  })
+  statusCode: number;
+  @ApiProperty({
+    isArray: true,
+    type: UsersInRoleDataDto,
+  })
+  data: UsersInRoleDataDto;
+}
+export class RolesUsersDataDto {
   @ApiProperty({
     isArray: true,
     type: UsersDataDto,

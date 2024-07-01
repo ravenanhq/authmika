@@ -197,9 +197,7 @@ export class RolesController {
   @UsePipes(new ValidationPipe())
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
-  async updateRole(
-    @Param('id') id: number,
-  ): Promise<RolesInUserUpdateSuccessDto> {
-    return this.roleService.getRolesByUsers(id);
+  async getUser(@Param('id') id: number): Promise<RolesInUserUpdateSuccessDto> {
+    return this.roleService.getUserList(id);
   }
 }
