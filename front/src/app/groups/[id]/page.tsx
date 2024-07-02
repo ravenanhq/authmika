@@ -105,12 +105,18 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   }, []);
 
   useEffect(() => {
-    if (groupData) {
-      setData(groupData);
-      const savedName = localStorage.getItem("groupName") || groupData.name;
-      setName(groupData.name);
+    if (typeof window !== "undefined") {
+      const group = localStorage.getItem("group-data");
+      if (group) {
+        const parsedGroupData = JSON.parse(group);
+        setGroupData(parsedGroupData);
+        setData(parsedGroupData);
+        const savedName = parsedGroupData.name || "";
+        setName(savedName);
+      }
     }
-  }, [groupData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     getUser();
@@ -125,6 +131,23 @@ const GroupView = ({ params }: { params: IGroupView }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    const filteredValue = inputValue
+      .toUpperCase()
+      .split("")
+      .filter((char) => /^[A-Z ]$/.test(char))
+      .join("");
+    setName(filteredValue);
+    const group = localStorage.getItem("group-data");
+    if (group) {
+      const parsedGroupData = JSON.parse(group);
+      parsedGroupData.name = filteredValue;
+      const data = JSON.stringify(parsedGroupData);
+      localStorage.setItem("group-data", data);
+    }
+  };
 
   const getApplicationsByGroupId = async (id: number | undefined) => {
     try {
@@ -375,10 +398,6 @@ const GroupView = ({ params }: { params: IGroupView }) => {
     }
   };
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value);
-  };
-
   if (!groupData) {
     return null;
   }
@@ -472,26 +491,26 @@ const GroupView = ({ params }: { params: IGroupView }) => {
       </Box>
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-        {alertShow && (
-        <Alert
-          severity={alertShow.severity}
-          onClose={() => {
-            setAlertShow(null);
-          }}
-          sx={{
-            margin: "0 auto",
-            width: {
-              xs: "90%",
-              sm: "70%",
-              md: "50%",
-              lg: "40%",
-              xl: "30%",
-            },
-          }}
-        >
-          {alertShow.message}
-        </Alert>
-      )}
+          {alertShow && (
+            <Alert
+              severity={alertShow.severity}
+              onClose={() => {
+                setAlertShow(null);
+              }}
+              sx={{
+                margin: "0 auto",
+                width: {
+                  xs: "90%",
+                  sm: "70%",
+                  md: "50%",
+                  lg: "40%",
+                  xl: "30%",
+                },
+              }}
+            >
+              {alertShow.message}
+            </Alert>
+          )}
           <Box sx={{ p: 0 }}>
             <Typography
               variant="h5"

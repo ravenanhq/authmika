@@ -122,11 +122,26 @@ export class RolesService {
         existingRole.updatedBy = user.userId;
         await existingRole.save();
 
+        const usersWithRole = await this.userModel.findAll({
+          where: { role: existingRole.name, status: { [Op.not]: [0] } },
+        });
+
+        const responseData: UsersDataDto[] = usersWithRole.map((user) => ({
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          mobile: user.mobile,
+          role: user.role,
+          status: user.status,
+          createdAt: user.created_at,
+        }));
+
         return {
           message: 'Role updated successfully.',
           statusCode: HttpStatus.OK,
           data: {
-            users: [],
+            users: responseData,
           },
         };
       } else {
