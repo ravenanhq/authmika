@@ -20,6 +20,7 @@ import {
   RolesDataDto,
   RolesDeleteSuccessDto,
   RolesDto,
+  RolesInUserUpdateSuccessDto,
   RolesUpdateSuccessDto,
 } from './dto/roles.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -166,5 +167,37 @@ export class RolesController {
     @Param('id') id: number,
   ): Promise<RolesUpdateSuccessDto> {
     return this.roleService.update(rolesDto, req.user, id);
+  }
+
+  @ApiTags('Roles')
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 200,
+    description: 'Success',
+    type: RolesUpdateSuccessDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+  })
+  @ApiOperation({ summary: 'Get users by role' })
+  @Put('users/:id')
+  @UsePipes(new ValidationPipe())
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard('jwt'))
+  async getUser(@Param('id') id: number): Promise<RolesInUserUpdateSuccessDto> {
+    return this.roleService.getUserList(id);
   }
 }

@@ -71,4 +71,5 @@ export class Users extends Model {
   otp_expiration: number;
 
   isSelected: boolean;
+  created_at: any;
 }

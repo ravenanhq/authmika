@@ -8,6 +8,13 @@ export class RolesDto {
   @IsNotEmpty({ message: 'name cannot be blank' })
   name: string;
 }
+
+export class RoleDto {
+  @ApiProperty({
+    example: 'SUPER ADMIN',
+  })
+  name: string;
+}
 export class RolesDataDto {
   @ApiProperty({
     example: 1,
@@ -70,6 +77,33 @@ export class RolesDeleteSuccessDto {
   })
   data: RolesDataDto[];
 }
+export class UsersDataDto {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  firstName: string;
+
+  @ApiProperty()
+  lastName: string;
+
+  @ApiProperty()
+  email: string;
+
+  @ApiProperty()
+  mobile: string;
+
+  @ApiProperty()
+  role: string;
+}
+
+export class UsersInRoleDataDto {
+  @ApiProperty({
+    isArray: true,
+    type: UsersDataDto,
+  })
+  users: UsersDataDto[];
+}
 
 export class RolesUpdateSuccessDto {
   @ApiProperty({
@@ -81,10 +115,32 @@ export class RolesUpdateSuccessDto {
     example: 200,
   })
   statusCode: number;
-
   @ApiProperty({
     isArray: true,
-    type: RolesDataDto,
+    type: UsersInRoleDataDto,
   })
-  data: RolesDataDto[];
+  data: UsersInRoleDataDto;
+}
+export class RolesUsersDataDto {
+  @ApiProperty({
+    isArray: true,
+    type: UsersDataDto,
+  })
+  users: UsersDataDto[];
+}
+export class RolesInUserUpdateSuccessDto {
+  @ApiProperty({
+    example: 'Role updated successfully',
+  })
+  message: string;
+
+  @ApiProperty({
+    example: 200,
+  })
+  statusCode: number;
+
+  @ApiProperty({
+    type: RolesUsersDataDto,
+  })
+  data: RolesUsersDataDto;
 }
