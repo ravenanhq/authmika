@@ -36,9 +36,7 @@ import {
 import React, { useState, useEffect } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
-import { Container } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useForm } from "react-hook-form";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
@@ -108,8 +106,6 @@ const UserView = ({ params }: { params: IUserView }) => {
   const [existingCheckboxes, setExistingCheckboxes] = useState<
     ICreateListProps[]
   >([]);
-  const [confirmationOpen, setConfirmationOpen] = useState(false);
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [openModal, setOpenModal] = React.useState(false);
   const [isVisible, setIsVisible] = useState<ICreatePasswordProps>({
     showPassword: false,
@@ -117,10 +113,6 @@ const UserView = ({ params }: { params: IUserView }) => {
   });
   const [confirmPassword, setConfirmPassword] = useState("");
   const [password, setPassword] = useState<string>("");
-  const [confirmationApplicationId, setConfirmationApplicationId] =
-    useState<number>();
-  const [confirmationApplicationName, setConfirmationApplicationName] =
-    useState("");
   const [error, setError] = useState<{
     type: AlertColor;
     message: string;
@@ -136,46 +128,6 @@ const UserView = ({ params }: { params: IUserView }) => {
   const handleEditModalClose = () => {
     setEditModalOpen(false);
     setInvalidEmail("");
-  };
-
-  const editUser = async (id: any, updatedData: any) => {
-    try {
-      const response = await UserApi.update(id, updatedData);
-      setInvalidEmail("");
-      if (response) {
-        if (response && response.statusCode === 200) {
-          const updatedRows = response.data.map((row: any) => {
-            if (row.id === id) {
-              return { ...row, ...updatedData };
-            }
-            return row;
-          });
-          setUserData(updatedData);
-          setAlertShow(response.message);
-          handleEditModalClose();
-        }
-      }
-    } catch (error: any) {
-      var response = error.response.data;
-      if (response.statusCode == 422 && response.message.email) {
-        setInvalidEmail(response.message.email);
-      } else if (response.statusCode == 422) {
-        setInvalidEmail(response.message);
-      }
-
-      console.log(error);
-    }
-  };
-
-  const handleEditSave = async (editedData: UserData) => {
-    if ("id" in editedData) {
-      const updatedData = { ...editedData };
-      try {
-        await editUser(updatedData.id, updatedData);
-      } catch (error) {
-        console.error("Error editing user:", error);
-      }
-    }
   };
 
   const handleEdit = () => {
@@ -486,7 +438,7 @@ const UserView = ({ params }: { params: IUserView }) => {
 
   return (
     <div>
-       {alertShow && (
+      {alertShow && (
         <Alert
           severity="success"
           onClose={() => {
@@ -509,7 +461,7 @@ const UserView = ({ params }: { params: IUserView }) => {
           {error.message}
         </Alert>
       )}
-           {saveAlert && (
+      {saveAlert && (
         <Alert
           severity={saveAlert.severity}
           onClose={() => {
@@ -521,7 +473,7 @@ const UserView = ({ params }: { params: IUserView }) => {
       )}
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-                 <Box sx={{ p: 2 }}>
+          <Box sx={{ p: 2 }}>
             <Typography
               variant="h5"
               component="h2"
@@ -729,8 +681,9 @@ const UserView = ({ params }: { params: IUserView }) => {
                           open={editModalOpen}
                           onClose={handleEditModalClose}
                           rowData={userData}
-                          onEdit={handleEditSave}
+                          onEdit={handleEdit}
                           uniqueEmail={invalidEmail}
+                          params={params}
                         />
                         <IconButton
                           aria-label="edit"
@@ -1048,7 +1001,7 @@ const UserView = ({ params }: { params: IUserView }) => {
           </Box>
         </Grid>
       </Grid>
-      </div>
+    </div>
   );
 };
 
