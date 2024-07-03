@@ -89,28 +89,30 @@ const RoleView = ({ params }: { params: IRoleView }) => {
         setName(savedName);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {  
+  useEffect(() => {
     if (id) {
       fetchUsers(id);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
 
   const fetchUsers = async (id: number) => {
     setLoading(true);
     try {
       const response = await RolesApi.getUsers(id);
-  
-      if (response && response.data && response.data.users) {
-        const sortedUsers = response.data.users.sort((a: RowData, b: RowData) => {
 
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
-       
+      if (response && response.data && response.data.users) {
+        const sortedUsers = response.data.users.sort(
+          (a: RowData, b: RowData) => {
+            return (
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+          }
+        );
+
         setRows(sortedUsers);
       }
     } catch (error) {
@@ -119,7 +121,7 @@ const RoleView = ({ params }: { params: IRoleView }) => {
       setLoading(false);
     }
   };
-  
+
   const handleEditClick = () => {
     setIsEditing(true);
   };
@@ -146,11 +148,12 @@ const RoleView = ({ params }: { params: IRoleView }) => {
       }
     } catch (error: any) {
       var response = error.response.data;
-       if (response.statusCode == 409) {
+      if (response.statusCode == 409) {
         setSaveAlert({
           severity: "error",
           message: response.message,
-        });      }
+        });
+      }
 
       console.error(error);
     }
@@ -177,8 +180,8 @@ const RoleView = ({ params }: { params: IRoleView }) => {
       parsedRoleData.name = filteredValue;
       const data = JSON.stringify(parsedRoleData);
       localStorage.setItem("role-data", data);
-     }
-};
+    }
+  };
   const handleAddUserClick = () => {
     setAddUserModalOpen(true);
   };
@@ -206,7 +209,10 @@ const RoleView = ({ params }: { params: IRoleView }) => {
           const currentUsers = [...rows];
           currentUsers.unshift(newUserDataWithId);
           const sortedUsers = currentUsers.sort((a, b) => {
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            return (
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+            );
           });
           setRows(sortedUsers);
           handleCloseAddUserModal();
@@ -248,7 +254,6 @@ const RoleView = ({ params }: { params: IRoleView }) => {
   };
 
   const handleDeleteConfirm = async (selectedRow: any) => {
-
     if (selectedRow !== null) {
       try {
         const currentRows = [...rows];
@@ -313,7 +318,7 @@ const RoleView = ({ params }: { params: IRoleView }) => {
       flex: 0.5,
       minWidth: 100,
       renderCell: (params) => <>{userStatus[params.value]}</>,
-    }, 
+    },
     {
       field: "created_at",
       headerName: "Created At",
@@ -382,11 +387,11 @@ const RoleView = ({ params }: { params: IRoleView }) => {
 
   return (
     <Container maxWidth="xl">
-            <Backdrop
+      <Backdrop
         sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={loading}
       >
-        <CircularProgress sx={{color:"#265073"}} />
+        <CircularProgress sx={{ color: "#265073" }} />
       </Backdrop>
 
       <Card
@@ -400,90 +405,98 @@ const RoleView = ({ params }: { params: IRoleView }) => {
           gridWidth: "500px",
         }}
       >
-             {saveAlert && (
-                <Alert
-                  severity={saveAlert.severity}
-                  onClose={() => {
-                    setSaveAlert(null);
-                  }}
-                >
-                  {saveAlert.message}
-                </Alert>
-              )}
+        {saveAlert && (
+          <Alert
+            severity={saveAlert.severity}
+            onClose={() => {
+              setSaveAlert(null);
+            }}
+          >
+            {saveAlert.message}
+          </Alert>
+        )}
         <Snackbar autoHideDuration={12000} />
         <CardContent style={{ padding: "0" }}>
-        <Box>
-          <Table>
-            <TableBody>
-              <TableRow>
-                <TableCell sx={{ fontSize: 30, border: "none",padding:"0" }}>
-                  {isEditing ? (
-                    <TextField
-                      value={name}
-                      onChange={handleNameChange}
-                      variant="outlined"
-                      size="small"
-                    />
-                  ) : (
-                    <strong>{name}</strong>
-                  )}
-                  <IconButton
-                    onClick={isEditing ? handleSaveClick : handleEditClick}
-                    sx={{
-                      backgroundColor: "#1C658C",
-                      color: "#fff",
-                      ":hover": {
-                        color: "#fff",
-                        backgroundColor: "#1C658C",
-                      },
-                      marginLeft: "10px",
-                    }}
+          <Box>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell
+                    sx={{ fontSize: 30, border: "none", padding: "0" }}
                   >
                     {isEditing ? (
-                      <SaveIcon
-                        sx={{
-                          color: "white",
-                          width: "0.75em",
-                          height: "0.75em",
-                        }}
+                      <TextField
+                        value={name}
+                        onChange={handleNameChange}
+                        variant="outlined"
+                        size="small"
                       />
                     ) : (
-                      <EditNoteIcon
-                        sx={{
-                          color: "white",
-                          width: "0.75em",
-                          height: "0.75em",
-                        }}
-                      />
+                      <strong>{name}</strong>
                     )}
-                  </IconButton>
-
-                  {isEditing && (
-                    <IconButton
-                      onClick={handleCancelClick}
-                      sx={{
-                        backgroundColor: "#FF9843",
-                        color: "#fff",
-                        ":hover": {
-                          color: "#fff",
-                          backgroundColor: "#FE7A36",
-                        },
-                        marginLeft: "5px",
-                      }}
-                    >
-                      <CloseIcon
+                    {!(
+                      name == "ADMIN" ||
+                      name == "MANAGER" ||
+                      name == "STAFF"
+                    ) && (
+                      <IconButton
+                        onClick={isEditing ? handleSaveClick : handleEditClick}
                         sx={{
-                          color: "white",
-                          width: "0.75em",
-                          height: "0.75em",
+                          backgroundColor: "#1C658C",
+                          color: "#fff",
+                          ":hover": {
+                            color: "#fff",
+                            backgroundColor: "#1C658C",
+                          },
+                          marginLeft: "10px",
                         }}
-                      />
-                    </IconButton>
-                  )}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+                      >
+                        {isEditing ? (
+                          <SaveIcon
+                            sx={{
+                              color: "white",
+                              width: "0.75em",
+                              height: "0.75em",
+                            }}
+                          />
+                        ) : (
+                          <EditNoteIcon
+                            sx={{
+                              color: "white",
+                              width: "0.75em",
+                              height: "0.75em",
+                            }}
+                          />
+                        )}
+                      </IconButton>
+                    )}
+
+                    {isEditing && (
+                      <IconButton
+                        onClick={handleCancelClick}
+                        sx={{
+                          backgroundColor: "#FF9843",
+                          color: "#fff",
+                          ":hover": {
+                            color: "#fff",
+                            backgroundColor: "#FE7A36",
+                          },
+                          marginLeft: "5px",
+                        }}
+                      >
+                        <CloseIcon
+                          sx={{
+                            color: "white",
+                            width: "0.75em",
+                            height: "0.75em",
+                          }}
+                        />
+                      </IconButton>
+                    )}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
           </Box>
           <Grid
             container
