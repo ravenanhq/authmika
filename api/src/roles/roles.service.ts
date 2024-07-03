@@ -184,7 +184,20 @@ export class RolesService {
           id: id,
         },
       });
+
       if (role) {
+        if (
+          role.name == 'ADMIN' ||
+          role.name == 'MANAGER' ||
+          role.name == 'STAFF'
+        ) {
+          return {
+            message: 'The role cannot be deleted.',
+            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+            data: [],
+          };
+        }
+
         const userRole = await this.userModel.findOne({
           where: {
             role: role.name,
