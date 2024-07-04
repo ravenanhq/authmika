@@ -5,12 +5,14 @@ import { UserApi } from "@/services/api/UserApi";
 import {
   Alert,
   AlertColor,
+  Autocomplete,
   Box,
   Button,
   Card,
   CardContent,
   Checkbox,
   CircularProgress,
+  Container,
   Dialog,
   DialogActions,
   DialogContent,
@@ -22,12 +24,14 @@ import {
   IconButton,
   InputAdornment,
   Paper,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Tabs,
   TextField,
   Typography,
   styled,
@@ -43,13 +47,16 @@ import HowToRegIcon from "@mui/icons-material/HowToReg";
 import LocalPostOfficeIcon from "@mui/icons-material/LocalPostOffice";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import DeActivateModal from "@/components/User/DeActivateModal";
-import EditUserModal from "@/components/User/EditUserModal";
 import EditNoteIcon from "@mui/icons-material/EditNote";
-
+import PropTypes from "prop-types";
+import { RowData } from "@/components/User/UserList";
+import { RolesApi } from "@/services/api/RolesApi";
+import { SxProps, Theme } from "@mui/material";
 interface IUserView {
   id?: number;
   username?: string;
   email?: string;
+  rowData: RowData | null;
 }
 interface ICreateListProps {
   name: string;
@@ -83,18 +90,86 @@ interface UserData {
 interface ICreatePasswordProps {
   password?: string | undefined;
   confirmPassword?: string | undefined;
+  firstName?: string | undefined;
+  lastName?: string;
+  email?: string;
+  mobile?: string;
+  role?: string;
   showPassword: boolean;
   showConfirmPassword: boolean;
   id?: number;
+}
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+  sx?: SxProps<Theme>;
 }
 interface AlertState {
   severity: "success" | "info" | "warning" | "error";
   message: string;
 }
 
-const UserView = ({ params }: { params: IUserView }) => {
+interface Role {
+  name: string;
+}
+
+interface Errors {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  mobile?: string;
+  role?: string;
+}
+
+const InitialRowData = {
+  id: 0,
+  firstName: "",
+  lastName: "",
+  email: "",
+  mobile: "",
+  role: "",
+  created_at: "",
+  status: 0,
+};
+
+const CustomTab = styled(Tab)(({ theme }) => ({
+  textTransform: "none",
+}));
+
+function CustomTabPanel(props: TabPanelProps) {
+  const { children, value, index, sx, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3, ...sx }}>{children}</Box>}
+    </div>
+  );
+}
+
+CustomTabPanel.propTypes = {
+  children: PropTypes.node,
+  index: PropTypes.number.isRequired,
+  value: PropTypes.number.isRequired,
+  sx: PropTypes.object,
+};
+
+function LabelProps(index: number) {
+  return {
+    id: `simple-tab-${index}`,
+    "aria-controls": `simple-tabpanel-${index}`,
+  };
+}
+
+const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
   const [applications, setApplications] = React.useState<Application[]>([]);
-  const [open, setOpen] = React.useState(false);
   const [options, setOptions] = useState<ICreateListProps[]>([]);
   const [selectedCheckboxes, setSelectedCheckboxes] = useState<
     ICreateListProps[]
@@ -103,37 +178,45 @@ const UserView = ({ params }: { params: IUserView }) => {
   const [id, setId] = useState<number | undefined>(params.id);
   const theme = useTheme();
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [existingCheckboxes, setExistingCheckboxes] = useState<
-    ICreateListProps[]
-  >([]);
   const [openModal, setOpenModal] = React.useState(false);
   const [isVisible, setIsVisible] = useState<ICreatePasswordProps>({
     showPassword: false,
     showConfirmPassword: false,
   });
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<{
     type: AlertColor;
     message: string;
   } | null>(null);
   const [deactivateModalOpen, setDeactivateModalOpen] =
     useState<boolean>(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [invalidEmail, setInvalidEmail] = useState("");
   const [alertShow, setAlertShow] = useState("");
   const [loading, setLoading] = useState(true);
   const [saveAlert, setSaveAlert] = useState<AlertState | null>(null);
+  const [saveModalAlert, setSaveModalAlert] = useState<AlertState | null>(null);
+  const [openIcon, setOpenIcon] = React.useState(false);
+  const handleOpenIcon = () => setOpenIcon(true);
+  const [tabValue, setTabValue] = React.useState(0);
+  const [formErrors, setFormErrors] = useState<Errors>({});
+  const [editedData, setEditedData] = useState<RowData>(InitialRowData);
+  const [roles, setRoles] = useState<{ name: string; label: string }[]>([]);
+  const emailError = invalidEmail || !!formErrors.email;
+  const helperText = [invalidEmail, formErrors.email].filter(Boolean).join(" ");
 
-  const handleEditModalClose = () => {
-    setEditModalOpen(false);
-    setInvalidEmail("");
-  };
+  useEffect(() => {
+    if (openIcon) {
+      setFormErrors({});
+      setTabValue(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openIcon]);
 
-  const handleEdit = () => {
-    setInvalidEmail("");
-    setEditModalOpen(true);
-  };
+  useEffect(() => {
+    if (userData) {
+      setEditedData(userData);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userData]);
 
   const setErrorMsg = (type: AlertColor, message: string) => {
     setError({ type, message });
@@ -153,6 +236,7 @@ const UserView = ({ params }: { params: IUserView }) => {
   } = useForm<ICreatePasswordProps>();
 
   useEffect(() => {
+    getRoles();
     getApplication();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -166,15 +250,6 @@ const UserView = ({ params }: { params: IUserView }) => {
   useEffect(() => {
     if (applications.length > 0) {
       setSelectedCheckboxes(
-        applications.map((app) => ({
-          application: app,
-          name: app.name,
-          id: app.id,
-          isChecked: true,
-        }))
-      );
-
-      setExistingCheckboxes(
         applications.map((app) => ({
           application: app,
           name: app.name,
@@ -228,6 +303,18 @@ const UserView = ({ params }: { params: IUserView }) => {
     }
   };
 
+  const getRoles = async () => {
+    try {
+      const response = await RolesApi.getAllRoleApi();
+      if (response) {
+        const roleData = response;
+        setRoles(roleData);
+      }
+    } catch (error: any) {
+      console.log(error);
+    }
+  };
+
   const getApplication = async () => {
     try {
       const res = await UserApi.getApplication();
@@ -238,8 +325,11 @@ const UserView = ({ params }: { params: IUserView }) => {
     }
   };
 
-  const handleClose = () => {
-    setOpen(false);
+  const handleCloseIcon = () => {
+    setOpenIcon(false);
+    setInvalidEmail("");
+    setSaveModalAlert(null);
+    setAlertShow("");
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -257,13 +347,16 @@ const UserView = ({ params }: { params: IUserView }) => {
       })
     : [];
 
-  const handleSubmitModal = async (selectedCheckboxes: ICreateListProps[]) => {
-    await onSubmitModal(selectedCheckboxes);
-    setOpen(false);
+  const handleSubmitModal = async (
+    selectedCheckboxes: ICreateListProps[],
+    isModal: boolean
+  ) => {
+    await onSubmitModal(selectedCheckboxes, isModal);
   };
 
   const onSubmitModal = async (
-    formData: ICreateListProps | ICreateListProps[]
+    formData: ICreateListProps | ICreateListProps[],
+    isModal: boolean
   ) => {
     const formDataArray = Array.isArray(formData) ? formData : [formData];
     const applicationIds: string[] = formDataArray.map((formDataItem) => {
@@ -272,12 +365,19 @@ const UserView = ({ params }: { params: IUserView }) => {
     try {
       const res = await UserApi.userApplicationMapping(id!, applicationIds);
       if (res.statusCode === 200 && res.message) {
-        setSaveAlert({
-          severity: "success",
-          message: res.message,
-        });
+        if (isModal) {
+          setSaveModalAlert({
+            severity: "success",
+            message: res.message,
+          });
+        } else {
+          setSaveAlert({
+            severity: "success",
+            message: res.message,
+          });
+        }
       }
-      getApplicationsByUserId(id);
+      await getApplicationsByUserId(id);
     } catch (error) {
       console.error("Error submitting data:", error);
     }
@@ -353,6 +453,7 @@ const UserView = ({ params }: { params: IUserView }) => {
     setValue("confirmPassword", "");
     clearErrors("password");
     clearErrors("confirmPassword");
+    setAlertShow("");
   };
 
   const onSubmit = async () => {
@@ -380,8 +481,6 @@ const UserView = ({ params }: { params: IUserView }) => {
       } catch (error) {
         console.error("Error submitting data:", error);
       }
-      setPassword("");
-      setConfirmPassword("");
     } else {
       console.error("Error: userData is null");
     }
@@ -401,6 +500,88 @@ const UserView = ({ params }: { params: IUserView }) => {
 
   const deactivateModalClose = () => {
     setDeactivateModalOpen(false);
+  };
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
+  const handleChange = (
+    event: React.ChangeEvent<{}>,
+    newValue: Role | null
+  ) => {
+    setEditedData((prevData: any) => ({
+      ...prevData,
+      role: newValue ? newValue.name : "",
+    }));
+  };
+
+  const validateForm = () => {
+    let newErrors: Errors = {};
+
+    if (!editedData.firstName?.trim()) {
+      newErrors.firstName = "First name is required";
+    }
+
+    if (!editedData.lastName?.trim()) {
+      newErrors.lastName = "Last name is required";
+    }
+
+    if (!editedData.email?.trim()) {
+      newErrors.email = "Email is required";
+    }
+
+    if (!editedData.mobile?.trim()) {
+      newErrors.mobile = "Mobile is required";
+    }
+
+    if (!editedData.role?.trim()) {
+      newErrors.role = "Role is required";
+    }
+
+    setFormErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const editUser = async (id: any, updatedData: any) => {
+    if (validateForm()) {
+      try {
+        const response = await UserApi.update(id, updatedData);
+        setInvalidEmail("");
+        if (response) {
+          if (response && response.statusCode === 200) {
+            const updatedRows = response.data.map((row: any) => {
+              if (row.id === id) {
+                return { ...row, ...updatedData };
+              }
+              return row;
+            });
+            setUserData(updatedData);
+            setAlertShow(response.message);
+          }
+        }
+      } catch (error: any) {
+        var response = error.response.data;
+        if (response.statusCode == 422 && response.message.email) {
+          setInvalidEmail(response.message.email);
+        } else if (response.statusCode == 422) {
+          setInvalidEmail(response.message);
+        }
+        console.log(error);
+      }
+    }
+  };
+
+  const handleEditSave = async (editedData: UserData) => {
+    if ("id" in editedData) {
+      const updatedData = { ...editedData };
+      try {
+        await editUser(updatedData.id, updatedData);
+      } catch (error) {
+        console.error("Error editing user:", error);
+      }
+    }
   };
 
   const PrimaryButton = styled(Button)(() => ({
@@ -437,17 +618,7 @@ const UserView = ({ params }: { params: IUserView }) => {
   };
 
   return (
-    <div>
-      {alertShow && (
-        <Alert
-          severity="success"
-          onClose={() => {
-            setAlertShow("");
-          }}
-        >
-          {alertShow}
-        </Alert>
-      )}
+    <Container maxWidth="xl">
       {error && (
         <Alert
           sx={{
@@ -512,7 +683,7 @@ const UserView = ({ params }: { params: IUserView }) => {
             >
               Deactivate User
             </PrimaryButton>
-            <Dialog open={openModal} onClose={handleClose}>
+            <Dialog open={openModal} onClose={handleCloseModal}>
               <DialogTitle
                 sx={{
                   backgroundColor: "#265073",
@@ -677,20 +848,392 @@ const UserView = ({ params }: { params: IUserView }) => {
                     <TableRow>
                       <TableCell></TableCell>
                       <TableCell align="right" sx={{ paddingTop: 0 }}>
-                        <EditUserModal
-                          open={editModalOpen}
-                          onClose={handleEditModalClose}
-                          rowData={userData}
-                          onEdit={handleEdit}
-                          uniqueEmail={invalidEmail}
-                          params={params}
-                        />
-                        <IconButton
-                          aria-label="edit"
-                          onClick={() => handleEdit()}
-                        >
+                        <IconButton aria-label="edit" onClick={handleOpenIcon}>
                           <EditNoteIcon sx={{ color: "#1C658C" }} />
                         </IconButton>
+                        <Dialog open={openIcon} onClose={handleCloseIcon}>
+                          <DialogTitle
+                            sx={{
+                              backgroundColor: "#265073",
+                              color: "#fff",
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            Update User
+                            <IconButton
+                              onClick={handleCloseIcon}
+                              sx={{
+                                backgroundColor: "#FF9843",
+                                color: "#fff",
+                                ":hover": {
+                                  color: "#fff",
+                                  backgroundColor: "#FE7A36",
+                                },
+                              }}
+                            >
+                              <CloseIcon />
+                            </IconButton>
+                          </DialogTitle>
+                          <Divider color="#265073"></Divider>
+                          <DialogContent>
+                            <Box sx={{ width: "100%" }}>
+                              <Box
+                                sx={{ borderBottom: 1, borderColor: "divider" }}
+                              >
+                                {alertShow && (
+                                  <Alert
+                                    severity="success"
+                                    onClose={() => {
+                                      setAlertShow("");
+                                    }}
+                                  >
+                                    {alertShow}
+                                  </Alert>
+                                )}
+                                {saveModalAlert && (
+                                  <Alert
+                                    severity={saveModalAlert.severity}
+                                    onClose={() => {
+                                      setSaveModalAlert(null);
+                                    }}
+                                  >
+                                    {saveModalAlert.message}
+                                  </Alert>
+                                )}
+                                <Tabs
+                                  value={tabValue}
+                                  onChange={handleTabChange}
+                                  aria-label="basic tabs example"
+                                  style={{ height: "32px" }}
+                                >
+                                  <CustomTab
+                                    label="Primary Details"
+                                    {...LabelProps(0)}
+                                  />
+                                  <CustomTab
+                                    label="Assignment"
+                                    {...LabelProps(1)}
+                                  />
+                                </Tabs>
+                              </Box>
+                              <CustomTabPanel
+                                value={tabValue}
+                                index={0}
+                                sx={{ width: "500px", height: "450px" }}
+                              >
+                                <TextField
+                                  label="First name"
+                                  name="firstName"
+                                  value={editedData.firstName || ""}
+                                  onChange={(e) =>
+                                    setEditedData({
+                                      ...editedData,
+                                      firstName: e.target.value,
+                                    })
+                                  }
+                                  required
+                                  fullWidth
+                                  margin="normal"
+                                  size="small"
+                                  error={!!formErrors.firstName}
+                                  helperText={formErrors.firstName}
+                                  sx={{ marginBottom: 1.5 }}
+                                />
+
+                                <TextField
+                                  label="Last name"
+                                  name="lastName"
+                                  required
+                                  value={editedData.lastName || ""}
+                                  onChange={(e) =>
+                                    setEditedData({
+                                      ...editedData,
+                                      lastName: e.target.value,
+                                    })
+                                  }
+                                  fullWidth
+                                  margin="normal"
+                                  size="small"
+                                  error={!!formErrors.lastName}
+                                  helperText={formErrors.lastName}
+                                  sx={{ marginBottom: 1.5 }}
+                                />
+
+                                <TextField
+                                  label="Email"
+                                  name="email"
+                                  required
+                                  value={editedData.email || ""}
+                                  onChange={(e) =>
+                                    setEditedData({
+                                      ...editedData,
+                                      email: e.target.value,
+                                    })
+                                  }
+                                  fullWidth
+                                  margin="normal"
+                                  size="small"
+                                  error={!!emailError}
+                                  helperText={helperText || null}
+                                  sx={{ marginBottom: 1.5 }}
+                                />
+
+                                <TextField
+                                  label="Mobile"
+                                  name="mobile"
+                                  required
+                                  value={editedData.mobile || ""}
+                                  onChange={(e) =>
+                                    setEditedData({
+                                      ...editedData,
+                                      mobile: e.target.value,
+                                    })
+                                  }
+                                  fullWidth
+                                  margin="normal"
+                                  size="small"
+                                  error={!!formErrors.mobile}
+                                  helperText={formErrors.mobile}
+                                  sx={{ marginBottom: 1.5 }}
+                                />
+                                <Autocomplete
+                                  value={
+                                    roles.find(
+                                      (role) => role.name === editedData.role
+                                    ) || null
+                                  }
+                                  onChange={handleChange}
+                                  options={roles}
+                                  getOptionLabel={(option) => option.name}
+                                  renderInput={(params) => (
+                                    <TextField
+                                      {...params}
+                                      label="Role"
+                                      error={!!formErrors.role}
+                                      size="small"
+                                      helperText={formErrors.role}
+                                      sx={{ marginTop: 2, marginBottom: 3.5 }}
+                                    />
+                                  )}
+                                />
+                                <Box display="flex" justifyContent="flex-end">
+                                  <PrimaryButton
+                                    startIcon={<SaveIcon />}
+                                    onClick={() => handleEditSave(editedData)}
+                                  >
+                                    Update
+                                  </PrimaryButton>
+                                </Box>
+                              </CustomTabPanel>
+                              <CustomTabPanel
+                                value={tabValue}
+                                index={1}
+                                sx={{ width: "500px", height: "450px" }}
+                              >
+                                <Box>
+                                  <Card
+                                    sx={{
+                                      width: "100%",
+                                      height: "80%",
+                                      margin: "auto",
+                                      position: "sticky",
+                                      [theme.breakpoints.down("md")]: {
+                                        width: "100%",
+                                      },
+                                      "@media (width: 1366px) and (height: 1024px),(width: 1280px) and (height: 853px),(width: 1280px) and (height: 800px),(width: 1368px) and (height: 912px)":
+                                        {
+                                          height: "370px",
+                                          marginTop: "70px",
+                                          marginBottom: "40px",
+                                        },
+                                    }}
+                                  >
+                                    <Table
+                                      stickyHeader
+                                      style={{ maxWidth: "100%" }}
+                                    >
+                                      <TableHead>
+                                        <TableRow>
+                                          <TableCell colSpan={2}>
+                                            <Box
+                                              display="flex"
+                                              width="100%"
+                                              margin="auto"
+                                              marginLeft="0"
+                                              paddingTop="0px"
+                                              marginTop="0px"
+                                              position="sticky"
+                                              sx={{
+                                                [theme.breakpoints.down("md")]:
+                                                  {
+                                                    width: "100%",
+                                                  },
+                                              }}
+                                            >
+                                              <TextField
+                                                InputProps={{
+                                                  startAdornment: (
+                                                    <SearchIcon
+                                                      sx={{
+                                                        color: "grey",
+                                                      }}
+                                                    />
+                                                  ),
+                                                }}
+                                                placeholder="Search applications"
+                                                variant="outlined"
+                                                value={searchTerm}
+                                                onChange={handleSearchChange}
+                                                size="small"
+                                                sx={{
+                                                  width: {
+                                                    xs: "200%",
+                                                    sm: "75%",
+                                                    md: "20%",
+                                                    lg: "390px",
+                                                  },
+                                                  height: "40px",
+                                                  "& .MuiInputBase-root": {
+                                                    height: "100%",
+                                                    outline: "none",
+                                                    textDecoration: "none",
+                                                  },
+                                                }}
+                                              />
+                                            </Box>
+                                          </TableCell>
+                                        </TableRow>
+                                      </TableHead>
+                                      <TableBody>
+                                        {loading && (
+                                          <TableRow>
+                                            <TableCell
+                                              colSpan={2}
+                                              style={{
+                                                textAlign: "center",
+                                                paddingTop: "5%",
+                                                border: "none",
+                                              }}
+                                            >
+                                              <CircularProgress />
+                                            </TableCell>
+                                          </TableRow>
+                                        )}
+                                        {!loading && (
+                                          <TableRow sx={{ marginTop: "0px" }}>
+                                            <TableCell colSpan={2}>
+                                              <TableContainer
+                                                component={Paper}
+                                                sx={{
+                                                  width: "100%",
+                                                  height: "260px",
+                                                  marginTop: "2px",
+                                                  marginBottom: "0px",
+                                                  overflowY: "auto",
+                                                  border: "none",
+                                                  boxShadow: "none",
+                                                }}
+                                              >
+                                                <FormGroup>
+                                                  {options
+                                                    .filter((option) =>
+                                                      option.name
+                                                        .toLowerCase()
+                                                        .includes(
+                                                          searchTerm.toLowerCase()
+                                                        )
+                                                    )
+                                                    .map((option) => (
+                                                      <FormControlLabel
+                                                        key={option.id}
+                                                        control={
+                                                          <Checkbox
+                                                            checked={selectedCheckboxes.some(
+                                                              (checkbox) =>
+                                                                checkbox.id ===
+                                                                option.id
+                                                            )}
+                                                            onChange={() =>
+                                                              handleCheckboxChange(
+                                                                option.id
+                                                              )
+                                                            }
+                                                            style={{
+                                                              color: "#265073",
+                                                              marginBottom:
+                                                                "0px",
+                                                              marginTop: "0px",
+                                                            }}
+                                                          />
+                                                        }
+                                                        label={
+                                                          <span
+                                                            style={{
+                                                              maxWidth: "300px",
+                                                              overflow:
+                                                                "hidden",
+                                                              display:
+                                                                "inline-block",
+                                                              whiteSpace:
+                                                                "unset",
+                                                              textOverflow:
+                                                                "ellipsis",
+                                                              wordBreak:
+                                                                "break-all",
+                                                              marginTop: "0px",
+                                                              marginBottom:
+                                                                "0px",
+                                                              paddingTop: "3px",
+                                                              paddingBottom:
+                                                                "0px",
+                                                            }}
+                                                          >
+                                                            {option.name}
+                                                          </span>
+                                                        }
+                                                      />
+                                                    ))}
+                                                  {options.filter((option) =>
+                                                    option.name
+                                                      .toLowerCase()
+                                                      .includes(
+                                                        searchTerm.toLowerCase()
+                                                      )
+                                                  ).length === 0 && (
+                                                    <Typography>
+                                                      No applications available
+                                                    </Typography>
+                                                  )}
+                                                </FormGroup>
+                                              </TableContainer>
+                                            </TableCell>
+                                          </TableRow>
+                                        )}
+                                      </TableBody>
+                                    </Table>
+                                  </Card>
+                                  <Box display="flex" justifyContent="flex-end">
+                                    <PrimaryButton
+                                      startIcon={<SaveIcon />}
+                                      type="submit"
+                                      onClick={() =>
+                                        handleSubmitModal(
+                                          selectedCheckboxes,
+                                          true
+                                        )
+                                      }
+                                      sx={{ marginTop: 3 }}
+                                    >
+                                      Save
+                                    </PrimaryButton>
+                                  </Box>
+                                </Box>
+                              </CustomTabPanel>
+                            </Box>
+                          </DialogContent>
+                        </Dialog>
                       </TableCell>
                     </TableRow>
                     <TableRow>
@@ -982,7 +1525,7 @@ const UserView = ({ params }: { params: IUserView }) => {
                 <PrimaryButton
                   startIcon={<SaveIcon />}
                   type="submit"
-                  onClick={() => handleSubmitModal(selectedCheckboxes)}
+                  onClick={() => handleSubmitModal(selectedCheckboxes, false)}
                 >
                   Save
                 </PrimaryButton>
@@ -1001,7 +1544,7 @@ const UserView = ({ params }: { params: IUserView }) => {
           </Box>
         </Grid>
       </Grid>
-    </div>
+    </Container>
   );
 };
 
