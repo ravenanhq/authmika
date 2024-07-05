@@ -30,6 +30,9 @@ export class UsersDto {
   @IsNotEmpty({ message: 'role cannot be blank' })
   role: string;
 
+  @IsNotEmpty({ message: 'group cannot be blank' })
+  groupId: number;
+
   currentPassword: string;
 
   confirmPassword: string;
@@ -65,6 +68,8 @@ export class AddUsersDto {
   @IsNotEmpty({ message: 'email cannot be blank' })
   email: string;
 
+  password: string;
+
   @ApiProperty({
     type: 'number',
     example: 9092454545,
@@ -78,6 +83,13 @@ export class AddUsersDto {
   })
   @IsNotEmpty({ message: 'role cannot be blank' })
   role: string;
+
+  @ApiProperty({
+    type: 'number',
+    example: 1,
+  })
+  @IsNotEmpty({ message: 'groupId cannot be blank' })
+  groupId: string;
 }
 
 export class AddUserSuccessDto {

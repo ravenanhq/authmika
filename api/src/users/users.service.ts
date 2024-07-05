@@ -173,9 +173,10 @@ export class UsersService {
   }
 
   async create(userDto: AddUsersDto): Promise<AddUserSuccessDto> {
-    const password = randomBytes(10).toString('hex');
+    let password: string;
+    let status: string;
+    const { firstName, lastName, email, mobile, role, groupId } = userDto;
 
-    const { firstName, lastName, email, mobile, role } = userDto;
     try {
       const existingUser = await this.userModel.findOne({
         where: { email: email },
@@ -183,6 +184,14 @@ export class UsersService {
       if (existingUser) {
         throw new NotFoundException('Email already exists.');
       } else {
+        if (userDto.password) {
+          password = userDto.password;
+          status = '1';
+        } else {
+          password = randomBytes(10).toString('hex');
+          status = '2';
+        }
+
         const newUser = await this.userModel.create({
           firstName: firstName,
           lastName: lastName,
@@ -190,13 +199,14 @@ export class UsersService {
           password: await hash(password, 10),
           mobile: mobile,
           role: role,
-          status: 2,
+          groupId: groupId,
+          status: status,
           createdBy: null,
         });
 
         if (!newUser) {
           throw new InternalServerErrorException('User creation failed');
-        } else {
+        } else if (!userDto.password) {
           const token = randomBytes(32).toString('hex');
           const currentDate = new Date();
           const expires = new Date(
@@ -540,8 +550,8 @@ export class UsersService {
     user: { id: any },
     id: number,
   ): Promise<UpdateUserSuccessDto> {
-    console.log(userDto);
-    const { firstName, lastName, email, password, mobile, role } = userDto;
+    const { firstName, lastName, email, password, mobile, role, groupId } =
+      userDto;
     try {
       const existingUser = await this.userModel.findOne({
         where: { id: id },
@@ -562,6 +572,7 @@ export class UsersService {
         existingUser.mobile = mobile;
         existingUser.password = password;
         existingUser.role = role;
+        existingUser.groupId = groupId;
         existingUser.updatedBy = user ? user.id : null;
         await existingUser.save();
 
