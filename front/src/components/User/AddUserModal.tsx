@@ -9,11 +9,12 @@ import {
   Divider,
   styled,
   IconButton,
+  Autocomplete,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
-import { MenuItem } from "@mui/material";
 import { RolesApi } from "@/services/api/RolesApi";
+import { GroupsApi } from "@/services/api/GroupsApi";
 
 interface Errors {
   firstName?: string;
@@ -21,6 +22,8 @@ interface Errors {
   email?: string;
   mobile?: string;
   role?: string;
+  group?: string;
+  password?: string;
 }
 
 interface AddUserModalProps {
@@ -40,12 +43,18 @@ export default function AddUserModal({
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState<{ label: string; name: string } | null>(
+    null
+  );
   const [roles, setRoles] = useState<{ name: string; label: string }[]>([]);
+  const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
   const [errors, setErrors] = useState<Errors>({});
+  const [group, setGroup] = useState<{ id: string; name: string } | null>(null);
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     getRoles();
+    getGroups();
   }, []);
 
   useEffect(() => {
@@ -63,7 +72,9 @@ export default function AddUserModal({
     setLastName("");
     setEmail("");
     setMobile("");
-    setRole("");
+    setRole(null);
+    setGroup(null);
+    setPassword("");
     setErrors({});
   };
 
@@ -86,8 +97,12 @@ export default function AddUserModal({
       newErrors.mobile = "Mobile is required";
     }
 
-    if (!role.trim()) {
+    if (!role) {
       newErrors.role = "Role is required";
+    }
+
+    if (!group) {
+      newErrors.group = "Group is required";
     }
 
     setErrors(newErrors);
@@ -98,11 +113,13 @@ export default function AddUserModal({
   const handleAddUser = async () => {
     if (validateForm()) {
       const newUser = {
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        mobile: mobile,
-        role: role,
+        firstName,
+        lastName,
+        email,
+        mobile,
+        password,
+        role: role?.name,
+        groupId: group?.id,
       };
       onAddUser(newUser);
     }
@@ -112,10 +129,20 @@ export default function AddUserModal({
     try {
       const response = await RolesApi.getAllRoleApi();
       if (response) {
-        const roleData = response;
-        setRoles(roleData);
+        setRoles(response);
       }
-    } catch (error: any) {
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getGroups = async () => {
+    try {
+      const response = await GroupsApi.getAllGroupsApi();
+      if (response) {
+        setGroups(response);
+      }
+    } catch (error) {
       console.log(error);
     }
   };
@@ -123,6 +150,20 @@ export default function AddUserModal({
   const handleClose = () => {
     clearForm();
     onClose();
+  };
+
+  const handleGroupChange = (
+    event: React.ChangeEvent<{}>,
+    newValue: { id: string; name: string } | null
+  ) => {
+    setGroup(newValue);
+  };
+
+  const handleRoleChange = (
+    event: React.ChangeEvent<{}>,
+    newValue: { label: string; name: string } | null
+  ) => {
+    setRole(newValue);
   };
 
   const PrimaryButton = styled(Button)(() => ({
@@ -181,7 +222,6 @@ export default function AddUserModal({
         <TextField
           label="First name"
           fullWidth
-          margin="normal"
           required
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
@@ -192,60 +232,80 @@ export default function AddUserModal({
         <TextField
           label="Last name"
           fullWidth
-          margin="normal"
           required
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           error={!!errors.lastName}
           helperText={errors.lastName}
           size="small"
+          sx={{ marginTop: 2 }}
         />
         <TextField
           label="Email"
           fullWidth
-          margin="normal"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           error={!!errors.email}
-          helperText={errors.email ? errors.email : " "}
+          helperText={errors.email}
           size="small"
-          sx={{ marginBottom: 1 }}
+          sx={{ marginTop: 2 }}
+        />
+        <TextField
+          label="Password"
+          fullWidth
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={!!errors.password}
+          helperText={errors.password}
+          size="small"
+          sx={{ marginTop: 2 }}
         />
         <TextField
           label="Mobile"
           fullWidth
-          margin="normal"
           required
           value={mobile}
           onChange={(e) => setMobile(e.target.value)}
           error={!!errors.mobile}
           helperText={errors.mobile}
           size="small"
-          sx={{ marginTop: 0 }}
-        />
-        <TextField
-          label="Role"
-          size="small"
-          required
-          fullWidth
-          value={role}
-          select
-          onChange={(e) => setRole(e.target.value)}
-          error={!!errors.role}
-          helperText={errors.role}
           sx={{ marginTop: 2 }}
-        >
-          {roles.map((option) => (
-            <MenuItem
-              key={option.name}
-              value={option.name}
-              style={{ paddingLeft: "16px" }}
-            >
-              {option.name}
-            </MenuItem>
-          ))}
-        </TextField>
+        />
+        <Autocomplete
+          value={role}
+          onChange={handleRoleChange}
+          options={roles}
+          getOptionLabel={(option) => option.name}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Role"
+              required
+              error={!!errors.role}
+              size="small"
+              helperText={errors.role}
+              sx={{ marginTop: 2 }}
+            />
+          )}
+        />
+        <Autocomplete
+          value={group}
+          onChange={handleGroupChange}
+          options={groups}
+          getOptionLabel={(option) => option.name}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Group"
+              required
+              error={!!errors.group}
+              size="small"
+              helperText={errors.group}
+              sx={{ marginTop: 2 }}
+            />
+          )}
+        />
       </DialogContent>
       <Divider
         color="#265073"

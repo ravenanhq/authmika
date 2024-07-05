@@ -40,6 +40,9 @@ export class Users extends Model {
   @Column({ field: 'role', type: DataType.STRING })
   role: string;
 
+  @Column({ field: 'group_id', type: DataType.INTEGER })
+  groupId: number;
+
   @Column({ defaultValue: false })
   isTwoFactorEnabled: boolean;
 

@@ -25,6 +25,8 @@ import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
 
 export interface RowData {
+  groupId: string;
+  group: string;
   created_at: string | number | Date;
   firstName: string;
   lastName: string;
@@ -219,7 +221,7 @@ const UserList = () => {
       const response = await UserServiceApi.create(newUser);
       setInvalidEmail("");
       if (response) {
-         if (response.statusCode == 201) {
+        if (response.statusCode == 201) {
           setRows(response.data);
           const newUserId = Math.floor(Math.random() * 1000);
           const newUserData = {
@@ -309,118 +311,118 @@ const UserList = () => {
   }));
 
   return (
-      <Card
-        sx={{
-          boxShadow: "none",
-          marginTop: "5%",
-          "& .user-header": {
-            backgroundColor: "#265073",
-            color: "#fff",
-          },
-          gridWidth: "500px",
-        }}
-      >
-        <Snackbar autoHideDuration={12000} />
-        <CardContent style={{ padding: "0" }}>
-          <Typography variant="h4">Users</Typography>
-          <Divider
-            color="#265073"
-            sx={{ marginTop: "5px", marginBottom: "3%" }}
-          ></Divider>
-          {loading && (
-            <div style={{ textAlign: "center", marginTop: "5%" }}>
-              <CircularProgress />
-            </div>
-          )}
-          {!loading && (
-            <>
-              <Stack sx={{ width: "100%", paddingBottom: "20px" }} spacing={4}>
-                {alertShow && (
-                  <Alert
-                    severity="success"
-                    onClose={() => {
-                      setAlertShow("");
-                    }}
-                  >
-                    {alertShow}
-                  </Alert>
-                )}
-                {deleteAlert && (
-                  <Alert
-                    severity={deleteAlert.severity}
-                    onClose={() => {
-                      setDeleteAlert(null);
-                    }}
-                  >
-                    {deleteAlert.message}
-                  </Alert>
-                )}
-              </Stack>
-              <Grid
-                container
-                justifyContent="flex-end"
-                alignItems="center"
-                style={{ marginBottom: "5px" }}
-              >
-                <Grid item>
-                  <PrimaryButton
-                    startIcon={<AddIcon />}
-                    onClick={handleAddUserClick}
-                  >
-                    Add New User
-                  </PrimaryButton>
-                </Grid>
+    <Card
+      sx={{
+        boxShadow: "none",
+        marginTop: "5%",
+        "& .user-header": {
+          backgroundColor: "#265073",
+          color: "#fff",
+        },
+        gridWidth: "500px",
+      }}
+    >
+      <Snackbar autoHideDuration={12000} />
+      <CardContent style={{ padding: "0" }}>
+        <Typography variant="h4">Users</Typography>
+        <Divider
+          color="#265073"
+          sx={{ marginTop: "5px", marginBottom: "3%" }}
+        ></Divider>
+        {loading && (
+          <div style={{ textAlign: "center", marginTop: "5%" }}>
+            <CircularProgress />
+          </div>
+        )}
+        {!loading && (
+          <>
+            <Stack sx={{ width: "100%", paddingBottom: "20px" }} spacing={4}>
+              {alertShow && (
+                <Alert
+                  severity="success"
+                  onClose={() => {
+                    setAlertShow("");
+                  }}
+                >
+                  {alertShow}
+                </Alert>
+              )}
+              {deleteAlert && (
+                <Alert
+                  severity={deleteAlert.severity}
+                  onClose={() => {
+                    setDeleteAlert(null);
+                  }}
+                >
+                  {deleteAlert.message}
+                </Alert>
+              )}
+            </Stack>
+            <Grid
+              container
+              justifyContent="flex-end"
+              alignItems="center"
+              style={{ marginBottom: "5px" }}
+            >
+              <Grid item>
+                <PrimaryButton
+                  startIcon={<AddIcon />}
+                  onClick={handleAddUserClick}
+                >
+                  Add New User
+                </PrimaryButton>
               </Grid>
-              <StyledDataGrid
-                rows={rows}
-                columns={columns.filter(
-                  (column) => column.field !== "created_at"
-                )}
-                getRowId={(row) => row.id}
-                autoHeight
-                initialState={{
-                  pagination: {
-                    paginationModel: { page: 0, pageSize: 5 },
-                  },
-                }}
-                slots={{
-                  noResultsOverlay: () => {
-                    return (
-                      <Typography
-                        variant="body1"
-                        align="center"
-                        sx={{ marginTop: 10, justifyContent: "center" }}
-                      >
-                        No results found.
-                      </Typography>
-                    );
-                  },
-                }}
-                pageSizeOptions={[5, 10, 15, 20]}
-                style={{
-                  backgroundColor: "white",
-                  marginTop: "2%",
-                  width: "100%",
-                }}
-              />
-            </>
-          )}
-        </CardContent>
+            </Grid>
+            <StyledDataGrid
+              rows={rows}
+              columns={columns.filter(
+                (column) => column.field !== "created_at"
+              )}
+              getRowId={(row) => row.id}
+              autoHeight
+              initialState={{
+                pagination: {
+                  paginationModel: { page: 0, pageSize: 5 },
+                },
+              }}
+              slots={{
+                noResultsOverlay: () => {
+                  return (
+                    <Typography
+                      variant="body1"
+                      align="center"
+                      sx={{ marginTop: 10, justifyContent: "center" }}
+                    >
+                      No results found.
+                    </Typography>
+                  );
+                },
+              }}
+              pageSizeOptions={[5, 10, 15, 20]}
+              style={{
+                backgroundColor: "white",
+                marginTop: "2%",
+                width: "100%",
+              }}
+            />
+          </>
+        )}
+      </CardContent>
 
-        <DeleteModal
-          open={deleteModalOpen}
-          onClose={handleDeleteModalClose}
-          onDeleteConfirm={() => handleDeleteConfirm(selectedRow)}
-          rowData={selectedRow}
-        />
+      <DeleteModal
+        open={deleteModalOpen}
+        onClose={handleDeleteModalClose}
+        onDeleteConfirm={() => handleDeleteConfirm(selectedRow)}
+        rowData={selectedRow}
+      />
 
-        <AddUserModal
-          open={isAddUserModalOpen}
-          onClose={handleCloseAddUserModal}
-          onAddUser={handleAddUser}
-          uniqueEmail={invalidEmail}
-        />
-      </Card>
+      <AddUserModal
+        open={isAddUserModalOpen}
+        onClose={handleCloseAddUserModal}
+        onAddUser={handleAddUser}
+        uniqueEmail={invalidEmail}
+      />
+    </Card>
   );
 };
 

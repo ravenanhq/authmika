@@ -52,6 +52,7 @@ import PropTypes from "prop-types";
 import { RowData } from "@/components/User/UserList";
 import { RolesApi } from "@/services/api/RolesApi";
 import { SxProps, Theme } from "@mui/material";
+import { GroupsApi } from "@/services/api/GroupsApi";
 interface IUserView {
   id?: number;
   username?: string;
@@ -83,6 +84,8 @@ interface UserData {
   lastName: string;
   email: string;
   role: string;
+  group: string;
+  groupId: string;
   status: number;
   mobile: string;
   id: number;
@@ -113,6 +116,12 @@ interface AlertState {
 
 interface Role {
   name: string;
+  id: string;
+}
+
+interface Group {
+  name: string;
+  id: string;
 }
 
 interface Errors {
@@ -121,6 +130,7 @@ interface Errors {
   email?: string;
   mobile?: string;
   role?: string;
+  group?: string;
 }
 
 const InitialRowData = {
@@ -130,6 +140,8 @@ const InitialRowData = {
   email: "",
   mobile: "",
   role: "",
+  group: "",
+  groupId: "",
   created_at: "",
   status: 0,
 };
@@ -199,7 +211,8 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
   const [tabValue, setTabValue] = React.useState(0);
   const [formErrors, setFormErrors] = useState<Errors>({});
   const [editedData, setEditedData] = useState<RowData>(InitialRowData);
-  const [roles, setRoles] = useState<{ name: string; label: string }[]>([]);
+  const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
+  const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
   const emailError = invalidEmail || !!formErrors.email;
   const helperText = [invalidEmail, formErrors.email].filter(Boolean).join(" ");
 
@@ -237,6 +250,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
 
   useEffect(() => {
     getRoles();
+    getGroups();
     getApplication();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -315,6 +329,18 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
     }
   };
 
+  const getGroups = async () => {
+    try {
+      const response = await GroupsApi.getAllGroupsApi();
+      if (response) {
+        const groupData = response;
+        setGroups(groupData);
+      }
+    } catch (error: any) {
+      console.log(error);
+    }
+  };
+
   const getApplication = async () => {
     try {
       const res = await UserApi.getApplication();
@@ -351,17 +377,13 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
     selectedCheckboxes: ICreateListProps[],
     isModal: boolean
   ) => {
-    await onSubmitModal(selectedCheckboxes, isModal);
-  };
-
-  const onSubmitModal = async (
-    formData: ICreateListProps | ICreateListProps[],
-    isModal: boolean
-  ) => {
-    const formDataArray = Array.isArray(formData) ? formData : [formData];
+    const formDataArray = Array.isArray(selectedCheckboxes)
+      ? selectedCheckboxes
+      : [selectedCheckboxes];
     const applicationIds: string[] = formDataArray.map((formDataItem) => {
       return formDataItem.id.toString();
     });
+
     try {
       const res = await UserApi.userApplicationMapping(id!, applicationIds);
       if (res.statusCode === 200 && res.message) {
@@ -508,12 +530,20 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
 
   const handleChange = (
     event: React.ChangeEvent<{}>,
-    newValue: Role | null
+    newValue: Group | null,
+    field: "role" | "group"
   ) => {
-    setEditedData((prevData: any) => ({
-      ...prevData,
-      role: newValue ? newValue.name : "",
-    }));
+    if (field === "role") {
+      setEditedData((prevData) => ({
+        ...prevData,
+        role: newValue ? newValue.name : "",
+      }));
+    } else if (field === "group" && newValue) {
+      setEditedData((prevData) => ({
+        ...prevData,
+        groupId: newValue.id,
+      }));
+    }
   };
 
   const validateForm = () => {
@@ -939,7 +969,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                                   size="small"
                                   error={!!formErrors.firstName}
                                   helperText={formErrors.firstName}
-                                  sx={{ marginBottom: 1.5 }}
+                                  sx={{ marginTop: 0, marginBottom: 1 }}
                                 />
 
                                 <TextField
@@ -958,7 +988,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                                   size="small"
                                   error={!!formErrors.lastName}
                                   helperText={formErrors.lastName}
-                                  sx={{ marginBottom: 1.5 }}
+                                  sx={{ marginBottom: 1 }}
                                 />
 
                                 <TextField
@@ -977,7 +1007,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                                   size="small"
                                   error={!!emailError}
                                   helperText={helperText || null}
-                                  sx={{ marginBottom: 1.5 }}
+                                  sx={{ marginBottom: 1 }}
                                 />
 
                                 <TextField
@@ -996,7 +1026,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                                   size="small"
                                   error={!!formErrors.mobile}
                                   helperText={formErrors.mobile}
-                                  sx={{ marginBottom: 1.5 }}
+                                  sx={{ marginBottom: 1 }}
                                 />
                                 <Autocomplete
                                   value={
@@ -1004,7 +1034,13 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                                       (role) => role.name === editedData.role
                                     ) || null
                                   }
-                                  onChange={handleChange}
+                                  onChange={(event, newValue) =>
+                                    handleChange(
+                                      event,
+                                      newValue as Role | null,
+                                      "role"
+                                    )
+                                  }
                                   options={roles}
                                   getOptionLabel={(option) => option.name}
                                   renderInput={(params) => (
@@ -1014,10 +1050,33 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                                       error={!!formErrors.role}
                                       size="small"
                                       helperText={formErrors.role}
-                                      sx={{ marginTop: 2, marginBottom: 3.5 }}
+                                      sx={{ marginTop: 2, marginBottom: 3 }}
                                     />
                                   )}
                                 />
+                                <Autocomplete
+                                  value={
+                                    groups.find(
+                                      (group) => group.id === editedData.groupId
+                                    ) || null
+                                  }
+                                  onChange={(event, newValue) =>
+                                    handleChange(event, newValue, "group")
+                                  }
+                                  options={groups}
+                                  getOptionLabel={(option) => option.name}
+                                  renderInput={(params) => (
+                                    <TextField
+                                      {...params}
+                                      label="Group"
+                                      error={!!formErrors.group}
+                                      size="small"
+                                      helperText={formErrors.group}
+                                      sx={{ marginBottom: 3.5 }}
+                                    />
+                                  )}
+                                />
+
                                 <Box display="flex" justifyContent="flex-end">
                                   <PrimaryButton
                                     startIcon={<SaveIcon />}
