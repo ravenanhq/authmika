@@ -9,15 +9,17 @@ import {
   Divider,
   styled,
   IconButton,
+  Autocomplete,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
-
+import { GroupsApi } from "@/services/api/GroupsApi";
 interface Errors {
   firstName?: string;
   lastName?: string;
   email?: string;
   mobile?: string;
+  group?: string;
 }
 
 interface AddUserModalProps {
@@ -38,6 +40,12 @@ export default function AddUserModal({
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
   const [errors, setErrors] = useState<Errors>({});
+  const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
+  const [group, setGroup] = useState<{ id: string; name: string } | null>(null);
+
+  useEffect(() => {
+    getGroups();
+  }, []);
 
   useEffect(() => {
     setErrors((prevErrors) => ({ ...prevErrors, email: uniqueEmail }));
@@ -54,6 +62,7 @@ export default function AddUserModal({
     setLastName("");
     setEmail("");
     setMobile("");
+    setGroup(null);
     setErrors({});
   };
 
@@ -76,6 +85,10 @@ export default function AddUserModal({
       newErrors.mobile = "Mobile is required";
     }
 
+    if (!group) {
+      newErrors.group = "Group is required";
+    }
+
     setErrors(newErrors);
 
     return Object.keys(newErrors).length === 0;
@@ -88,6 +101,7 @@ export default function AddUserModal({
         lastName: lastName,
         email: email,
         mobile: mobile,
+        groupId: group?.id,
       };
       onAddUser(newUser);
     }
@@ -96,6 +110,24 @@ export default function AddUserModal({
   const handleClose = () => {
     clearForm();
     onClose();
+  };
+
+  const getGroups = async () => {
+    try {
+      const response = await GroupsApi.getAllGroupsApi();
+      if (response) {
+        setGroups(response);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleGroupChange = (
+    event: React.ChangeEvent<{}>,
+    newValue: { id: string; name: string } | null
+  ) => {
+    setGroup(newValue);
   };
 
   const PrimaryButton = styled(Button)(() => ({
@@ -196,6 +228,23 @@ export default function AddUserModal({
           helperText={errors.mobile}
           size="small"
           sx={{ marginTop: 0 }}
+        />
+        <Autocomplete
+          value={group}
+          onChange={handleGroupChange}
+          options={groups}
+          getOptionLabel={(option) => option.name}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Group"
+              required
+              error={!!errors.group}
+              size="small"
+              helperText={errors.group}
+              sx={{ marginTop: 2 }}
+            />
+          )}
         />
       </DialogContent>
       <Divider

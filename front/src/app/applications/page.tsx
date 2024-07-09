@@ -4,7 +4,7 @@ import ApplicationList from "@/components/Applications/ApplicationList";
 
 export default function Application() {
   return (
-    <Container maxWidth="xl">
+    <Container  maxWidth="xl">
       <ApplicationList />
     </Container>
   );

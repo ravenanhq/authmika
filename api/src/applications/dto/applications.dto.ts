@@ -122,6 +122,7 @@ export class ApplicationCreateDataDto {
     example: 'Example Application',
   })
   name: string;
+  @Matches(/^[^\s]+$/, { message: 'Spaces are not allowed in the application' })
   @ApiProperty({
     type: 'string',
     example: 'exampleapplication',
