@@ -1,7 +1,6 @@
 "use client";
 import {
   Alert,
-  Backdrop,
   Box,
   Button,
   Card,
@@ -27,22 +26,27 @@ import { RolesApi } from "@/services/api/RolesApi";
 import AddIcon from "@mui/icons-material/Add";
 import AddUserModal from "@/components/Roles/AddUserModal";
 import { UserServiceApi } from "@/services/api/UserServiceApi";
-import { SavedSearch, Visibility } from "@mui/icons-material";
+import { Visibility } from "@mui/icons-material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { UserApi } from "@/services/api/UserApi";
 import DeleteUserModal from "@/components/Roles/DeleteUserModal";
-
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 export interface RowData {
   name: string;
   id: number;
   firstName: string;
   lastName: string;
+  email: string;
+  mobile: string;
+  role: string;
+  groupId: number;
   created_at: string | number | Date;
   createdAt: string | number | Date;
 }
 
-interface RoleData {
+export interface RoleData {
+  id(id: any, updatedData: RoleData): unknown;
   name: string;
 }
 
@@ -77,6 +81,7 @@ const RoleView = ({ params }: { params: IRoleView }) => {
   const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
+  const [updatedData, setUpdatedData] = useState(data); // Store updated role data
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -131,8 +136,9 @@ const RoleView = ({ params }: { params: IRoleView }) => {
     if (data) {
       const updatedData: RoleData = { ...data, name };
       setData(updatedData);
+      setUpdatedData(updatedData);
       try {
-        await editGroup(id, updatedData);
+        await editGroup(data.id, updatedData);
         localStorage.setItem("roleName", name);
       } catch (error) {
         console.error("Error updating role:", error);
@@ -144,7 +150,13 @@ const RoleView = ({ params }: { params: IRoleView }) => {
     try {
       const response = await RolesApi.updateRoleApi(id, updatedData);
       if (response && response.statusCode === 200) {
-        setRows(response.data.users);
+        const sortedUsers = response.data.users.sort((a: any, b: any) => {
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        });
+
+        setRows(sortedUsers);
       }
     } catch (error: any) {
       var response = error.response.data;
@@ -153,6 +165,7 @@ const RoleView = ({ params }: { params: IRoleView }) => {
           severity: "error",
           message: response.message,
         });
+        setIsEditing(true);
       }
 
       console.error(error);
@@ -191,13 +204,15 @@ const RoleView = ({ params }: { params: IRoleView }) => {
   };
 
   const handleAddUser = async (newUser: RowData) => {
-    const newUserData = { ...newUser, role: roleData?.name };
+    const roleName = updatedData?.name || data?.name || name;
+    const newUserData = { ...newUser, role: roleName };
     setLoading(true);
     try {
       const response = await UserServiceApi.create(newUserData);
       setInvalidEmail("");
       if (response) {
         if (response.statusCode === 201) {
+          setRows(response.data);
           const newUserId = Math.floor(Math.random() * 1000);
           const newUserDataWithId = {
             ...newUserData,
@@ -353,6 +368,11 @@ const RoleView = ({ params }: { params: IRoleView }) => {
     },
   ];
 
+  const handleBackButtonClick = () => {
+    localStorage.clear();
+    window.location.href = "/roles";
+  };
+
   if (!roleData) {
     return null;
   }
@@ -385,15 +405,20 @@ const RoleView = ({ params }: { params: IRoleView }) => {
     marginTop: "5%",
   }));
 
+  const BackButton = styled(Button)(({ theme }) => ({
+    textTransform: "none",
+    paddingLeft: theme.spacing(1),
+    paddingRight: theme.spacing(2),
+    backgroundColor: "#FF9843",
+    color: "#fff",
+    ":hover": {
+      backgroundColor: "#FE7A36",
+    },
+    marginTop: theme.spacing(3),
+  }));
+
   return (
     <Container maxWidth="xl">
-      <Backdrop
-        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        open={loading}
-      >
-        <CircularProgress sx={{ color: "#265073" }} />
-      </Backdrop>
-
       <Card
         sx={{
           boxShadow: "none",
@@ -413,6 +438,26 @@ const RoleView = ({ params }: { params: IRoleView }) => {
             }}
           >
             {saveAlert.message}
+          </Alert>
+        )}
+        {deleteAlert && (
+          <Alert
+            severity={deleteAlert.severity}
+            onClose={() => {
+              setDeleteAlert(null);
+            }}
+          >
+            {deleteAlert.message}
+          </Alert>
+        )}
+        {alertShow && (
+          <Alert
+            severity="success"
+            onClose={() => {
+              setAlertShow("");
+            }}
+          >
+            {alertShow}
           </Alert>
         )}
         <Snackbar autoHideDuration={12000} />
@@ -498,52 +543,73 @@ const RoleView = ({ params }: { params: IRoleView }) => {
               </TableBody>
             </Table>
           </Box>
-          <Grid
-            container
-            justifyContent="flex-end"
-            alignItems="center"
-            style={{ marginBottom: "5px" }}
-          >
-            <Grid item>
-              <PrimaryButton
-                startIcon={<AddIcon />}
-                onClick={handleAddUserClick}
+          {loading && (
+            <div style={{ textAlign: "center", marginTop: "5%" }}>
+              <CircularProgress />
+            </div>
+          )}
+          {!loading && (
+            <>
+              <Grid
+                container
+                justifyContent="flex-end"
+                alignItems="center"
+                style={{ marginBottom: "5px" }}
               >
-                Add New User
-              </PrimaryButton>
-            </Grid>
-          </Grid>
-          <StyledDataGrid
-            rows={rows}
-            columns={columns.filter((column) => column.field !== "created_at")}
-            getRowId={(row) => row.id}
-            autoHeight
-            initialState={{
-              pagination: {
-                paginationModel: { page: 0, pageSize: 5 },
-              },
-            }}
-            slots={{
-              noResultsOverlay: () => {
-                return (
-                  <Typography
-                    variant="body1"
-                    align="center"
-                    sx={{ marginTop: 10, justifyContent: "center" }}
+                <Grid item>
+                  <PrimaryButton
+                    startIcon={<AddIcon />}
+                    onClick={handleAddUserClick}
                   >
-                    No results found.
-                  </Typography>
-                );
-              },
-            }}
-            pageSizeOptions={[5, 10, 15, 20]}
-            style={{
-              backgroundColor: "white",
-              marginTop: "2%",
-              width: "100%",
-            }}
-          />
+                    Add New User
+                  </PrimaryButton>
+                </Grid>
+              </Grid>
+              <StyledDataGrid
+                rows={rows}
+                columns={columns.filter(
+                  (column) => column.field !== "created_at"
+                )}
+                getRowId={(row) => row.id}
+                autoHeight
+                initialState={{
+                  pagination: {
+                    paginationModel: { page: 0, pageSize: 5 },
+                  },
+                }}
+                slots={{
+                  noResultsOverlay: () => {
+                    return (
+                      <Typography
+                        variant="body1"
+                        align="center"
+                        sx={{ marginTop: 10, justifyContent: "center" }}
+                      >
+                        No results found.
+                      </Typography>
+                    );
+                  },
+                }}
+                pageSizeOptions={[5, 10, 15, 20]}
+                style={{
+                  backgroundColor: "white",
+                  marginTop: "2%",
+                  width: "100%",
+                }}
+              />
 
+              <Box display="flex" justifyContent="flex-end">
+                <BackButton
+                  variant="contained"
+                  onClick={handleBackButtonClick}
+                  startIcon={<ArrowBackIcon />}
+                  sx={{ marginTop: 4 }}
+                >
+                  Back
+                </BackButton>
+              </Box>
+            </>
+          )}
           <DeleteUserModal
             open={deleteModalOpen}
             onClose={handleDeleteModalClose}
