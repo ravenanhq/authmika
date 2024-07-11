@@ -34,7 +34,13 @@ interface AlertState {
   message: string;
 }
 
-const GroupListPage = () => {
+// interface GroupListProps {
+// title: boolean;
+// isListPage: boolean;
+// applicationId: number;
+// isView: boolean;
+// }
+const GroupList = () => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [selectedRow, setSelectedRow] = useState(null);
@@ -59,9 +65,6 @@ const GroupListPage = () => {
     setAddGroupModalOpen(false);
   };
 
-  const handleAddGroup = (newGroup: RowData) => {
-    addGroup(newGroup);
-  };
   const handleDelete = (rowData: SetStateAction<null>) => {
     setSelectedRow(rowData);
     setDeleteGroupModalOpen(true);
@@ -122,7 +125,7 @@ const GroupListPage = () => {
     },
   ];
 
-  const addGroup = async (newGroup: RowData) => {
+  const handleAddGroup = async (newGroup: RowData) => {
     try {
       const response = await GroupsApi.addGroupApi(newGroup);
       setUniqueAlert("");
@@ -284,11 +287,13 @@ const GroupListPage = () => {
     >
       <Snackbar autoHideDuration={3000} message={message} />
       <CardContent style={{ padding: "0" }}>
-        <Typography variant="h4">Groups</Typography>
-        <Divider
-          color="#265073"
-          sx={{ marginTop: "5px", marginBottom: "3%" }}
-        ></Divider>
+        <>
+          <Typography variant="h4">Groups</Typography>
+          <Divider
+            color="#265073"
+            sx={{ marginTop: "5px", marginBottom: "3%" }}
+          ></Divider>
+        </>
         {loading && (
           <div style={{ textAlign: "center", marginTop: "5%" }}>
             <CircularProgress />
@@ -374,6 +379,9 @@ const GroupListPage = () => {
         onClose={handleCloseAddGroupModal}
         onAddGroup={handleAddGroup}
         uniqueNameValidation={uniqueAlert}
+        // isView={isView}
+        // applicationId={applicationId}
+        // isListPage={isListPage}
       />
 
       <EditGroupModal
@@ -393,4 +401,4 @@ const GroupListPage = () => {
     </Card>
   );
 };
-export default GroupListPage;
+export default GroupList;

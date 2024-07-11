@@ -22,6 +22,9 @@ interface AddGroupModalProps {
   onClose: () => void;
   onAddGroup: (name: any) => void;
   uniqueNameValidation: string;
+  // isView: boolean;
+  // isListPage: boolean;
+  // applicationId:number;
 }
 
 export default function AddGroupModal({
@@ -29,6 +32,9 @@ export default function AddGroupModal({
   onClose,
   onAddGroup,
   uniqueNameValidation,
+  // isView,
+  // applicationId,
+  // isListPage,
 }: AddGroupModalProps) {
   const [name, setName] = useState("");
   const [errors, setErrors] = useState<Errors>({});

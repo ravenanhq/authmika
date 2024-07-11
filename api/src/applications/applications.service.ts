@@ -440,14 +440,12 @@ export class ApplicationsService {
       where: { userId: userIds },
       attributes: ['groupId'],
     });
-
     const uniqueGroupIds = Array.from(
       new Set(groupIds.map((item) => item.groupId)),
     );
 
     const groups = await this.groupModel.findAll({
       where: { id: uniqueGroupIds },
-      attributes: ['id', 'name'],
     });
 
     return { users, groups };
