@@ -21,8 +21,13 @@ interface ResendOtpParams {
   url: string;
 }
 export class UserApi {
-  static async getUsers() {
-    const res = await axios.get(`${config.service}/users`);
+  static async getUsers(isListPage: boolean, applicationId: number) {
+    const params = {
+      isListPage: isListPage,
+      applicationId: applicationId,
+    };
+
+    const res = await axios.get(`${config.service}/users`, { params });
     return res.data;
   }
 
@@ -151,6 +156,7 @@ export class UserApi {
     );
     return res.data;
   }
+
   static async getApplicationByKey(data: any) {
     const res = await axios.post(
       `${config.service}/application/get-application`,
@@ -248,18 +254,12 @@ export class UserApi {
     return res.data;
   }
 
-  static async userGroupMapping(
-    groupId: number,
-    userId: Array<string>
-  ) {
+  static async userGroupMapping(groupId: number, userId: Array<string>) {
     try {
-      const res: any = await axios.post(
-        `${config.service}/group-users`,
-        {
-          groupId: groupId,
-          userId: userId,
-        }
-      );
+      const res: any = await axios.post(`${config.service}/group-users`, {
+        groupId: groupId,
+        userId: userId,
+      });
       return res.data;
     } catch (error: any) {
       return error.response.data;

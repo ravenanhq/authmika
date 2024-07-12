@@ -90,6 +90,7 @@ export class AddUsersDto {
   })
   @IsNotEmpty({ message: 'groupId cannot be blank' })
   groupId: string;
+  id: number;
 }
 
 export class AddUserSuccessDto {

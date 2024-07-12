@@ -127,12 +127,32 @@ export class UsersService {
     });
   }
 
-  async getUsers(): Promise<Users[]> {
+  async getUsers(isListPage: boolean, applicationId?: number): Promise<any[]> {
     try {
-      const users = await this.userModel.findAll({
-        where: { status: { [Op.not]: [0] } },
-      });
-      return users;
+      if (isListPage === true || applicationId === 0 || applicationId == null) {
+        const users = await this.userModel.findAll({
+          where: { status: { [Op.not]: [0] } },
+        });
+        return users;
+      } else {
+        const userApplications = await this.userApplictionsModel.findAll({
+          where: { applicationId: applicationId },
+        });
+
+        if (!userApplications || userApplications.length === 0) {
+          throw new NotFoundException('No users found for this application');
+        }
+
+        const userIds = userApplications.map(
+          (userApplication) => userApplication.userId,
+        );
+
+        const users = await this.userModel.findAll({
+          where: { id: userIds, status: { [Op.not]: [0] } },
+        });
+
+        return users;
+      }
     } catch (error) {
       throw new HttpException(
         'Error getting users',
@@ -172,11 +192,16 @@ export class UsersService {
     }
   }
 
-  async create(userDto: AddUsersDto): Promise<AddUserSuccessDto> {
+  async create(
+    userDto: AddUsersDto,
+    isView: boolean,
+    applicationId?: number,
+  ): Promise<AddUserSuccessDto> {
     let password: string;
     let status: string;
+    let id: number;
     const { firstName, lastName, email, mobile, role, groupId } = userDto;
-
+    let newUser;
     try {
       const existingUser = await this.userModel.findOne({
         where: { email: email },
@@ -192,8 +217,9 @@ export class UsersService {
           status = '2';
         }
 
-        const newUser = await this.userModel.create({
+        newUser = await this.userModel.create({
           firstName: firstName,
+          id: id,
           lastName: lastName,
           email: email,
           password: await hash(password, 10),
@@ -236,34 +262,74 @@ export class UsersService {
           );
         }
       }
-      const users = await this.userModel.findAll({
-        where: { status: 1 },
-      });
-      return {
-        message: 'User created successfully',
-        statusCode: HttpStatus.CREATED,
-        data: users,
-      };
+      if (isView === true || applicationId === 0 || applicationId == null) {
+        const users = await this.userModel.findAll({
+          where: { status: 1 },
+        });
+        return {
+          message: 'User created successfully',
+          statusCode: HttpStatus.CREATED,
+          data: users,
+        };
+      } else {
+        await this.userApplictionsModel.create({
+          userId: newUser.id,
+          applicationId: applicationId,
+        });
+        const userApplications = await this.userApplictionsModel.findAll({
+          where: { applicationId: applicationId },
+        });
+
+        if (!userApplications || userApplications.length === 0) {
+          throw new NotFoundException('No users found for this application');
+        }
+
+        const userIds = userApplications.map(
+          (userApplication) => userApplication.userId,
+        );
+
+        const users = await this.userModel.findAll({
+          where: {
+            id: userIds,
+            status: { [Op.not]: [0] },
+          },
+        });
+        return {
+          message: 'Users created successfully',
+          statusCode: HttpStatus.OK,
+          data: users,
+        };
+      }
     } catch (error) {
       if (error instanceof HttpException) {
-        throw new HttpException(
-          {
-            message: error.message,
-            statusCode: HttpStatus.CONFLICT,
-            data: null,
-          },
-          HttpStatus.CONFLICT,
-        );
+        throw error;
       } else {
         throw new HttpException(
-          {
-            message: error.message,
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            data: null,
-          },
+          'Error creating or updating user',
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
+    }
+  }
+  catch(error) {
+    if (error instanceof HttpException) {
+      throw new HttpException(
+        {
+          message: error.message,
+          statusCode: HttpStatus.CONFLICT,
+          data: null,
+        },
+        HttpStatus.CONFLICT,
+      );
+    } else {
+      throw new HttpException(
+        {
+          message: error.message,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          data: null,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 

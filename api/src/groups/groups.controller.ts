@@ -58,6 +58,7 @@ export class GroupsController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
   async getGroups() {
+    // @Query('applicationId') applicationId: number, // @Query('isListPage') isListPage: boolean,
     try {
       const activeGroups = await this.groupService.getGroupList();
       return activeGroups;
@@ -101,6 +102,8 @@ export class GroupsController {
   async create(
     @Body() groupsDto: GroupsDto,
     @Request() req,
+    // @Query('isView') isView: boolean,
+    // @Query('applicationId') applicationId?: number,
   ): Promise<GroupCreateSuccessDto> {
     return this.groupService.create(groupsDto, req.user);
   }

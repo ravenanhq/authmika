@@ -23,7 +23,8 @@ export class UsersCommand {
   })
   async listUsers() {
     try {
-      const users = await this.userService.getUsers();
+      const isListPage = true;
+      const users = await this.userService.getUsers(isListPage);
 
       if (users.length > 0) {
         const userList = [];

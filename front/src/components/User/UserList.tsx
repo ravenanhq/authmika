@@ -19,10 +19,10 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteModal from "./DeleteUserModal";
 import AddUserModal from "./AddUserModal";
-import { UserApi } from "@/services/api/UserApi";
 import { UserServiceApi } from "@/services/api/UserServiceApi";
 import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
+import { UserApi } from "@/services/api/UserApi";
 
 export interface RowData {
   groupId: string;
@@ -48,7 +48,23 @@ const userStatus: { [key: number]: string } = {
   3: "Inactive",
 };
 
-const UserList = () => {
+interface UserListProps {
+  title: boolean;
+  isListPage: boolean;
+  applicationId: number;
+  isView: boolean;
+  role: boolean;
+  status: boolean;
+}
+
+const UserList: React.FC<UserListProps> = ({
+  title,
+  isListPage,
+  applicationId,
+  isView,
+  role,
+  status,
+}) => {
   const [alertShow, setAlertShow] = useState("");
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<RowData[]>([]);
@@ -60,7 +76,7 @@ const UserList = () => {
 
   useEffect(() => {
     restrictMenuAccess();
-    getUsers();
+    getUsers(isListPage, applicationId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -91,10 +107,6 @@ const UserList = () => {
     localStorage.setItem("user-data", data);
     const url = `/users/${rowData.id}`;
     window.location.href = url;
-  };
-
-  const handleAddUser = (newUser: RowData) => {
-    addUser(newUser);
   };
 
   const handleDelete = (rowData: RowData | null) => {
@@ -150,21 +162,6 @@ const UserList = () => {
       minWidth: 120,
     },
     {
-      field: "role",
-      headerName: "Role",
-      headerClassName: "user-header",
-      flex: 0.5,
-      minWidth: 100,
-    },
-    {
-      field: "status",
-      headerName: "Status",
-      headerClassName: "user-header",
-      flex: 0.5,
-      minWidth: 100,
-      renderCell: (params) => <>{userStatus[params.value]}</>,
-    },
-    {
       field: "created_at",
       headerName: "Created At",
       type: "date",
@@ -198,9 +195,29 @@ const UserList = () => {
     },
   ];
 
-  const getUsers = async () => {
+  if (role == true) {
+    columns.splice(4, 0, {
+      field: "role",
+      headerName: "Role",
+      headerClassName: "user-header",
+      flex: 0.5,
+      minWidth: 100,
+    });
+  }
+  if (status == true) {
+    columns.splice(4, 0, {
+      field: "status",
+      headerName: "Status",
+      headerClassName: "user-header",
+      flex: 0.5,
+      minWidth: 100,
+      renderCell: (params) => <>{userStatus[params.value]}</>,
+    });
+  }
+
+  const getUsers = async (isListPage: boolean, applicationId: number) => {
     try {
-      const response = await UserApi.getUsers();
+      const response = await UserApi.getUsers(isListPage, applicationId);
       if (response) {
         const sortedRows = response.sort((a: RowData, b: RowData) => {
           return (
@@ -216,12 +233,20 @@ const UserList = () => {
     }
   };
 
-  const addUser = async (newUser: RowData) => {
+  const handleAddUser = async (
+    newUser: RowData,
+    isView: boolean,
+    applicationId: number
+  ) => {
     try {
-      const response = await UserServiceApi.create(newUser);
+      const response = await UserServiceApi.create(
+        newUser,
+        isView,
+        applicationId
+      );
       setInvalidEmail("");
       if (response) {
-        if (response.statusCode == 201) {
+        if (response.statusCode == 201 || response.statusCode == 200) {
           setRows(response.data);
           const newUserId = Math.floor(Math.random() * 1000);
           const newUserData = {
@@ -314,7 +339,7 @@ const UserList = () => {
     <Card
       sx={{
         boxShadow: "none",
-        marginTop: "5%",
+        marginTop: title ? "5%" : "0",
         "& .user-header": {
           backgroundColor: "#265073",
           color: "#fff",
@@ -324,11 +349,16 @@ const UserList = () => {
     >
       <Snackbar autoHideDuration={12000} />
       <CardContent style={{ padding: "0" }}>
-        <Typography variant="h4">Users</Typography>
-        <Divider
-          color="#265073"
-          sx={{ marginTop: "5px", marginBottom: "3%" }}
-        ></Divider>
+        {title && (
+          <>
+            {" "}
+            <Typography variant="h4">Users</Typography>
+            <Divider
+              color="#265073"
+              sx={{ marginTop: "5px", marginBottom: "3%" }}
+            ></Divider>
+          </>
+        )}
         {loading && (
           <div style={{ textAlign: "center", marginTop: "5%" }}>
             <CircularProgress />
@@ -421,6 +451,9 @@ const UserList = () => {
         onClose={handleCloseAddUserModal}
         onAddUser={handleAddUser}
         uniqueEmail={invalidEmail}
+        isView={isView}
+        applicationId={applicationId}
+        isListPage={isListPage}
       />
     </Card>
   );

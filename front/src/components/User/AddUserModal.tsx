@@ -15,6 +15,7 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import { RolesApi } from "@/services/api/RolesApi";
 import { GroupsApi } from "@/services/api/GroupsApi";
+import { Island_Moments } from "next/font/google";
 
 interface Errors {
   firstName?: string;
@@ -29,7 +30,10 @@ interface Errors {
 interface AddUserModalProps {
   open: boolean;
   onClose: () => void;
-  onAddUser: (application: any) => void;
+  onAddUser: (application: any,  isView: boolean, applicationId:number ) => void;
+  isView: boolean;
+  isListPage: boolean;
+  applicationId:number;
   uniqueEmail: string;
 }
 
@@ -38,6 +42,9 @@ export default function AddUserModal({
   onClose,
   onAddUser,
   uniqueEmail,
+  isView,
+  applicationId,
+  isListPage,
 }: AddUserModalProps) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -54,7 +61,8 @@ export default function AddUserModal({
 
   useEffect(() => {
     getRoles();
-    getGroups();
+    getGroups(isListPage,applicationId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -121,7 +129,7 @@ export default function AddUserModal({
         role: role?.name,
         groupId: group?.id,
       };
-      onAddUser(newUser);
+      onAddUser(newUser,isView,applicationId);
     }
   };
 
@@ -136,9 +144,9 @@ export default function AddUserModal({
     }
   };
 
-  const getGroups = async () => {
+  const getGroups = async (isListPage:boolean,applicationId:number) => {
     try {
-      const response = await GroupsApi.getAllGroupsApi();
+      const response = await GroupsApi.getAllGroupsApi(isListPage,applicationId);
       if (response) {
         setGroups(response);
       }
