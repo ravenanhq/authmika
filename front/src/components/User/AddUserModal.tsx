@@ -15,7 +15,6 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import { RolesApi } from "@/services/api/RolesApi";
 import { GroupsApi } from "@/services/api/GroupsApi";
-import { Island_Moments } from "next/font/google";
 
 interface Errors {
   firstName?: string;
@@ -30,11 +29,26 @@ interface Errors {
 interface AddUserModalProps {
   open: boolean;
   onClose: () => void;
-  onAddUser: (application: any,  isView: boolean, applicationId:number ) => void;
-  isView: boolean;
+  onAddUser: (
+    application: any,
+    isView: boolean,
+    applicationId: number | undefined,
+    isGroup: boolean
+  ) => void;
+  isView: string | boolean;
   isListPage: boolean;
-  applicationId:number;
+  applicationId: number | undefined;
   uniqueEmail: string;
+  validatePassword: string;
+  showRole: boolean;
+  roleView: boolean;
+  roleName: string | undefined;
+  groupView: boolean;
+  showGroup: boolean;
+  groupName: string | undefined;
+  groupId: number | undefined;
+  isGroup: boolean;
+  validateMobile: string;
 }
 
 export default function AddUserModal({
@@ -44,7 +58,15 @@ export default function AddUserModal({
   uniqueEmail,
   isView,
   applicationId,
-  isListPage,
+  validatePassword,
+  showRole,
+  roleView,
+  roleName,
+  groupView,
+  showGroup,
+  groupId,
+  isGroup,
+  validateMobile,
 }: AddUserModalProps) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -58,11 +80,13 @@ export default function AddUserModal({
   const [errors, setErrors] = useState<Errors>({});
   const [group, setGroup] = useState<{ id: string; name: string } | null>(null);
   const [password, setPassword] = useState("");
+  const isViewBool =
+    typeof isView === "string" ? JSON.parse(isView.toLowerCase()) : isView;
 
   useEffect(() => {
     getRoles();
-    getGroups(isListPage,applicationId);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    getGroups();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -74,6 +98,14 @@ export default function AddUserModal({
       clearForm();
     }
   }, [open]);
+
+  useEffect(() => {
+    setErrors((prevErrors) => ({ ...prevErrors, password: validatePassword }));
+  }, [validatePassword]);
+
+  useEffect(() => {
+    setErrors((prevErrors) => ({ ...prevErrors, mobile: validateMobile }));
+  }, [validateMobile]);
 
   const clearForm = () => {
     setFirstName("");
@@ -105,11 +137,11 @@ export default function AddUserModal({
       newErrors.mobile = "Mobile is required";
     }
 
-    if (!role) {
+    if (showRole && !role && !roleView) {
       newErrors.role = "Role is required";
     }
 
-    if (!group) {
+    if (showGroup && !group && !groupView) {
       newErrors.group = "Group is required";
     }
 
@@ -126,10 +158,10 @@ export default function AddUserModal({
         email,
         mobile,
         password,
-        role: role?.name,
-        groupId: group?.id,
+        role: roleView ? roleName : role?.name,
+        groupId: groupView ? groupId : group?.id,
       };
-      onAddUser(newUser,isView,applicationId);
+      onAddUser(newUser, isViewBool, applicationId, isGroup);
     }
   };
 
@@ -144,9 +176,9 @@ export default function AddUserModal({
     }
   };
 
-  const getGroups = async (isListPage:boolean,applicationId:number) => {
+  const getGroups = async () => {
     try {
-      const response = await GroupsApi.getAllGroupsApi(isListPage,applicationId);
+      const response = await GroupsApi.getAllGroupsApi();
       if (response) {
         setGroups(response);
       }
@@ -161,7 +193,7 @@ export default function AddUserModal({
   };
 
   const handleGroupChange = (
-    event: React.ChangeEvent<{}>,
+    event: React.SyntheticEvent<Element, Event>,
     newValue: { id: string; name: string } | null
   ) => {
     setGroup(newValue);
@@ -262,6 +294,7 @@ export default function AddUserModal({
         <TextField
           label="Password"
           fullWidth
+          required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           error={!!errors.password}
@@ -280,40 +313,48 @@ export default function AddUserModal({
           size="small"
           sx={{ marginTop: 2 }}
         />
-        <Autocomplete
-          value={role}
-          onChange={handleRoleChange}
-          options={roles}
-          getOptionLabel={(option) => option.name}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Role"
-              required
-              error={!!errors.role}
-              size="small"
-              helperText={errors.role}
-              sx={{ marginTop: 2 }}
+        {showRole && (
+          <div>
+            <Autocomplete
+              value={role}
+              onChange={handleRoleChange}
+              options={roles}
+              getOptionLabel={(option) => option.name}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Role"
+                  required
+                  error={!!errors.role}
+                  size="small"
+                  helperText={errors.role}
+                  sx={{ marginTop: 2 }}
+                />
+              )}
             />
-          )}
-        />
-        <Autocomplete
-          value={group}
-          onChange={handleGroupChange}
-          options={groups}
-          getOptionLabel={(option) => option.name}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Group"
-              required
-              error={!!errors.group}
-              size="small"
-              helperText={errors.group}
-              sx={{ marginTop: 2 }}
+          </div>
+        )}
+        {showGroup && (
+          <div>
+            <Autocomplete
+              value={group}
+              onChange={handleGroupChange}
+              options={groups}
+              getOptionLabel={(option) => option.name}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Group"
+                  required
+                  error={!!errors.group}
+                  size="small"
+                  helperText={errors.group}
+                  sx={{ marginTop: 2 }}
+                />
+              )}
             />
-          )}
-        />
+          </div>
+        )}
       </DialogContent>
       <Divider
         color="#265073"

@@ -33,9 +33,12 @@ import { randomBytes } from 'crypto';
 import { PasswordResetTokens } from 'src/db/model/password-reset-tokens.model';
 import { MailService } from 'src/mail/mail.service';
 import { ResetPasswordDto } from 'src/auth/dto/reset-password.dto';
+import { Roles } from 'src/db/model/roles.model';
+import { GroupUsers } from 'src/db/model/group-users.model';
 
 @Injectable()
 export class UsersService {
+  groupUsers: any;
   constructor(
     @InjectModel(Users)
     private userModel: typeof Users,
@@ -43,6 +46,10 @@ export class UsersService {
     private userApplictionsModel: typeof UserApplications,
     @InjectModel(Applications)
     private readonly applictionsModel: typeof Applications,
+    @InjectModel(Roles)
+    private rolesModel: typeof Roles,
+    @InjectModel(GroupUsers)
+    private groupUsersModel: typeof GroupUsers,
     @InjectModel(PasswordResetTokens)
     private passwordResetTokensModel: typeof PasswordResetTokens,
     private readonly mailservice: MailService,
@@ -127,14 +134,21 @@ export class UsersService {
     });
   }
 
-  async getUsers(isListPage: boolean, applicationId?: number): Promise<any[]> {
+  async getUsers(
+    isListPage: boolean,
+    applicationId?: number,
+    roleId?: number,
+    id?: number,
+    groupId?: number,
+  ): Promise<any[]> {
     try {
-      if (isListPage === true || applicationId === 0 || applicationId == null) {
-        const users = await this.userModel.findAll({
+      let users;
+      if (String(isListPage) == 'true') {
+        users = await this.userModel.findAll({
           where: { status: { [Op.not]: [0] } },
         });
         return users;
-      } else {
+      } else if (applicationId) {
         const userApplications = await this.userApplictionsModel.findAll({
           where: { applicationId: applicationId },
         });
@@ -147,7 +161,37 @@ export class UsersService {
           (userApplication) => userApplication.userId,
         );
 
-        const users = await this.userModel.findAll({
+        users = await this.userModel.findAll({
+          where: { id: userIds, status: { [Op.not]: [0] } },
+        });
+
+        return users;
+      } else if (roleId) {
+        const existingRole = await this.rolesModel.findOne({
+          where: { id },
+        });
+
+        if (!existingRole) {
+          throw new HttpException('Role not found.', HttpStatus.NOT_FOUND);
+        }
+
+        users = await this.userModel.findAll({
+          where: { role: existingRole.name, status: { [Op.not]: [0] } },
+        });
+
+        return users;
+      } else if (groupId) {
+        const userGroups = await this.groupUsersModel.findAll({
+          where: { groupId: groupId },
+        });
+
+        if (!userGroups || userGroups.length === 0) {
+          throw new NotFoundException('No users found for this group');
+        }
+
+        const userIds = userGroups.map((userGroup) => userGroup.userId);
+
+        users = await this.userModel.findAll({
           where: { id: userIds, status: { [Op.not]: [0] } },
         });
 
@@ -194,75 +238,86 @@ export class UsersService {
 
   async create(
     userDto: AddUsersDto,
-    isView: boolean,
+    isView: string | boolean,
     applicationId?: number,
+    isGroup?: boolean,
   ): Promise<AddUserSuccessDto> {
+    const isViewBool =
+      typeof isView === 'string' ? JSON.parse(isView.toLowerCase()) : isView;
+
     let password: string;
     let status: string;
     let id: number;
     const { firstName, lastName, email, mobile, role, groupId } = userDto;
     let newUser;
+
     try {
       const existingUser = await this.userModel.findOne({
         where: { email: email },
       });
+
       if (existingUser) {
         throw new NotFoundException('Email already exists.');
-      } else {
-        if (userDto.password) {
-          password = userDto.password;
-          status = '1';
-        } else {
-          password = randomBytes(10).toString('hex');
-          status = '2';
-        }
+      }
 
-        newUser = await this.userModel.create({
-          firstName: firstName,
-          id: id,
-          lastName: lastName,
-          email: email,
-          password: await hash(password, 10),
-          mobile: mobile,
-          role: role,
-          groupId: groupId,
-          status: status,
-          createdBy: null,
+      if (userDto.password) {
+        password = userDto.password;
+        status = '1';
+      } else {
+        password = randomBytes(10).toString('hex');
+        status = '2';
+      }
+
+      newUser = await this.userModel.create({
+        firstName: firstName,
+        id: id,
+        lastName: lastName,
+        email: email,
+        password: await hash(password, 10),
+        mobile: mobile,
+        role: role,
+        groupId: groupId,
+        status: status,
+        createdBy: null,
+      });
+
+      if (!newUser) {
+        throw new InternalServerErrorException('User creation failed');
+      }
+
+      if (!userDto.password) {
+        const token = randomBytes(32).toString('hex');
+        const currentDate = new Date();
+        const expires = new Date(
+          currentDate.getTime() +
+            parseInt(process.env.PASSWORD_RESET_EXPIRATION_TIME, 10) * 60000,
+        );
+        const url = `${
+          process.env.BASE_URL
+        }/create-password/?key=${token}&expires=${expires.getTime()}`;
+
+        const oldToken = await this.passwordResetTokensModel.findOne({
+          where: { email },
         });
 
-        if (!newUser) {
-          throw new InternalServerErrorException('User creation failed');
-        } else if (!userDto.password) {
-          const token = randomBytes(32).toString('hex');
-          const currentDate = new Date();
-          const expires = new Date(
-            currentDate.getTime() +
-              parseInt(process.env.PASSWORD_RESET_EXPIRATION_TIME, 10) * 60000,
+        if (oldToken) {
+          await this.passwordResetTokensModel.update(
+            { token: token },
+            { where: { email } },
           );
-          const url = `${
-            process.env.BASE_URL
-          }/create-password/?key=${token}&expires=${expires.getTime()}`;
-
-          const oldToken = await this.passwordResetTokensModel.findOne({
-            where: { email },
-          });
-          if (oldToken) {
-            await this.passwordResetTokensModel.update(
-              { token: token },
-              { where: { email } },
-            );
-          } else {
-            await this.passwordResetTokensModel.create({ email, token });
-          }
-          await this.mailservice.sendCreatePasswordEmail(
-            email,
-            url,
-            firstName,
-            lastName,
-          );
+        } else {
+          await this.passwordResetTokensModel.create({ email, token });
         }
+
+        await this.mailservice.sendCreatePasswordEmail(
+          email,
+          url,
+          firstName,
+          lastName,
+        );
       }
-      if (isView === true || applicationId === 0 || applicationId == null) {
+
+      if (isViewBool) {
         const users = await this.userModel.findAll({
           where: { status: 1 },
         });
@@ -271,11 +326,12 @@ export class UsersService {
           statusCode: HttpStatus.CREATED,
           data: users,
         };
-      } else {
+      } else if (applicationId) {
         await this.userApplictionsModel.create({
           userId: newUser.id,
           applicationId: applicationId,
         });
+
         const userApplications = await this.userApplictionsModel.findAll({
           where: { applicationId: applicationId },
         });
@@ -294,6 +350,32 @@ export class UsersService {
             status: { [Op.not]: [0] },
           },
         });
+
+        return {
+          message: 'Users created successfully',
+          statusCode: HttpStatus.OK,
+          data: users,
+        };
+      } else if (isGroup) {
+        await this.groupUsersModel.create({
+          userId: newUser.id,
+          groupId: newUser.groupId,
+        });
+
+        const userGroups = await this.groupUsersModel.findAll({
+          where: { groupId: groupId },
+        });
+
+        if (!userGroups || userGroups.length === 0) {
+          throw new NotFoundException('No users found for this group');
+        }
+
+        const userIds = userGroups.map((userGroup) => userGroup.userId);
+
+        const users = await this.userModel.findAll({
+          where: { id: userIds, status: { [Op.not]: [0] } },
+        });
+
         return {
           message: 'Users created successfully',
           statusCode: HttpStatus.OK,
@@ -302,37 +384,26 @@ export class UsersService {
       }
     } catch (error) {
       if (error instanceof HttpException) {
-        throw error;
+        throw new HttpException(
+          {
+            message: error.message,
+            statusCode: HttpStatus.CONFLICT,
+            data: null,
+          },
+          HttpStatus.CONFLICT,
+        );
       } else {
         throw new HttpException(
-          'Error creating or updating user',
+          {
+            message: error.message,
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            data: null,
+          },
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
     }
   }
-  catch(error) {
-    if (error instanceof HttpException) {
-      throw new HttpException(
-        {
-          message: error.message,
-          statusCode: HttpStatus.CONFLICT,
-          data: null,
-        },
-        HttpStatus.CONFLICT,
-      );
-    } else {
-      throw new HttpException(
-        {
-          message: error.message,
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          data: null,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
   async verifyOtp(id: number, otp: string): Promise<VerifyOtpSuccessDto> {
     try {
       const existingUser = await this.userModel.findOne({

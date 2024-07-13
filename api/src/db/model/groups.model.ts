@@ -6,7 +6,9 @@ import {
   AutoIncrement,
   PrimaryKey,
   Unique,
+  HasMany,
 } from 'sequelize-typescript';
+import { Users } from './users.model';
 
 @Table({
   tableName: 'groups',
@@ -32,4 +34,7 @@ export class Groups extends Model<Groups> {
 
   @Column({ field: 'updated_by', type: DataType.INTEGER })
   updatedBy: number;
+
+  @HasMany(() => Users)
+  users: Users[];
 }
