@@ -100,6 +100,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   const [name, setName] = useState<string>("");
   const [rows, setRows] = useState<RowData[]>([]);
   const [tabValue, setTabValue] = React.useState(0);
+  const [is409Error, setIs409Error] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -109,6 +110,26 @@ const GroupView = ({ params }: { params: IGroupView }) => {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (is409Error) {
+      if (typeof window !== "undefined") {
+        const group = localStorage.getItem("group-data");
+        if (group) {
+          const parsedGroupData = JSON.parse(group);
+          setGroupData(parsedGroupData);
+          setData(parsedGroupData);
+          const savedName = parsedGroupData.name || "";
+          setName(savedName);
+        }
+      }
+      const data = JSON.stringify(groupData);
+      localStorage.setItem("group-data", data);
+      setData(groupData);
+
+      setIs409Error(false);
+    }
+  }, [is409Error, groupData]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -151,8 +172,11 @@ const GroupView = ({ params }: { params: IGroupView }) => {
       const updatedData: GroupData = { ...data, name };
       setData(updatedData);
       try {
-        await editGroup(id, updatedData);
-        localStorage.setItem("groupName", name);
+        const res = await editGroup(id, updatedData);
+        if (res && res.statusCode === 200) {
+          setName(name);
+          localStorage.setItem("roleName", name);
+        }
       } catch (error) {
         console.error("Error updating group:", error);
       }
@@ -168,6 +192,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
       const response = await GroupsApi.updateGroupApi(id, updatedData);
       if (response && response.statusCode === 200) {
         setRows(response);
+        return response;
       }
     } catch (error: any) {
       var response = error.response.data;
@@ -177,9 +202,10 @@ const GroupView = ({ params }: { params: IGroupView }) => {
           message: response.message,
         });
         setIsEditing(true);
+        setIs409Error(true);
       }
 
-      console.error(error);
+      throw error;
     }
   };
 
@@ -231,15 +257,15 @@ const GroupView = ({ params }: { params: IGroupView }) => {
             margin: "5% 0px 3% 0px",
             overflowX: "auto",
             paddingRight: "90px",
-            paddingLeft: "90px",
+            paddingLeft: "42px",
             width: "100%",
           }}
         >
-          <legend style={{ marginLeft: 15 }}> Group</legend>
+          <legend> Group</legend>
           <Table>
             <TableBody>
               <TableRow>
-                <TableCell sx={{ fontSize: 30, border: "none" }}>
+                <TableCell sx={{ fontSize: 30, border: "none",padding:"0" }}>
                   {isEditing ? (
                     <TextField
                       value={name}

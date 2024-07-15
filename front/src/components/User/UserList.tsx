@@ -28,7 +28,6 @@ import { UserServiceApi } from "@/services/api/UserServiceApi";
 import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
 import { UserApi } from "@/services/api/UserApi";
-import { RoleData } from "@/app/roles/[id]/page";
 import { GroupData } from "@/app/users/[id]/page";
 
 export interface RowData {

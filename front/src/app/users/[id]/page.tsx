@@ -53,6 +53,12 @@ import { RowData } from "@/components/User/UserList";
 import { RolesApi } from "@/services/api/RolesApi";
 import { SxProps, Theme } from "@mui/material";
 import { GroupsApi } from "@/services/api/GroupsApi";
+export interface GroupData {
+  id: number;
+  name: string;
+  status: number;
+  created_at: string | number | Date;
+}
 interface IUserView {
   id?: number;
   username?: string;
@@ -63,6 +69,7 @@ interface ICreateListProps {
   name: string;
   id: number;
 }
+
 interface Application {
   logoPath: string;
   id: number;
@@ -84,7 +91,7 @@ interface UserData {
   lastName: string;
   email: string;
   role: string;
-  group: string;
+  groups?: GroupData;
   groupId: string;
   status: number;
   mobile: string;
@@ -108,18 +115,15 @@ interface TabPanelProps {
   index: number;
   value: number;
   sx?: SxProps<Theme>;
+  dir?: string;
 }
+
 interface AlertState {
   severity: "success" | "info" | "warning" | "error";
   message: string;
 }
 
 interface Role {
-  name: string;
-  id: string;
-}
-
-interface Group {
   name: string;
   id: string;
 }
@@ -140,8 +144,12 @@ const InitialRowData = {
   email: "",
   mobile: "",
   role: "",
-  group: "",
-  groupId: "",
+  groups: {
+      id: 0,
+      name: "",
+      status: 0,
+      created_at: "",
+    },  groupId: "",
   created_at: "",
   status: 0,
 };
@@ -226,7 +234,10 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
 
   useEffect(() => {
     if (userData) {
-      setEditedData(userData);
+      setEditedData({
+        ...userData,
+        groups: userData.groups ?? { id: 0, name: "-", status: 0, created_at: "" },
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userData]);
@@ -302,16 +313,8 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
         setSelectedCheckboxes([]);
         return;
       }
-      const extractedData: ExtractedDataItem[] = res;
-      const mappedData: Application[] = extractedData.map(
-        (item: ExtractedDataItem) => ({
-          id: item.application.id,
-          name: item.application.name,
-          baseUrl: item.application.baseUrl,
-          logoPath: item.application.logoPath,
-        })
-      );
-      setApplications(mappedData);
+      setApplications(res);
+      return res;
     } catch (error: any) {
       console.log(error);
     }
@@ -530,7 +533,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
 
   const handleChange = (
     event: React.ChangeEvent<{}>,
-    newValue: Group | null,
+    newValue: { id: string; name: string } | null,
     field: "role" | "group"
   ) => {
     if (field === "role") {
@@ -539,9 +542,10 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
         role: newValue ? newValue.name : "",
       }));
     } else if (field === "group" && newValue) {
+      const groupId = parseInt(newValue.id);
       setEditedData((prevData) => ({
         ...prevData,
-        groupId: newValue.id,
+        groupIds: groupId,
       }));
     }
   };
@@ -867,6 +871,10 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                 [theme.breakpoints.down("md")]: {
                   width: "100%",
                 },
+                "@media (width: 1024px) and (height: 1366px),(width: 932px) and (height: 430px),(width: 915px) and (height: 412px),(width: 1024px) and (height: 768px),(width: 1180px) and (height: 820px),(width: 912px) and (height: 1368px),(width: 914px) and (height: 412px),(width: 1024px) and (height: 600px)":
+                  {
+                    width: "210%",
+                  },
               }}
             >
               <CardContent>
@@ -908,9 +916,16 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                           </DialogTitle>
                           <Divider color="#265073"></Divider>
                           <DialogContent>
-                            <Box sx={{ width: "100%" }}>
+                            <Box
+                              sx={{
+                                width: "100%",
+                              }}
+                            >
                               <Box
-                                sx={{ borderBottom: 1, borderColor: "divider" }}
+                                sx={{
+                                  borderBottom: 1,
+                                  borderColor: "divider",
+                                }}
                               >
                                 {alertShow && (
                                   <Alert
@@ -936,22 +951,25 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                                   value={tabValue}
                                   onChange={handleTabChange}
                                   aria-label="basic tabs example"
-                                  style={{ height: "32px" }}
                                 >
                                   <CustomTab
                                     label="Primary Details"
                                     {...LabelProps(0)}
                                   />
                                   <CustomTab
-                                    label="Assignment"
+                                    label="Assigned Applications"
                                     {...LabelProps(1)}
                                   />
+                                  {/* <CustomTab
+                                    label="Assigned Groups"
+                                    {...LabelProps(2)}
+                                  /> */}
                                 </Tabs>
                               </Box>
                               <CustomTabPanel
                                 value={tabValue}
                                 index={0}
-                                sx={{ width: "500px", height: "450px" }}
+                                sx={{ width: "100%", height: "450px" }}
                               >
                                 <TextField
                                   label="First name"
@@ -1089,7 +1107,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                               <CustomTabPanel
                                 value={tabValue}
                                 index={1}
-                                sx={{ width: "500px", height: "450px" }}
+                                sx={{ width: "100%", height: "450px" }}
                               >
                                 <Box>
                                   <Card
@@ -1104,7 +1122,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                                       "@media (width: 1366px) and (height: 1024px),(width: 1280px) and (height: 853px),(width: 1280px) and (height: 800px),(width: 1368px) and (height: 912px)":
                                         {
                                           height: "370px",
-                                          marginTop: "70px",
+                                          marginTop: "10px",
                                           marginBottom: "40px",
                                         },
                                     }}
@@ -1153,6 +1171,11 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                                                     md: "20%",
                                                     lg: "390px",
                                                   },
+                                                  "@media (width: 932px) and (height: 430px),(width: 915px) and (height: 412px),(width: 1024px) and (height: 768px),(width: 1180px) and (height: 820px),(width: 1024px) and (height: 600px),(width: 914px) and (height: 412px),(width: 912px) and (height:1368px),(width: 1024px) and (height: 1366px)":
+                                                    {
+                                                      width: "100%",
+                                                    },
+
                                                   height: "40px",
                                                   "& .MuiInputBase-root": {
                                                     height: "100%",
@@ -1190,7 +1213,6 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                                                   height: "260px",
                                                   marginTop: "2px",
                                                   marginBottom: "0px",
-                                                  overflowY: "auto",
                                                   border: "none",
                                                   boxShadow: "none",
                                                 }}
@@ -1347,6 +1369,16 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                     </TableRow>
                     <TableRow>
                       <TableCell>
+                        <strong>Group:</strong>
+                      </TableCell>
+                      <TableCell
+                        style={{ whiteSpace: "unset", wordBreak: "break-all" }}
+                      >
+                        {userData.groups ? userData.groups.name : '-'}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>
                         <strong>Status:</strong>
                       </TableCell>
                       <TableCell
@@ -1390,12 +1422,11 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
               <Card
                 sx={{
                   width: "60%",
-                  height: "365px",
+                  height: "415px",
                   margin: "auto",
                   position: "sticky",
                   marginTop: "45px",
                   marginBottom: "20px",
-                  overflow: "hidden",
                   [theme.breakpoints.down("md")]: {
                     width: "100%",
                   },
@@ -1481,10 +1512,9 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                             component={Paper}
                             sx={{
                               width: "100%",
-                              height: "260px",
+                              height: "308px",
                               marginTop: "2px",
                               marginBottom: "0px",
-                              overflowY: "auto",
                               border: "none",
                               boxShadow: "none",
                             }}
@@ -1590,19 +1620,19 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                 </PrimaryButton>
               </Card>
             </Card>
-            <Box display="flex" justifyContent="flex-end">
-              <BackButton
-                variant="contained"
-                onClick={handleBackButtonClick}
-                startIcon={<ArrowBackIcon />}
-                sx={{ marginTop: 4 }}
-              >
-                Back
-              </BackButton>
-            </Box>
           </Box>
         </Grid>
       </Grid>
+      <Box display="flex" justifyContent="flex-end">
+        <BackButton
+          variant="contained"
+          onClick={handleBackButtonClick}
+          startIcon={<ArrowBackIcon />}
+          sx={{ marginTop: 4 }}
+        >
+          Back
+        </BackButton>
+      </Box>
     </Container>
   );
 };
