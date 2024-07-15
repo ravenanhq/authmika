@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumberString, IsString, Matches } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumberString,
+  IsString,
+  Matches,
+  ValidateIf,
+} from 'class-validator';
 import { UserDataDto } from 'src/auth/dto/login.dto';
 import { Match } from 'src/common/validators/match.validator';
 import { Users } from 'src/db/model/users.model';
@@ -68,10 +74,11 @@ export class AddUsersDto {
   @IsNotEmpty({ message: 'email cannot be blank' })
   email: string;
 
-  @IsString()
-  @IsNotEmpty({ message: 'Password is required' })
+  @ValidateIf(
+    (o) => o.password !== undefined && o.password !== null && o.password !== '',
+  )
   @Matches(
-    /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~`!@#$%^&*()-_+={}[\]|\\:;"'<>,.?/]).{8,}$/,
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
     {
       message:
         'Must contain: 8 or more characters, 1 uppercase, 1 lowercase, 1 number, 1 special character.',

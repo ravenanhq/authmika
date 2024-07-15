@@ -293,18 +293,8 @@ const RoleView = ({ params }: { params: IRoleView }) => {
       )}
       {!loading && (
         <>
-          <Card
-            sx={{
-              boxShadow: "none",
-              marginTop: "5px",
-              "& .role-header": {
-                backgroundColor: "#265073",
-                color: "#fff",
-              },
-              gridWidth: "500px",
-            }}
-          >
-            {saveAlert && (
+               <Box sx={{ marginTop: 0.5 }}>
+                     {saveAlert && (
               <Alert
                 severity={saveAlert.severity}
                 onClose={() => {
@@ -335,17 +325,15 @@ const RoleView = ({ params }: { params: IRoleView }) => {
               </Alert>
             )}
             <Snackbar autoHideDuration={12000} />
-            <CardContent style={{ padding: "0" }}>
               <Box
                 component="fieldset"
                 sx={{
-                  p: 2,
                   border: "1px solid #ededed",
                   borderRadius: "5px",
                   margin: "5% 0px 3% 0px",
                   overflowX: "auto",
                   paddingRight: "90px",
-                  paddingLeft: "42px",
+                  paddingLeft: "20px",
                   width: "100%",
                 }}
               >
@@ -354,7 +342,7 @@ const RoleView = ({ params }: { params: IRoleView }) => {
                   <TableBody>
                     <TableRow>
                       <TableCell
-                        sx={{ fontSize: 30, border: "none", padding: "0" }}
+                        sx={{ fontSize: 30, border: "none", marginLeft: "30" }}
                       >
                         {isEditing ? (
                           <TextField
@@ -437,7 +425,7 @@ const RoleView = ({ params }: { params: IRoleView }) => {
                   value={tabValue}
                   onChange={handleTabChange}
                   aria-label="basic tabs example"
-                  sx={{ marginLeft: 3 }}
+                  sx={{ marginLeft: 2 }}
                 >
                   <Tab label="Users" {...TabProps(0)} />
                 </Tabs>
@@ -476,8 +464,7 @@ const RoleView = ({ params }: { params: IRoleView }) => {
                   Back
                 </BackButton>
               </Box>
-            </CardContent>
-          </Card>
+          </Box>
         </>
       )}
     </Container>

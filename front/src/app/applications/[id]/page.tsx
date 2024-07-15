@@ -238,12 +238,11 @@ const ApplicationView: React.FC<{ params: IApplicationView }> = ({}) => {
                   borderRadius: "5px",
                   margin: "5% 0px 3% 0px",
                   overflowX: "auto",
-                  paddingRight: "90px",
-                  paddingLeft: "90px",
+                  paddingLeft: "20px",
                   width: "100%",
                 }}
               >
-                <legend>
+                <legend style={{paddingLeft:"0px"}}>
                   Application Details
                   <EditApplicationModal
                     open={editModalOpen}
@@ -266,7 +265,7 @@ const ApplicationView: React.FC<{ params: IApplicationView }> = ({}) => {
                     />
                   </IconButton>
                 </legend>
-                <Grid container spacing={2}>
+                <Grid container spacing={2} sx={{paddingLeft:"100px",paddingRight:"100px"}}>
                   <Grid item xs={12} sm={6}>
                     <Box display="flex" alignItems="center">
                       <strong>Name:</strong>

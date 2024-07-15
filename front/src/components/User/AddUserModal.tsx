@@ -294,7 +294,6 @@ export default function AddUserModal({
         <TextField
           label="Password"
           fullWidth
-          required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           error={!!errors.password}
