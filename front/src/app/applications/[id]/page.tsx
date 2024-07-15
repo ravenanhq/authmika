@@ -9,13 +9,13 @@ import {
   Alert,
   styled,
   IconButton,
-  TableCell,
   Grid,
   Tabs,
   SxProps,
   Theme,
   Tab,
   TableContainer,
+  CircularProgress,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditNoteIcon from "@mui/icons-material/EditNote";
@@ -57,17 +57,6 @@ interface TabPanelProps {
   sx?: SxProps<Theme>;
   dir?: string;
 }
-
-const CustomTab = styled(Tab)(({ theme }) => ({
-  textTransform: "none",
-}));
-
-const LabelTableCell = styled(TableCell)(({ theme }) => ({
-  whiteSpace: "nowrap",
-  paddingRight: "70px",
-  paddingLeft: "70px",
-  border: "none",
-}));
 
 function CustomTabPanel(props: TabPanelProps) {
   const { children, value, index, sx, ...other } = props;
@@ -112,6 +101,7 @@ const ApplicationView: React.FC<{ params: IApplicationView }> = ({}) => {
   const [users, setUsers] = useState<User[]>([]);
   const [tabValue, setTabValue] = React.useState(0);
   const [id, setId] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
 
   const handleEditModalClose = () => {
     setEditModalOpen(false);
@@ -174,6 +164,7 @@ const ApplicationView: React.FC<{ params: IApplicationView }> = ({}) => {
     const fetchData = async () => {
       if (typeof window !== "undefined") {
         const application = localStorage.getItem("application-data");
+        setLoading(true);
         if (application) {
           try {
             const app = JSON.parse(application);
@@ -182,6 +173,7 @@ const ApplicationView: React.FC<{ params: IApplicationView }> = ({}) => {
           } catch (error) {
             console.error("Error fetching data:", error);
           } finally {
+            setLoading(false);
           }
         }
       }
@@ -219,6 +211,11 @@ const ApplicationView: React.FC<{ params: IApplicationView }> = ({}) => {
 
   return (
     <Container maxWidth="xl">
+      {loading && (
+        <div style={{ textAlign: "center", marginTop: "5%" }}>
+          <CircularProgress />
+        </div>
+      )}
       <Box sx={{ p: 2, margin: "auto", overflowX: "auto" }}>
         {alertShow && (
           <Alert
@@ -231,165 +228,180 @@ const ApplicationView: React.FC<{ params: IApplicationView }> = ({}) => {
           </Alert>
         )}
         <Grid container>
-          <Box
-            component="fieldset"
-            sx={{
-              p: 2,
-              border: "1px solid #ededed",
-              borderRadius: "5px",
-              margin: "5% 0px 3% 0px",
-              overflowX: "auto",
-              paddingRight: "90px",
-              paddingLeft: "90px",
-              width: "100%",
-            }}
-          >
-            <legend>
-              Application Details
-              <EditApplicationModal
-                open={editModalOpen}
-                onClose={handleEditModalClose}
-                rowData={applicationData}
-                onEdit={handleEditSave}
-                uniqueValidation={uniqueAlert}
-              />
-              <IconButton
-                aria-label="edit"
-                onClick={handleEdit}
+          {!loading && (
+            <>
+              <Box
+                component="fieldset"
                 sx={{
-                  backgroundColor: "#1C658C",
-                  color: "#fff",
-                  marginLeft: "10px",
+                  p: 2,
+                  border: "1px solid #ededed",
+                  borderRadius: "5px",
+                  margin: "5% 0px 3% 0px",
+                  overflowX: "auto",
+                  paddingLeft: "20px",
+                  width: "100%",
                 }}
               >
-                <EditNoteIcon style={{ fontSize: "20px", color: "white" }} />
-              </IconButton>
-            </legend>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <Box display="flex" alignItems="center">
-                  <strong>Name:</strong>
-                  <Box sx={{ marginLeft: 11, marginBottom: 2 }}>
-                    {applicationData.name}
-                  </Box>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Box display="flex" alignItems="center">
-                  <strong>Application:</strong>
-                  <Box sx={{ marginLeft: 7, marginBottom: 2 }}>
-                    {applicationData.application}
-                  </Box>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Box display="flex" alignItems="center">
-                  <strong>Base URL:</strong>
-                  <Box sx={{ marginLeft: 7, marginBottom: 2 }}>
-                    {applicationData.baseUrl}
-                  </Box>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Box display="flex" alignItems="center">
-                  <strong>Call Back URL:</strong>
-                  <Box sx={{ marginLeft: 5, marginBottom: 2 }}>
-                    {applicationData.callBackUrl}
-                  </Box>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Box display="flex" alignItems="center">
-                  <strong style={{ marginTop: 5 }}>Client Secret ID:</strong>
-                  <Box
+                <legend style={{paddingLeft:"0px"}}>
+                  Application Details
+                  <EditApplicationModal
+                    open={editModalOpen}
+                    onClose={handleEditModalClose}
+                    rowData={applicationData}
+                    onEdit={handleEditSave}
+                    uniqueValidation={uniqueAlert}
+                  />
+                  <IconButton
+                    aria-label="edit"
+                    onClick={handleEdit}
                     sx={{
-                      marginLeft: 1,
-                      whiteSpace: "unset",
-                      wordBreak: "break-all",
-                      marginBottom: 0,
+                      backgroundColor: "#1C658C",
+                      color: "#fff",
+                      marginLeft: "10px",
                     }}
                   >
-                    {applicationData.clientSecretId}
-                  </Box>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Box display="flex">
-                  <strong style={{ whiteSpace: "nowrap" }}>
-                    Client Secret Key:
-                  </strong>
-                  <Box
-                    sx={{
-                      marginLeft: 1,
-                      marginBottom: 2,
-                      whiteSpace: "unset",
-                      wordBreak: "break-all",
-                    }}
-                  >
-                    {applicationData.clientSecretKey}
-                  </Box>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Box display="flex" alignItems="center">
-                  <strong>Image:</strong>
-                  <Box sx={{ marginLeft: 10 }}>
-                    {applicationData.logoPath ? (
-                      <CardMedia
-                        component="img"
-                        src={`${config.service}/assets/images/${applicationData.logoPath}`}
-                        alt="logo"
-                        height="100"
-                        style={{ width: "80px" }}
-                      />
-                    ) : (
-                      <CardMedia
-                        component="img"
-                        src={`${config.service}/assets/images/no_image.jpg`}
-                        alt="logo"
-                        height="100"
-                        style={{ width: "80px" }}
-                      />
-                    )}
-                  </Box>
-                </Box>
-              </Grid>
-            </Grid>
-          </Box>
-          <Card sx={{ width: "100%" }}>
-            <Tabs
-              value={tabValue}
-              onChange={handleTabChange}
-              aria-label="basic tabs example"
-              sx={{ marginLeft: 3 }}
-            >
-              <Tab label="Users" {...TabProps(0)} />
-              {/* <Tab label="Groups" {...TabProps(1)} /> */}
-            </Tabs>
-            <CustomTabPanel
-              value={tabValue}
-              index={0}
-              sx={{ width: "100%", height: "500px" }}
-            >
-              <TableContainer>
-                <UserList
-                  title={false}
-                  isListPage={false}
-                  applicationId={id}
-                  isView={false}
-                  role={false}
-                  status={false}
-                />
-              </TableContainer>
-            </CustomTabPanel>
-            {/* <CustomTabPanel
+                    <EditNoteIcon
+                      style={{ fontSize: "20px", color: "white" }}
+                    />
+                  </IconButton>
+                </legend>
+                <Grid container spacing={2} sx={{paddingLeft:"100px",paddingRight:"100px"}}>
+                  <Grid item xs={12} sm={6}>
+                    <Box display="flex" alignItems="center">
+                      <strong>Name:</strong>
+                      <Box sx={{ marginLeft: 11, marginBottom: 2 }}>
+                        {applicationData.name}
+                      </Box>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box display="flex" alignItems="center">
+                      <strong>Application:</strong>
+                      <Box sx={{ marginLeft: 7, marginBottom: 2 }}>
+                        {applicationData.application}
+                      </Box>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box display="flex" alignItems="center">
+                      <strong>Base URL:</strong>
+                      <Box sx={{ marginLeft: 7, marginBottom: 2 }}>
+                        {applicationData.baseUrl}
+                      </Box>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box display="flex" alignItems="center">
+                      <strong>Call Back URL:</strong>
+                      <Box sx={{ marginLeft: 5, marginBottom: 2 }}>
+                        {applicationData.callBackUrl}
+                      </Box>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box display="flex" alignItems="center">
+                      <strong style={{ marginTop: 5 }}>
+                        Client Secret ID:
+                      </strong>
+                      <Box
+                        sx={{
+                          marginLeft: 1,
+                          whiteSpace: "unset",
+                          wordBreak: "break-all",
+                          marginBottom: 0,
+                        }}
+                      >
+                        {applicationData.clientSecretId}
+                      </Box>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box display="flex">
+                      <strong style={{ whiteSpace: "nowrap" }}>
+                        Client Secret Key:
+                      </strong>
+                      <Box
+                        sx={{
+                          marginLeft: 1,
+                          marginBottom: 2,
+                          whiteSpace: "unset",
+                          wordBreak: "break-all",
+                        }}
+                      >
+                        {applicationData.clientSecretKey}
+                      </Box>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box display="flex" alignItems="center">
+                      <strong>Image:</strong>
+                      <Box sx={{ marginLeft: 10 }}>
+                        {applicationData.logoPath ? (
+                          <CardMedia
+                            component="img"
+                            src={`${config.service}/assets/images/${applicationData.logoPath}`}
+                            alt="logo"
+                            height="100"
+                            style={{ width: "80px" }}
+                          />
+                        ) : (
+                          <CardMedia
+                            component="img"
+                            src={`${config.service}/assets/images/no_image.jpg`}
+                            alt="logo"
+                            height="100"
+                            style={{ width: "80px" }}
+                          />
+                        )}
+                      </Box>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Box>
+              <Card sx={{ width: "100%" }}>
+                <Tabs
+                  value={tabValue}
+                  onChange={handleTabChange}
+                  aria-label="basic tabs example"
+                  sx={{ marginLeft: 3 }}
+                >
+                  <Tab label="Users" {...TabProps(0)} />
+                  {/* <Tab label="Groups" {...TabProps(1)} /> */}
+                </Tabs>
+                <CustomTabPanel
+                  value={tabValue}
+                  index={0}
+                  sx={{ width: "100%", height: "500px" }}
+                >
+                  <TableContainer>
+                    <UserList
+                      title={false}
+                      isListPage={false}
+                      applicationId={id}
+                      isView={false}
+                      roleId={undefined}
+                      id={undefined}
+                      showRole={true}
+                      roleView={false}
+                      roleName={undefined}
+                      groupId={undefined}
+                      groupView={false}
+                      showGroup={true}
+                      groupName={undefined}
+                      isGroup={false}
+                    />
+                  </TableContainer>
+                </CustomTabPanel>
+                {/* <CustomTabPanel
               value={tabValue}
               index={1}
               sx={{ width: "1450px", height: "700px" }}
             >
               <GroupList title={false} isListPage={false} applicationId={id} isView={false} />
             </CustomTabPanel> */}
-          </Card>
+              </Card>
+            </>
+          )}
         </Grid>
       </Box>
       <BackButton

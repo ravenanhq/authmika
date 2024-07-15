@@ -72,10 +72,11 @@ export class UserServiceApi {
     return res.data;
   }
 
-  static async create(newUser: any,isView:boolean,applicationId:number) {
+  static async create(newUser: any,isView:string | boolean,applicationId:number | undefined,isGroup:boolean) {
     const params = {
       isView: isView,
       applicationId: applicationId,
+      isGroup: isGroup,
     };
     const res = await axios.post(`${config.service}/users`, newUser,{params});
     return res.data;

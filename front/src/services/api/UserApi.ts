@@ -1,6 +1,7 @@
 import { config } from "../../../config";
 import { ApiResponseDto } from "@/models/users.dto";
 import axios from "@/api/axios";
+import { RoleData } from "@/app/roles/[id]/page";
 interface IResetPasswordData {
   key?: string;
   expires?: string;
@@ -21,10 +22,13 @@ interface ResendOtpParams {
   url: string;
 }
 export class UserApi {
-  static async getUsers(isListPage: boolean, applicationId: number) {
+  static async getUsers(isListPage: boolean, applicationId: number | undefined,roleId: number | undefined,id:number | undefined,groupId:number | undefined) {
     const params = {
       isListPage: isListPage,
       applicationId: applicationId,
+      roleId: roleId,
+      id:id,
+      groupId: groupId,
     };
 
     const res = await axios.get(`${config.service}/users`, { params });

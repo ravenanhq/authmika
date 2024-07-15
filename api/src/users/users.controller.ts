@@ -113,11 +113,17 @@ export class UsersController {
   async getUsers(
     @Query('isListPage') isListPage: boolean,
     @Query('applicationId') applicationId: number,
+    @Query('roleId') roleId: number,
+    @Query('id') id: number,
+    @Query('groupId') groupId: number,
   ) {
     try {
       const activeUsers = await this.userService.getUsers(
         isListPage,
         applicationId,
+        roleId,
+        id,
+        groupId,
       );
       return activeUsers;
     } catch (error) {
@@ -150,10 +156,11 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   async create(
     @Body() usersDto: AddUsersDto,
-    @Query('isView') isView: boolean,
+    @Query('isView') isView: string | boolean,
     @Query('applicationId') applicationId?: number,
+    @Query('isGroup') isGroup?: boolean,
   ): Promise<AddUserSuccessDto> {
-    return this.userService.create(usersDto, isView, applicationId);
+    return this.userService.create(usersDto, isView, applicationId, isGroup);
   }
 
   // @Post('get-otp/:id')
