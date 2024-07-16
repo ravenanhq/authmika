@@ -34,13 +34,15 @@ interface AlertState {
   message: string;
 }
 
-// interface GroupListProps {
-// title: boolean;
-// isListPage: boolean;
-// applicationId: number;
-// isView: boolean;
-// }
-const GroupList = () => {
+interface GroupListProps {
+title: boolean;
+get: string,
+userId: number | undefined,
+isCreate: string | boolean,
+}
+const GroupList: React.FC<GroupListProps> = ({
+  title,get,userId,isCreate
+}) => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [selectedRow, setSelectedRow] = useState(null);
@@ -51,11 +53,19 @@ const GroupList = () => {
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
   const [deleteGroupModalOpen, setDeleteGroupModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const GET_FILTER = 'filter';
 
   useEffect(() => {
-    getGroupsList();
+    getGroupsList(get,userId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (userId !== undefined) {
+      getGroupsList(GET_FILTER, userId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   const handleAddGroupClick = () => {
     setAddGroupModalOpen(true);
@@ -125,9 +135,9 @@ const GroupList = () => {
     },
   ];
 
-  const handleAddGroup = async (newGroup: RowData) => {
+  const handleAddGroup = async (newGroup: RowData,isCreate:string | boolean,userId:number | undefined) => {
     try {
-      const response = await GroupsApi.addGroupApi(newGroup);
+      const response = await GroupsApi.addGroupApi(newGroup,isCreate,userId);
       setUniqueAlert("");
       if (response) {
         if (response.statusCode == 201) {
@@ -154,9 +164,9 @@ const GroupList = () => {
     }
   };
 
-  const getGroupsList = async () => {
+  const getGroupsList = async (get:string,userId:number | undefined) => {
     try {
-      const response = await GroupsApi.getAllGroupsApi();
+      const response = await GroupsApi.getAllGroupsApi(get,userId);
       if (response) {
         const sortedRows = response.sort((a: RowData, b: RowData) => {
           return (
@@ -272,7 +282,7 @@ const GroupList = () => {
     <Card
       sx={{
         boxShadow: "none",
-        marginTop: "5%",
+        marginTop: title ? "5%" : "0",
         "& .group-header": {
           backgroundColor: "#265073",
           color: "#fff",
@@ -287,6 +297,7 @@ const GroupList = () => {
     >
       <Snackbar autoHideDuration={3000} message={message} />
       <CardContent style={{ padding: "0" }}>
+      {title && (
         <>
           <Typography variant="h4">Groups</Typography>
           <Divider
@@ -294,6 +305,7 @@ const GroupList = () => {
             sx={{ marginTop: "5px", marginBottom: "3%" }}
           ></Divider>
         </>
+      )}
         {loading && (
           <div style={{ textAlign: "center", marginTop: "5%" }}>
             <CircularProgress />
@@ -379,6 +391,8 @@ const GroupList = () => {
         onClose={handleCloseAddGroupModal}
         onAddGroup={handleAddGroup}
         uniqueNameValidation={uniqueAlert}
+        isCreate={isCreate}
+        userId={userId}
         // isView={isView}
         // applicationId={applicationId}
         // isListPage={isListPage}

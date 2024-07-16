@@ -18,7 +18,6 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { SetStateAction, useEffect, useState } from "react";
 import { ApplicationApi } from "@/services/api/ApplicationApi";
 import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddApplicationModal from "./AddApplicationModal";
 import DeleteApplicationModal from "./DeleteApplicationModal";
@@ -50,7 +49,19 @@ interface AlertState {
   message: string;
 }
 
-const ApplicationList = () => {
+interface ApplicationListProps {
+  title: boolean;
+  get: string;
+  userId: number | undefined;
+  isAdd:string | boolean,
+}
+
+const ApplicationList: React.FC<ApplicationListProps> = ({
+  title,
+  get,
+  userId,
+  isAdd
+}) => {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<RowData[]>([]);
   const [selectedRow, setSelectedRow] = useState(null);
@@ -62,12 +73,20 @@ const ApplicationList = () => {
   const [uniqueAlert, setUniqueAlert] = useState("");
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
   const filteredRows = rows.filter((row) => row.id);
+  const GET_FILTER = 'filter';
 
   useEffect(() => {
     restrictMenuAccess();
-    getApplications();
+    getApplications(get, userId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (userId !== undefined) {
+      getApplications(GET_FILTER, userId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   const restrictMenuAccess = async () => {
     const session = await getSession();
@@ -89,10 +108,6 @@ const ApplicationList = () => {
     } catch (error: any) {
       console.log(error);
     }
-  };
-
-  const handleAddApplication = (newApplication: RowData) => {
-    addApplication(newApplication);
   };
 
   const handleDelete = (rowData: SetStateAction<null>) => {
@@ -204,9 +219,9 @@ const ApplicationList = () => {
     },
   ];
 
-  const addApplication = async (newApplication: RowData) => {
+  const handleAddApplication = async (newApplication: RowData, isAdd:string | boolean,userId: number | undefined): Promise<void> => {
     try {
-      const response = await ApplicationApi.addApplication(newApplication);
+      const response = await ApplicationApi.addApplication(newApplication,isAdd,userId);
       setUniqueAlert("");
       if (response) {
         if (response.statusCode == 409) {
@@ -269,9 +284,15 @@ const ApplicationList = () => {
     }
   };
 
-  const getApplications = async () => {
+  const getApplications = async (
+    get: string,
+    userId: number | undefined,
+  ) => {
     try {
-      const response = await ApplicationApi.getApplications();
+      const response = await ApplicationApi.getApplications(
+        get,
+        userId
+      );
       if (response) {
         const sortedRows = response.sort((a: RowData, b: RowData) => {
           return (
@@ -318,7 +339,7 @@ const ApplicationList = () => {
     <Card
       sx={{
         boxShadow: "none",
-        marginTop: "5%",
+        marginTop: title ? "5%" : "0",
         "& .application-header": {
           backgroundColor: "#265073",
           color: "#fff",
@@ -328,11 +349,15 @@ const ApplicationList = () => {
     >
       <Snackbar autoHideDuration={3000} message={message} />
       <CardContent style={{ padding: "0" }}>
-        <Typography variant="h4">Applications</Typography>
-        <Divider
-          color="#265073"
-          sx={{ marginTop: "5px", marginBottom: "3%" }}
-        ></Divider>
+        {title && (
+          <>
+            <Typography variant="h4">Applications</Typography>
+            <Divider
+              color="#265073"
+              sx={{ marginTop: "5px", marginBottom: "3%" }}
+            ></Divider>
+          </>
+        )}
         {loading && (
           <div style={{ textAlign: "center", marginTop: "5%" }}>
             <CircularProgress />
@@ -419,6 +444,8 @@ const ApplicationList = () => {
         onClose={handleCloseAddApplicationModal}
         onAddApplication={handleAddApplication}
         uniqueValidation={uniqueAlert}
+        isAdd={isAdd}
+        userId={userId}
       />
 
       <DeleteApplicationModal

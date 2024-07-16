@@ -2,14 +2,22 @@ import axios from "@/api/axios";
 import { config } from "../../../config";
 
 export class ApplicationApi {
-    static async getApplications() {
-        const res = await axios.get(`${config.service}/applications`);
+    static async getApplications(get: string,userId:number | undefined
+    ) {
+        const params = {
+           get: get,
+           userId: userId,
+          };
+        const res = await axios.get(`${config.service}/applications`,{params});
         return res.data;
     }
-    static async addApplication(newApplication: any) {
+    static async addApplication(newApplication: any,isAdd:string | boolean,userId: number | undefined) {
+        const params = {
+            isAdd: isAdd,
+            userId: userId
+           };
         const res = await axios.post(
-            `${config.service}/applications`,
-            newApplication
+            `${config.service}/applications`,newApplication,{params}
         );
         return res.data;
     }

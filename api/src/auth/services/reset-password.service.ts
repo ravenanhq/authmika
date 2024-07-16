@@ -63,7 +63,6 @@ export class ResetPasswordService {
       { password: hashedPassword, status: 1 },
       { where: { email, status: 1 } },
     );
-
     if (updatedUser[0] === 1) {
       passwordReset.destroy();
       return {

@@ -13,6 +13,7 @@ import {
   Request,
   Put,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import {
   GroupCreateSuccessDto,
@@ -57,10 +58,9 @@ export class GroupsController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
-  async getGroups() {
-    // @Query('applicationId') applicationId: number, // @Query('isListPage') isListPage: boolean,
+  async getGroups(@Query('get') get: string, @Query('userId') userId: number) {
     try {
-      const activeGroups = await this.groupService.getGroupList();
+      const activeGroups = await this.groupService.getGroupList(get, userId);
       return activeGroups;
     } catch (error) {
       throw new HttpException(
@@ -102,10 +102,10 @@ export class GroupsController {
   async create(
     @Body() groupsDto: GroupsDto,
     @Request() req,
-    // @Query('isView') isView: boolean,
-    // @Query('applicationId') applicationId?: number,
+    @Query('isCreate') isCreate: boolean,
+    @Query('userId') userId?: number,
   ): Promise<GroupCreateSuccessDto> {
-    return this.groupService.create(groupsDto, req.user);
+    return this.groupService.create(groupsDto, req.user, isCreate, userId);
   }
 
   @ApiTags('Groups')

@@ -12,6 +12,7 @@ import {
   Param,
   Put,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import {
@@ -58,8 +59,11 @@ export class ApplicationsController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
-  async getApplications() {
-    return this.applicationService.getApplications();
+  async getApplications(
+    @Query('get') get: string,
+    @Query('userId') userId: number,
+  ) {
+    return this.applicationService.getApplications(get, userId);
   }
 
   @ApiTags('Applications')
@@ -89,8 +93,15 @@ export class ApplicationsController {
   async create(
     @Body() applicationsDto: ApplicationCreateDataDto,
     @Request() req,
+    @Query('isAdd') isAdd: boolean,
+    @Query('userId') userId: number,
   ): Promise<{ message: string; statusCode: number }> {
-    return this.applicationService.create(applicationsDto, req.user);
+    return this.applicationService.create(
+      applicationsDto,
+      req.user,
+      isAdd,
+      userId,
+    );
   }
 
   @ApiTags('Applications')

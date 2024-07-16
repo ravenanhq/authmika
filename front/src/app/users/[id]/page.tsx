@@ -53,6 +53,9 @@ import { RowData } from "@/components/User/UserList";
 import { RolesApi } from "@/services/api/RolesApi";
 import { SxProps, Theme } from "@mui/material";
 import { GroupsApi } from "@/services/api/GroupsApi";
+import ApplicationList from "@/components/Applications/ApplicationList";
+import { ApplicationApi } from "@/services/api/ApplicationApi";
+import GroupList from "@/components/Groups/GroupList";
 export interface GroupData {
   id: number;
   name: string;
@@ -64,6 +67,9 @@ interface IUserView {
   username?: string;
   email?: string;
   rowData: RowData | null;
+  isAppList: string | boolean;
+  userId: number | undefined;
+  isAllApp: string | boolean;
 }
 interface ICreateListProps {
   name: string;
@@ -145,11 +151,12 @@ const InitialRowData = {
   mobile: "",
   role: "",
   groups: {
-      id: 0,
-      name: "",
-      status: 0,
-      created_at: "",
-    },  groupId: "",
+    id: 0,
+    name: "",
+    status: 0,
+    created_at: "",
+  },
+  groupId: "",
   created_at: "",
   status: 0,
 };
@@ -181,7 +188,7 @@ CustomTabPanel.propTypes = {
   sx: PropTypes.object,
 };
 
-function LabelProps(index: number) {
+function TabProps(index: number) {
   return {
     id: `simple-tab-${index}`,
     "aria-controls": `simple-tabpanel-${index}`,
@@ -223,6 +230,10 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
   const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
   const emailError = invalidEmail || !!formErrors.email;
   const helperText = [invalidEmail, formErrors.email].filter(Boolean).join(" ");
+  const [userId, setUserId] = useState<number | undefined>();
+  const [isGroupList, setIsGroupList] = useState(true);
+  const GET_ALL = "all";
+  const GET_FILTER = "filter";
 
   useEffect(() => {
     if (openIcon) {
@@ -236,7 +247,12 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
     if (userData) {
       setEditedData({
         ...userData,
-        groups: userData.groups ?? { id: 0, name: "-", status: 0, created_at: "" },
+        groups: userData.groups ?? {
+          id: 0,
+          name: "-",
+          status: 0,
+          created_at: "",
+        },
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -261,8 +277,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
 
   useEffect(() => {
     getRoles();
-    getGroups();
-    getApplication();
+    getGroups(GET_ALL, userId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -270,6 +285,13 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
     if (id !== undefined) {
       getApplicationsByUserId(id);
     }
+  }, [id]);
+
+  useEffect(() => {
+    if (id !== undefined) {
+      getApplication(GET_ALL, userId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
@@ -332,9 +354,9 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
     }
   };
 
-  const getGroups = async () => {
+  const getGroups = async (get: string, userId: number | undefined) => {
     try {
-      const response = await GroupsApi.getAllGroupsApi();
+      const response = await GroupsApi.getAllGroupsApi(get, userId);
       if (response) {
         const groupData = response;
         setGroups(groupData);
@@ -344,9 +366,9 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
     }
   };
 
-  const getApplication = async () => {
+  const getApplication = async (get: string, userId: number | undefined) => {
     try {
-      const res = await UserApi.getApplication();
+      const res = await ApplicationApi.getApplications(get, userId);
       setOptions(res);
       setLoading(false);
     } catch (error: any) {
@@ -676,48 +698,25 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
           {saveAlert.message}
         </Alert>
       )}
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
-          <Box sx={{ p: 2 }}>
-            <Typography
-              variant="h5"
-              component="h2"
-              sx={{ marginBottom: 1, marginTop: 2 }}
-            >
-              User Details
-            </Typography>
-            <Divider sx={{ marginBottom: 1, flexGrow: 1 }} color="#265073" />
-            <PrimaryButton
-              variant="contained"
-              color="primary"
-              style={{ margin: "17px 15px 0 0" }}
-              onClick={handleOpenModal}
-              startIcon={<HowToRegIcon />}
-              disabled={userData.status === 1}
-            >
-              Set Password & Activate
-            </PrimaryButton>
-            <PrimaryButton
-              variant="contained"
-              color="primary"
-              style={{ margin: "15px 15px 0 0" }}
-              onClick={() => resendLink()}
-              startIcon={<LocalPostOfficeIcon />}
-              disabled={userData.status === 1}
-            >
-              Resend Activation Email
-            </PrimaryButton>
-            <PrimaryButton
-              variant="contained"
-              color="primary"
-              style={{ margin: "15px 15px 0 0" }}
-              onClick={() => setDeactivateModalOpen(true)}
-              startIcon={<PersonOffIcon />}
-              disabled={userData.status === 3}
-            >
-              Deactivate User
-            </PrimaryButton>
-            <Dialog open={openModal} onClose={handleCloseModal}>
+      <Grid item xs={12} md={6}>
+        <Box
+          component="fieldset"
+          sx={{
+            p: 2,
+            border: "1px solid #ededed",
+            borderRadius: "5px",
+            margin: "5% 0px 3% 0px",
+            overflowX: "auto",
+            paddingLeft: "20px",
+            width: "100%",
+          }}
+        >
+          <legend style={{ paddingLeft: "0px" }}>
+            User Details
+            <IconButton aria-label="edit" onClick={handleOpenIcon}>
+              <EditNoteIcon sx={{ color: "#1C658C" }} />
+            </IconButton>
+            <Dialog open={openIcon} onClose={handleCloseIcon}>
               <DialogTitle
                 sx={{
                   backgroundColor: "#265073",
@@ -725,12 +724,11 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  width: "100%",
                 }}
               >
-                Create Password
+                Update User
                 <IconButton
-                  onClick={handleCloseModal}
+                  onClick={handleCloseIcon}
                   sx={{
                     backgroundColor: "#FF9843",
                     color: "#fff",
@@ -745,884 +743,689 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
               </DialogTitle>
               <Divider color="#265073"></Divider>
               <DialogContent>
-                <Box component="form" noValidate sx={{ mt: 1 }}>
-                  <TextField
-                    label="Password"
-                    required
-                    fullWidth
-                    value={isVisible.password}
-                    type={isVisible.showPassword ? "text" : "password"}
-                    {...register("password", {
-                      required: "Password is required.",
-                      pattern: {
-                        value:
-                          /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~`!@#$%^&*()-_+={}[\]|\\:;"'<>,.?/]).{8,}$/,
-                        message:
-                          "Must contain: 8 or more characters, 1 uppercase, 1 lowercase, 1 number, 1 special character.",
-                      },
-                    })}
-                    onChange={(e) => {
-                      handlePasswordChange(e.target.value);
-                    }}
-                    margin="normal"
-                    variant="outlined"
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() =>
-                              handlePasswordVisibility("showPassword")
-                            }
-                            onMouseDown={(e) => e.preventDefault()}
-                            edge="end"
-                          >
-                            {isVisible.showPassword ? (
-                              <VisibilityOff />
-                            ) : (
-                              <Visibility />
-                            )}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                    error={Boolean(errors.password)}
-                    helperText={
-                      errors.password
-                        ? errors.password.message?.toString()
-                        : null
-                    }
-                    size="small"
-                  />
-                  <TextField
-                    label="Confirm Password"
-                    required
-                    fullWidth
-                    {...register("confirmPassword", {
-                      required: "Confirm password is required.",
-                      validate: (val: string | undefined) => {
-                        if (watch("password") != val) {
-                          return "Confirm password does not match";
-                        }
-                      },
-                    })}
-                    value={isVisible.confirmPassword}
-                    type={isVisible.showConfirmPassword ? "text" : "password"}
-                    onChange={(e) => {
-                      clearErrors("confirmPassword");
-                      handleConfirmPasswordChange(e.target.value);
-                    }}
-                    margin="normal"
-                    variant="outlined"
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() =>
-                              handlePasswordVisibility("showConfirmPassword")
-                            }
-                            onMouseDown={(e) => e.preventDefault()}
-                            edge="end"
-                          >
-                            {isVisible.showConfirmPassword ? (
-                              <VisibilityOff />
-                            ) : (
-                              <Visibility />
-                            )}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                    error={Boolean(errors.confirmPassword)}
-                    helperText={
-                      errors.confirmPassword
-                        ? errors.confirmPassword.message?.toString()
-                        : null
-                    }
-                    size="small"
-                  />
-                </Box>
-              </DialogContent>
-              <Divider
-                color="#265073"
-                sx={{ marginBottom: "2%", marginTop: "2%" }}
-              ></Divider>
-              <DialogActions style={{ margin: "0 16px 10px 0" }}>
-                <PrimaryButton
-                  type="submit"
-                  variant="contained"
-                  startIcon={<SaveIcon />}
-                  onClick={handleSubmit(onSubmit)}
+                <Box
+                  sx={{
+                    width: "100%",
+                  }}
                 >
-                  Save
-                </PrimaryButton>
-              </DialogActions>
-            </Dialog>
-            <DeActivateModal
-              open={deactivateModalOpen}
-              onDeactivateConfirm={deactivateUser}
-              onClose={deactivateModalClose}
-            />
-            <Card
-              sx={{
-                width: "100%",
-                height: "120%",
-                margin: "auto",
-                mt: "30px",
-                [theme.breakpoints.down("md")]: {
-                  width: "100%",
-                },
-                "@media (width: 1024px) and (height: 1366px),(width: 932px) and (height: 430px),(width: 915px) and (height: 412px),(width: 1024px) and (height: 768px),(width: 1180px) and (height: 820px),(width: 912px) and (height: 1368px),(width: 914px) and (height: 412px),(width: 1024px) and (height: 600px)":
-                  {
-                    width: "210%",
-                  },
-              }}
-            >
-              <CardContent>
-                <Table
-                  stickyHeader
-                  style={{ maxWidth: "100%", height: "120%" }}
-                >
-                  <TableBody sx={{ height: "100%" }}>
-                    <TableRow>
-                      <TableCell></TableCell>
-                      <TableCell align="right" sx={{ paddingTop: 0 }}>
-                        <IconButton aria-label="edit" onClick={handleOpenIcon}>
-                          <EditNoteIcon sx={{ color: "#1C658C" }} />
-                        </IconButton>
-                        <Dialog open={openIcon} onClose={handleCloseIcon}>
-                          <DialogTitle
-                            sx={{
-                              backgroundColor: "#265073",
-                              color: "#fff",
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
-                          >
-                            Update User
-                            <IconButton
-                              onClick={handleCloseIcon}
-                              sx={{
-                                backgroundColor: "#FF9843",
-                                color: "#fff",
-                                ":hover": {
-                                  color: "#fff",
-                                  backgroundColor: "#FE7A36",
-                                },
-                              }}
-                            >
-                              <CloseIcon />
-                            </IconButton>
-                          </DialogTitle>
-                          <Divider color="#265073"></Divider>
-                          <DialogContent>
-                            <Box
-                              sx={{
-                                width: "100%",
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  borderBottom: 1,
-                                  borderColor: "divider",
-                                }}
-                              >
-                                {alertShow && (
-                                  <Alert
-                                    severity="success"
-                                    onClose={() => {
-                                      setAlertShow("");
-                                    }}
-                                  >
-                                    {alertShow}
-                                  </Alert>
-                                )}
-                                {saveModalAlert && (
-                                  <Alert
-                                    severity={saveModalAlert.severity}
-                                    onClose={() => {
-                                      setSaveModalAlert(null);
-                                    }}
-                                  >
-                                    {saveModalAlert.message}
-                                  </Alert>
-                                )}
-                                <Tabs
-                                  value={tabValue}
-                                  onChange={handleTabChange}
-                                  aria-label="basic tabs example"
-                                >
-                                  <CustomTab
-                                    label="Primary Details"
-                                    {...LabelProps(0)}
-                                  />
-                                  <CustomTab
-                                    label="Assigned Applications"
-                                    {...LabelProps(1)}
-                                  />
-                                  {/* <CustomTab
+                  <Box
+                    sx={{
+                      borderBottom: 1,
+                      borderColor: "divider",
+                    }}
+                  >
+                    {alertShow && (
+                      <Alert
+                        severity="success"
+                        onClose={() => {
+                          setAlertShow("");
+                        }}
+                      >
+                        {alertShow}
+                      </Alert>
+                    )}
+                    {saveModalAlert && (
+                      <Alert
+                        severity={saveModalAlert.severity}
+                        onClose={() => {
+                          setSaveModalAlert(null);
+                        }}
+                      >
+                        {saveModalAlert.message}
+                      </Alert>
+                    )}
+                    <Tabs
+                      value={tabValue}
+                      onChange={handleTabChange}
+                      aria-label="basic tabs example"
+                    >
+                      <CustomTab label="Primary Details" {...TabProps(0)} />
+                      <CustomTab label="Assignment" {...TabProps(1)} />
+                      {/* <CustomTab
                                     label="Assigned Groups"
                                     {...LabelProps(2)}
                                   /> */}
-                                </Tabs>
-                              </Box>
-                              <CustomTabPanel
-                                value={tabValue}
-                                index={0}
-                                sx={{ width: "100%", height: "450px" }}
-                              >
-                                <TextField
-                                  label="First name"
-                                  name="firstName"
-                                  value={editedData.firstName || ""}
-                                  onChange={(e) =>
-                                    setEditedData({
-                                      ...editedData,
-                                      firstName: e.target.value,
-                                    })
-                                  }
-                                  required
-                                  fullWidth
-                                  margin="normal"
-                                  size="small"
-                                  error={!!formErrors.firstName}
-                                  helperText={formErrors.firstName}
-                                  sx={{ marginTop: 0, marginBottom: 1 }}
-                                />
+                    </Tabs>
+                  </Box>
+                  <CustomTabPanel
+                    value={tabValue}
+                    index={0}
+                    sx={{ width: "100%", height: "450px" }}
+                  >
+                    <TextField
+                      label="First name"
+                      name="firstName"
+                      value={editedData.firstName || ""}
+                      onChange={(e) =>
+                        setEditedData({
+                          ...editedData,
+                          firstName: e.target.value,
+                        })
+                      }
+                      required
+                      fullWidth
+                      margin="normal"
+                      size="small"
+                      error={!!formErrors.firstName}
+                      helperText={formErrors.firstName}
+                      sx={{ marginTop: 0, marginBottom: 1 }}
+                    />
 
-                                <TextField
-                                  label="Last name"
-                                  name="lastName"
-                                  required
-                                  value={editedData.lastName || ""}
-                                  onChange={(e) =>
-                                    setEditedData({
-                                      ...editedData,
-                                      lastName: e.target.value,
-                                    })
-                                  }
-                                  fullWidth
-                                  margin="normal"
-                                  size="small"
-                                  error={!!formErrors.lastName}
-                                  helperText={formErrors.lastName}
-                                  sx={{ marginBottom: 1 }}
-                                />
+                    <TextField
+                      label="Last name"
+                      name="lastName"
+                      required
+                      value={editedData.lastName || ""}
+                      onChange={(e) =>
+                        setEditedData({
+                          ...editedData,
+                          lastName: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      margin="normal"
+                      size="small"
+                      error={!!formErrors.lastName}
+                      helperText={formErrors.lastName}
+                      sx={{ marginBottom: 1 }}
+                    />
 
-                                <TextField
-                                  label="Email"
-                                  name="email"
-                                  required
-                                  value={editedData.email || ""}
-                                  onChange={(e) =>
-                                    setEditedData({
-                                      ...editedData,
-                                      email: e.target.value,
-                                    })
-                                  }
-                                  fullWidth
-                                  margin="normal"
-                                  size="small"
-                                  error={!!emailError}
-                                  helperText={helperText || null}
-                                  sx={{ marginBottom: 1 }}
-                                />
+                    <TextField
+                      label="Email"
+                      name="email"
+                      required
+                      value={editedData.email || ""}
+                      onChange={(e) =>
+                        setEditedData({
+                          ...editedData,
+                          email: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      margin="normal"
+                      size="small"
+                      error={!!emailError}
+                      helperText={helperText || null}
+                      sx={{ marginBottom: 1 }}
+                    />
 
-                                <TextField
-                                  label="Mobile"
-                                  name="mobile"
-                                  required
-                                  value={editedData.mobile || ""}
-                                  onChange={(e) =>
-                                    setEditedData({
-                                      ...editedData,
-                                      mobile: e.target.value,
-                                    })
-                                  }
-                                  fullWidth
-                                  margin="normal"
-                                  size="small"
-                                  error={!!formErrors.mobile}
-                                  helperText={formErrors.mobile}
-                                  sx={{ marginBottom: 1 }}
-                                />
-                                <Autocomplete
-                                  value={
-                                    roles.find(
-                                      (role) => role.name === editedData.role
-                                    ) || null
-                                  }
-                                  onChange={(event, newValue) =>
-                                    handleChange(
-                                      event,
-                                      newValue as Role | null,
-                                      "role"
-                                    )
-                                  }
-                                  options={roles}
-                                  getOptionLabel={(option) => option.name}
-                                  renderInput={(params) => (
-                                    <TextField
-                                      {...params}
-                                      label="Role"
-                                      error={!!formErrors.role}
-                                      size="small"
-                                      helperText={formErrors.role}
-                                      sx={{ marginTop: 2, marginBottom: 3 }}
-                                    />
-                                  )}
-                                />
-                                <Autocomplete
-                                  value={
-                                    groups.find(
-                                      (group) => group.id === editedData.groupId
-                                    ) || null
-                                  }
-                                  onChange={(event, newValue) =>
-                                    handleChange(event, newValue, "group")
-                                  }
-                                  options={groups}
-                                  getOptionLabel={(option) => option.name}
-                                  renderInput={(params) => (
-                                    <TextField
-                                      {...params}
-                                      label="Group"
-                                      error={!!formErrors.group}
-                                      size="small"
-                                      helperText={formErrors.group}
-                                      sx={{ marginBottom: 3.5 }}
-                                    />
-                                  )}
-                                />
+                    <TextField
+                      label="Mobile"
+                      name="mobile"
+                      required
+                      value={editedData.mobile || ""}
+                      onChange={(e) =>
+                        setEditedData({
+                          ...editedData,
+                          mobile: e.target.value,
+                        })
+                      }
+                      fullWidth
+                      margin="normal"
+                      size="small"
+                      error={!!formErrors.mobile}
+                      helperText={formErrors.mobile}
+                      sx={{ marginBottom: 1 }}
+                    />
+                    <Autocomplete
+                      value={
+                        roles.find((role) => role.name === editedData.role) ||
+                        null
+                      }
+                      onChange={(event, newValue) =>
+                        handleChange(event, newValue as Role | null, "role")
+                      }
+                      options={roles}
+                      getOptionLabel={(option) => option.name}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Role"
+                          error={!!formErrors.role}
+                          size="small"
+                          helperText={formErrors.role}
+                          sx={{ marginTop: 2, marginBottom: 3 }}
+                        />
+                      )}
+                    />
+                    <Autocomplete
+                      value={
+                        groups.find(
+                          (group) => group.id === editedData.groupId
+                        ) || null
+                      }
+                      onChange={(event, newValue) =>
+                        handleChange(event, newValue, "group")
+                      }
+                      options={groups}
+                      getOptionLabel={(option) => option.name}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Group"
+                          error={!!formErrors.group}
+                          size="small"
+                          helperText={formErrors.group}
+                          sx={{ marginBottom: 3.5 }}
+                        />
+                      )}
+                    />
 
-                                <Box display="flex" justifyContent="flex-end">
-                                  <PrimaryButton
-                                    startIcon={<SaveIcon />}
-                                    onClick={() => handleEditSave(editedData)}
-                                  >
-                                    Update
-                                  </PrimaryButton>
+                    <Box display="flex" justifyContent="flex-end">
+                      <PrimaryButton
+                        startIcon={<SaveIcon />}
+                        onClick={() => handleEditSave(editedData)}
+                      >
+                        Update
+                      </PrimaryButton>
+                    </Box>
+                  </CustomTabPanel>
+                  <CustomTabPanel
+                    value={tabValue}
+                    index={1}
+                    sx={{ width: "100%", height: "450px" }}
+                  >
+                    <Box>
+                      <Card
+                        sx={{
+                          width: "100%",
+                          height: "80%",
+                          margin: "auto",
+                          position: "sticky",
+                          [theme.breakpoints.down("md")]: {
+                            width: "100%",
+                          },
+                          "@media (width: 1366px) and (height: 1024px),(width: 1280px) and (height: 853px),(width: 1280px) and (height: 800px),(width: 1368px) and (height: 912px)":
+                            {
+                              height: "370px",
+                              marginTop: "10px",
+                              marginBottom: "40px",
+                            },
+                        }}
+                      >
+                        <Table stickyHeader style={{ maxWidth: "100%" }}>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell colSpan={2}>
+                                <Box
+                                  display="flex"
+                                  width="100%"
+                                  margin="auto"
+                                  marginLeft="0"
+                                  paddingTop="0px"
+                                  marginTop="0px"
+                                  position="sticky"
+                                  sx={{
+                                    [theme.breakpoints.down("md")]: {
+                                      width: "100%",
+                                    },
+                                  }}
+                                >
+                                  <TextField
+                                    InputProps={{
+                                      startAdornment: (
+                                        <SearchIcon
+                                          sx={{
+                                            color: "grey",
+                                          }}
+                                        />
+                                      ),
+                                    }}
+                                    placeholder="Search applications"
+                                    variant="outlined"
+                                    value={searchTerm}
+                                    onChange={handleSearchChange}
+                                    size="small"
+                                    sx={{
+                                      width: {
+                                        xs: "200%",
+                                        sm: "75%",
+                                        md: "20%",
+                                        lg: "390px",
+                                      },
+                                      "@media (width: 932px) and (height: 430px),(width: 915px) and (height: 412px),(width: 1024px) and (height: 768px),(width: 1180px) and (height: 820px),(width: 1024px) and (height: 600px),(width: 914px) and (height: 412px),(width: 912px) and (height:1368px),(width: 1024px) and (height: 1366px)":
+                                        {
+                                          width: "100%",
+                                        },
+
+                                      height: "40px",
+                                      "& .MuiInputBase-root": {
+                                        height: "100%",
+                                        outline: "none",
+                                        textDecoration: "none",
+                                      },
+                                    }}
+                                  />
                                 </Box>
-                              </CustomTabPanel>
-                              <CustomTabPanel
-                                value={tabValue}
-                                index={1}
-                                sx={{ width: "100%", height: "450px" }}
-                              >
-                                <Box>
-                                  <Card
+                              </TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {loading && (
+                              <TableRow>
+                                <TableCell
+                                  colSpan={2}
+                                  style={{
+                                    textAlign: "center",
+                                    paddingTop: "5%",
+                                    border: "none",
+                                  }}
+                                >
+                                  <CircularProgress />
+                                </TableCell>
+                              </TableRow>
+                            )}
+                            {!loading && (
+                              <TableRow sx={{ marginTop: "0px" }}>
+                                <TableCell colSpan={2}>
+                                  <TableContainer
+                                    component={Paper}
                                     sx={{
                                       width: "100%",
-                                      height: "80%",
-                                      margin: "auto",
-                                      position: "sticky",
-                                      [theme.breakpoints.down("md")]: {
-                                        width: "100%",
-                                      },
-                                      "@media (width: 1366px) and (height: 1024px),(width: 1280px) and (height: 853px),(width: 1280px) and (height: 800px),(width: 1368px) and (height: 912px)":
-                                        {
-                                          height: "370px",
-                                          marginTop: "10px",
-                                          marginBottom: "40px",
-                                        },
+                                      height: "260px",
+                                      marginTop: "2px",
+                                      marginBottom: "0px",
+                                      border: "none",
+                                      boxShadow: "none",
                                     }}
                                   >
-                                    <Table
-                                      stickyHeader
-                                      style={{ maxWidth: "100%" }}
-                                    >
-                                      <TableHead>
-                                        <TableRow>
-                                          <TableCell colSpan={2}>
-                                            <Box
-                                              display="flex"
-                                              width="100%"
-                                              margin="auto"
-                                              marginLeft="0"
-                                              paddingTop="0px"
-                                              marginTop="0px"
-                                              position="sticky"
-                                              sx={{
-                                                [theme.breakpoints.down("md")]:
-                                                  {
-                                                    width: "100%",
-                                                  },
-                                              }}
-                                            >
-                                              <TextField
-                                                InputProps={{
-                                                  startAdornment: (
-                                                    <SearchIcon
-                                                      sx={{
-                                                        color: "grey",
-                                                      }}
-                                                    />
-                                                  ),
-                                                }}
-                                                placeholder="Search applications"
-                                                variant="outlined"
-                                                value={searchTerm}
-                                                onChange={handleSearchChange}
-                                                size="small"
-                                                sx={{
-                                                  width: {
-                                                    xs: "200%",
-                                                    sm: "75%",
-                                                    md: "20%",
-                                                    lg: "390px",
-                                                  },
-                                                  "@media (width: 932px) and (height: 430px),(width: 915px) and (height: 412px),(width: 1024px) and (height: 768px),(width: 1180px) and (height: 820px),(width: 1024px) and (height: 600px),(width: 914px) and (height: 412px),(width: 912px) and (height:1368px),(width: 1024px) and (height: 1366px)":
-                                                    {
-                                                      width: "100%",
-                                                    },
-
-                                                  height: "40px",
-                                                  "& .MuiInputBase-root": {
-                                                    height: "100%",
-                                                    outline: "none",
-                                                    textDecoration: "none",
-                                                  },
+                                    <FormGroup>
+                                      {options
+                                        .filter((option) =>
+                                          option.name
+                                            .toLowerCase()
+                                            .includes(searchTerm.toLowerCase())
+                                        )
+                                        .map((option) => (
+                                          <FormControlLabel
+                                            key={option.id}
+                                            control={
+                                              <Checkbox
+                                                checked={selectedCheckboxes.some(
+                                                  (checkbox) =>
+                                                    checkbox.id === option.id
+                                                )}
+                                                onChange={() =>
+                                                  handleCheckboxChange(
+                                                    option.id
+                                                  )
+                                                }
+                                                style={{
+                                                  color: "#265073",
+                                                  marginBottom: "0px",
+                                                  marginTop: "0px",
                                                 }}
                                               />
-                                            </Box>
-                                          </TableCell>
-                                        </TableRow>
-                                      </TableHead>
-                                      <TableBody>
-                                        {loading && (
-                                          <TableRow>
-                                            <TableCell
-                                              colSpan={2}
-                                              style={{
-                                                textAlign: "center",
-                                                paddingTop: "5%",
-                                                border: "none",
-                                              }}
-                                            >
-                                              <CircularProgress />
-                                            </TableCell>
-                                          </TableRow>
-                                        )}
-                                        {!loading && (
-                                          <TableRow sx={{ marginTop: "0px" }}>
-                                            <TableCell colSpan={2}>
-                                              <TableContainer
-                                                component={Paper}
-                                                sx={{
-                                                  width: "100%",
-                                                  height: "260px",
-                                                  marginTop: "2px",
+                                            }
+                                            label={
+                                              <span
+                                                style={{
+                                                  maxWidth: "300px",
+                                                  overflow: "hidden",
+                                                  display: "inline-block",
+                                                  whiteSpace: "unset",
+                                                  textOverflow: "ellipsis",
+                                                  wordBreak: "break-all",
+                                                  marginTop: "0px",
                                                   marginBottom: "0px",
-                                                  border: "none",
-                                                  boxShadow: "none",
+                                                  paddingTop: "3px",
+                                                  paddingBottom: "0px",
                                                 }}
                                               >
-                                                <FormGroup>
-                                                  {options
-                                                    .filter((option) =>
-                                                      option.name
-                                                        .toLowerCase()
-                                                        .includes(
-                                                          searchTerm.toLowerCase()
-                                                        )
-                                                    )
-                                                    .map((option) => (
-                                                      <FormControlLabel
-                                                        key={option.id}
-                                                        control={
-                                                          <Checkbox
-                                                            checked={selectedCheckboxes.some(
-                                                              (checkbox) =>
-                                                                checkbox.id ===
-                                                                option.id
-                                                            )}
-                                                            onChange={() =>
-                                                              handleCheckboxChange(
-                                                                option.id
-                                                              )
-                                                            }
-                                                            style={{
-                                                              color: "#265073",
-                                                              marginBottom:
-                                                                "0px",
-                                                              marginTop: "0px",
-                                                            }}
-                                                          />
-                                                        }
-                                                        label={
-                                                          <span
-                                                            style={{
-                                                              maxWidth: "300px",
-                                                              overflow:
-                                                                "hidden",
-                                                              display:
-                                                                "inline-block",
-                                                              whiteSpace:
-                                                                "unset",
-                                                              textOverflow:
-                                                                "ellipsis",
-                                                              wordBreak:
-                                                                "break-all",
-                                                              marginTop: "0px",
-                                                              marginBottom:
-                                                                "0px",
-                                                              paddingTop: "3px",
-                                                              paddingBottom:
-                                                                "0px",
-                                                            }}
-                                                          >
-                                                            {option.name}
-                                                          </span>
-                                                        }
-                                                      />
-                                                    ))}
-                                                  {options.filter((option) =>
-                                                    option.name
-                                                      .toLowerCase()
-                                                      .includes(
-                                                        searchTerm.toLowerCase()
-                                                      )
-                                                  ).length === 0 && (
-                                                    <Typography>
-                                                      No applications available
-                                                    </Typography>
-                                                  )}
-                                                </FormGroup>
-                                              </TableContainer>
-                                            </TableCell>
-                                          </TableRow>
-                                        )}
-                                      </TableBody>
-                                    </Table>
-                                  </Card>
-                                  <Box display="flex" justifyContent="flex-end">
-                                    <PrimaryButton
-                                      startIcon={<SaveIcon />}
-                                      type="submit"
-                                      onClick={() =>
-                                        handleSubmitModal(
-                                          selectedCheckboxes,
-                                          true
-                                        )
-                                      }
-                                      sx={{ marginTop: 3 }}
-                                    >
-                                      Save
-                                    </PrimaryButton>
-                                  </Box>
-                                </Box>
-                              </CustomTabPanel>
-                            </Box>
-                          </DialogContent>
-                        </Dialog>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <strong>First name:</strong>
-                      </TableCell>
-                      <TableCell
-                        style={{ whiteSpace: "unset", wordBreak: "break-all" }}
-                      >
-                        {userData.firstName}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <strong>Last name:</strong>
-                      </TableCell>
-                      <TableCell
-                        style={{ whiteSpace: "unset", wordBreak: "break-all" }}
-                      >
-                        {userData.lastName}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <strong>Email:</strong>
-                      </TableCell>
-                      <TableCell
-                        style={{ whiteSpace: "unset", wordBreak: "break-all" }}
-                      >
-                        {userData.email}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <strong>Mobile:</strong>
-                      </TableCell>
-                      <TableCell
-                        style={{ whiteSpace: "unset", wordBreak: "break-all" }}
-                      >
-                        {userData.mobile}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <strong>Role:</strong>
-                      </TableCell>
-                      <TableCell
-                        style={{ whiteSpace: "unset", wordBreak: "break-all" }}
-                      >
-                        {userData.role}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <strong>Group:</strong>
-                      </TableCell>
-                      <TableCell
-                        style={{ whiteSpace: "unset", wordBreak: "break-all" }}
-                      >
-                        {userData.groups ? userData.groups.name : '-'}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <strong>Status:</strong>
-                      </TableCell>
-                      <TableCell
-                        style={{ whiteSpace: "unset", wordBreak: "break-all" }}
-                      >
-                        {userStatus[userData.status]}
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </Box>
-        </Grid>
-        <Grid item xs={12} lg={6}>
-          <Box
-            sx={{
-              p: 2,
-            }}
+                                                {option.name}
+                                              </span>
+                                            }
+                                          />
+                                        ))}
+                                      {options.filter((option) =>
+                                        option.name
+                                          .toLowerCase()
+                                          .includes(searchTerm.toLowerCase())
+                                      ).length === 0 && (
+                                        <Typography>
+                                          No applications available
+                                        </Typography>
+                                      )}
+                                    </FormGroup>
+                                  </TableContainer>
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </Card>
+                      <Box display="flex" justifyContent="flex-end">
+                        <PrimaryButton
+                          startIcon={<SaveIcon />}
+                          type="submit"
+                          onClick={() =>
+                            handleSubmitModal(selectedCheckboxes, true)
+                          }
+                          sx={{ marginTop: 3 }}
+                        >
+                          Save
+                        </PrimaryButton>
+                      </Box>
+                    </Box>
+                  </CustomTabPanel>
+                </Box>
+              </DialogContent>
+            </Dialog>
+          </legend>
+
+          <PrimaryButton
+            variant="contained"
+            color="primary"
+            style={{ margin: "17px 15px 0 0" }}
+            onClick={handleOpenModal}
+            startIcon={<HowToRegIcon />}
+            disabled={userData.status === 1}
           >
-            <Typography
-              variant="h5"
-              component="h2"
-              sx={{ marginBottom: 1, marginTop: 2 }}
-              position="sticky"
-            >
-              Assigned Applications
-            </Typography>
-            <Divider sx={{ marginBottom: 2, flexGrow: 2 }} color="#265073" />
-            <Card
+            Set Password & Activate
+          </PrimaryButton>
+          <PrimaryButton
+            variant="contained"
+            color="primary"
+            style={{ margin: "15px 15px 0 0" }}
+            onClick={() => resendLink()}
+            startIcon={<LocalPostOfficeIcon />}
+            disabled={userData.status === 1}
+          >
+            Resend Activation Email
+          </PrimaryButton>
+          <PrimaryButton
+            variant="contained"
+            color="primary"
+            style={{ margin: "15px 15px 0 0" }}
+            onClick={() => setDeactivateModalOpen(true)}
+            startIcon={<PersonOffIcon />}
+            disabled={userData.status === 3}
+          >
+            Deactivate User
+          </PrimaryButton>
+          <Dialog open={openModal} onClose={handleCloseModal}>
+            <DialogTitle
               sx={{
+                backgroundColor: "#265073",
+                color: "#fff",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
                 width: "100%",
-                height: "80%",
-                margin: "auto",
-                position: "sticky",
-                [theme.breakpoints.down("md")]: {
-                  width: "100%",
-                },
               }}
             >
-              <Card
+              Create Password
+              <IconButton
+                onClick={handleCloseModal}
                 sx={{
-                  width: "60%",
-                  height: "415px",
-                  margin: "auto",
-                  position: "sticky",
-                  marginTop: "45px",
-                  marginBottom: "20px",
-                  [theme.breakpoints.down("md")]: {
-                    width: "100%",
+                  backgroundColor: "#FF9843",
+                  color: "#fff",
+                  ":hover": {
+                    color: "#fff",
+                    backgroundColor: "#FE7A36",
                   },
-                  "@media (width: 1366px) and (height: 1024px),(width: 1280px) and (height: 853px),(width: 1280px) and (height: 800px),(width: 1368px) and (height: 912px)":
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <Divider color="#265073"></Divider>
+            <DialogContent>
+              <Box component="form" noValidate sx={{ mt: 1 }}>
+                <TextField
+                  label="Password"
+                  required
+                  fullWidth
+                  value={isVisible.password}
+                  type={isVisible.showPassword ? "text" : "password"}
+                  {...register("password", {
+                    required: "Password is required.",
+                    pattern: {
+                      value:
+                        /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~`!@#$%^&*()-_+={}[\]|\\:;"'<>,.?/]).{8,}$/,
+                      message:
+                        "Must contain: 8 or more characters, 1 uppercase, 1 lowercase, 1 number, 1 special character.",
+                    },
+                  })}
+                  onChange={(e) => {
+                    handlePasswordChange(e.target.value);
+                  }}
+                  margin="normal"
+                  variant="outlined"
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() =>
+                            handlePasswordVisibility("showPassword")
+                          }
+                          onMouseDown={(e) => e.preventDefault()}
+                          edge="end"
+                        >
+                          {isVisible.showPassword ? (
+                            <VisibilityOff />
+                          ) : (
+                            <Visibility />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  error={Boolean(errors.password)}
+                  helperText={
+                    errors.password ? errors.password.message?.toString() : null
+                  }
+                  size="small"
+                />
+                <TextField
+                  label="Confirm Password"
+                  required
+                  fullWidth
+                  {...register("confirmPassword", {
+                    required: "Confirm password is required.",
+                    validate: (val: string | undefined) => {
+                      if (watch("password") != val) {
+                        return "Confirm password does not match";
+                      }
+                    },
+                  })}
+                  value={isVisible.confirmPassword}
+                  type={isVisible.showConfirmPassword ? "text" : "password"}
+                  onChange={(e) => {
+                    clearErrors("confirmPassword");
+                    handleConfirmPasswordChange(e.target.value);
+                  }}
+                  margin="normal"
+                  variant="outlined"
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() =>
+                            handlePasswordVisibility("showConfirmPassword")
+                          }
+                          onMouseDown={(e) => e.preventDefault()}
+                          edge="end"
+                        >
+                          {isVisible.showConfirmPassword ? (
+                            <VisibilityOff />
+                          ) : (
+                            <Visibility />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  error={Boolean(errors.confirmPassword)}
+                  helperText={
+                    errors.confirmPassword
+                      ? errors.confirmPassword.message?.toString()
+                      : null
+                  }
+                  size="small"
+                />
+              </Box>
+            </DialogContent>
+            <Divider
+              color="#265073"
+              sx={{ marginBottom: "2%", marginTop: "2%" }}
+            ></Divider>
+            <DialogActions style={{ margin: "0 16px 10px 0" }}>
+              <PrimaryButton
+                type="submit"
+                variant="contained"
+                startIcon={<SaveIcon />}
+                onClick={handleSubmit(onSubmit)}
+              >
+                Save
+              </PrimaryButton>
+            </DialogActions>
+          </Dialog>
+          <DeActivateModal
+            open={deactivateModalOpen}
+            onDeactivateConfirm={deactivateUser}
+            onClose={deactivateModalClose}
+          />
+          <Table stickyHeader style={{ maxWidth: "100%", height: "120%" }}>
+            <TableBody sx={{ height: "100%" }}>
+              <Grid
+                container
+                spacing={2}
+                sx={{
+                  paddingX: { xs: 4, md: 50 },
+                  marginTop: 4,
+                  "@media(width: 1024px) and (height: 768px), (min-width: 430px) and (max-width: 932px)":
                     {
-                      height: "370px",
-                      marginTop: "70px",
-                      marginBottom: "40px",
+                      paddingLeft: "100px",
+                      paddingRight: "100px",
+                    },
+                  "@media (width: 1180px) and (height: 820px),(width: 1024px) and (height: 1366px),(width: 1024px) and (height: 600px)":
+                    {
+                      paddingLeft: "120px",
+                      paddingRight: "120px",
                     },
                 }}
               >
-                <Table stickyHeader style={{ maxWidth: "100%" }}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell colSpan={2}>
-                        <Box
-                          display="flex"
-                          width="100%"
-                          margin="auto"
-                          marginLeft="0"
-                          paddingTop="0px"
-                          marginTop="0px"
-                          position="sticky"
-                          sx={{
-                            [theme.breakpoints.down("md")]: {
-                              width: "100%",
-                            },
-                          }}
-                        >
-                          <TextField
-                            InputProps={{
-                              startAdornment: (
-                                <SearchIcon
-                                  sx={{
-                                    color: "grey",
-                                  }}
-                                />
-                              ),
-                            }}
-                            placeholder="Search applications"
-                            variant="outlined"
-                            value={searchTerm}
-                            onChange={handleSearchChange}
-                            size="small"
-                            sx={{
-                              width: {
-                                xs: "100%",
-                                sm: "75%",
-                                md: "50%",
-                                lg: "390px",
-                              },
-                              height: "40px",
-                              "& .MuiInputBase-root": {
-                                height: "100%",
-                                outline: "none",
-                                textDecoration: "none",
-                              },
-                            }}
-                          />
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {loading && (
-                      <TableRow>
-                        <TableCell
-                          colSpan={2}
-                          style={{
-                            textAlign: "center",
-                            paddingTop: "5%",
-                            border: "none",
-                          }}
-                        >
-                          <CircularProgress />
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    {!loading && (
-                      <TableRow sx={{ marginTop: "0px" }}>
-                        <TableCell colSpan={2}>
-                          <TableContainer
-                            component={Paper}
-                            sx={{
-                              width: "100%",
-                              height: "308px",
-                              marginTop: "2px",
-                              marginBottom: "0px",
-                              border: "none",
-                              boxShadow: "none",
-                            }}
-                          >
-                            <FormGroup>
-                              {options
-                                .filter((option) =>
-                                  option.name
-                                    .toLowerCase()
-                                    .includes(searchTerm.toLowerCase())
-                                )
-                                .map((option) => (
-                                  <FormControlLabel
-                                    key={option.id}
-                                    control={
-                                      <Checkbox
-                                        checked={selectedCheckboxes.some(
-                                          (checkbox) =>
-                                            checkbox.id === option.id
-                                        )}
-                                        onChange={() =>
-                                          handleCheckboxChange(option.id)
-                                        }
-                                        style={{
-                                          color: "#265073",
-                                          marginBottom: "0px",
-                                          marginTop: "0px",
-                                        }}
-                                      />
-                                    }
-                                    label={
-                                      <span
-                                        style={{
-                                          maxWidth: "300px",
-                                          overflow: "hidden",
-                                          display: "inline-block",
-                                          whiteSpace: "unset",
-                                          textOverflow: "ellipsis",
-                                          wordBreak: "break-all",
-                                          marginTop: "0px",
-                                          marginBottom: "0px",
-                                          paddingTop: "3px",
-                                          paddingBottom: "0px",
-                                        }}
-                                      >
-                                        {option.name}
-                                      </span>
-                                    }
-                                  />
-                                ))}
-                              {options.filter((option) =>
-                                option.name
-                                  .toLowerCase()
-                                  .includes(searchTerm.toLowerCase())
-                              ).length === 0 && (
-                                <Typography>
-                                  No applications available
-                                </Typography>
-                              )}
-                            </FormGroup>
-                          </TableContainer>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </Card>
-              <Card
-                sx={{
-                  width: "60%",
-                  margin: "auto",
-                  position: "sticky",
-                  marginTop: "25px",
-                  marginBottom: "22px",
-                  border: "none",
-                  boxShadow: "none",
-                  [theme.breakpoints.down("md")]: {
-                    width: "100%",
-                  },
-                  [theme.breakpoints.down("lg")]: {
-                    marginLeft: "15px",
-                  },
-                  "@media (width: 914px) and (height: 412px),(width: 912px) and (height: 1368px),(width: 915px) and (height: 412px),(width: 932px) and (height: 430px),(width: 1180px) and (height: 820px)":
-                    {
-                      marginLeft: "155px",
-                    },
-                  "@media (width: 1180px) and (height: 820px),(width: 1024px) and (height: 768px)":
-                    {
-                      marginLeft: "200px",
-                    },
-                  "@media (width: 1024px) and (height: 1366px),(width: 1024px) and (height: 600px),(width: 1024px) and (height: 768px)":
-                    {
-                      marginLeft: "180px",
-                    },
-                }}
-              >
-                <PrimaryButton
-                  startIcon={<SaveIcon />}
-                  type="submit"
-                  onClick={() => handleSubmitModal(selectedCheckboxes, false)}
-                >
-                  Save
-                </PrimaryButton>
-              </Card>
-            </Card>
-          </Box>
-        </Grid>
+                <Grid item xs={12} md={6} container>
+                  <TableRow>
+                    <TableCell sx={{ border: "none" }}>
+                      <strong>First name:</strong>
+                    </TableCell>
+                    <TableCell style={{ border: "none" }}>
+                      {userData.firstName}
+                    </TableCell>
+                  </TableRow>
+                </Grid>
+                <Grid item xs={12} md={6} container>
+                  <TableRow>
+                    <TableCell sx={{ border: "none" }}>
+                      <strong>Last name:</strong>
+                    </TableCell>
+                    <TableCell style={{ border: "none" }}>
+                      {userData.lastName}
+                    </TableCell>
+                  </TableRow>
+                </Grid>
+                <Grid item xs={12} md={6} container>
+                  <TableRow>
+                    <TableCell sx={{ border: "none" }}>
+                      <strong>Email:</strong>
+                    </TableCell>
+                    <TableCell
+                      style={{
+                        whiteSpace: "unset",
+                        wordBreak: "break-word",
+                        border: "none",
+                      }}
+                    >
+                      {userData.email}
+                    </TableCell>
+                  </TableRow>
+                </Grid>
+                <Grid item xs={12} md={6} container>
+                  <TableRow>
+                    <TableCell sx={{ border: "none" }}>
+                      <strong>Mobile:</strong>
+                    </TableCell>
+                    <TableCell style={{ border: "none" }}>
+                      {userData.mobile}
+                    </TableCell>
+                  </TableRow>
+                </Grid>
+                <Grid item xs={12} md={6} container>
+                  <TableRow>
+                    <TableCell sx={{ border: "none" }}>
+                      <strong>Role:</strong>
+                    </TableCell>
+                    <TableCell style={{ border: "none" }}>
+                      {userData.role}
+                    </TableCell>
+                  </TableRow>
+                </Grid>
+                <Grid item xs={12} md={6} container>
+                  <TableRow>
+                    <TableCell sx={{ border: "none" }}>
+                      <strong>Group:</strong>
+                    </TableCell>
+                    <TableCell style={{ border: "none" }}>
+                      {userData.groups ? userData.groups.name : "-"}
+                    </TableCell>
+                  </TableRow>
+                </Grid>
+                <Grid item xs={12} md={6} container>
+                  <TableRow>
+                    <TableCell sx={{ border: "none" }}>
+                      <strong>Status:</strong>
+                    </TableCell>
+                    <TableCell style={{ border: "none" }}>
+                      {userStatus[userData.status]}
+                    </TableCell>
+                  </TableRow>
+                </Grid>
+              </Grid>
+            </TableBody>
+          </Table>
+        </Box>
       </Grid>
+      <Card sx={{ width: "100%" }}>
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          aria-label="basic tabs example"
+          sx={{ marginLeft: 2 }}
+        >
+          <Tab label="Applications" {...TabProps(2)} />
+          <Tab label="Groups" {...TabProps(3)} />
+        </Tabs>
+        <CustomTabPanel
+          value={tabValue}
+          index={0}
+          sx={{ width: "100%", height: "700px" }}
+        >
+          <TableContainer>
+            <ApplicationList
+              title={false}
+              userId={id}
+              get={GET_ALL}
+              isAdd={false}
+            />
+          </TableContainer>
+        </CustomTabPanel>
+        <CustomTabPanel
+          value={tabValue}
+          index={1}
+          sx={{ width: "100%", height: "700px" }}
+        >
+          <TableContainer>
+            <GroupList
+              title={false}
+              get={GET_ALL}
+              userId={id}
+              isCreate={false}
+            />
+          </TableContainer>
+        </CustomTabPanel>
+      </Card>
       <Box display="flex" justifyContent="flex-end">
         <BackButton
           variant="contained"
