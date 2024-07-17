@@ -30,34 +30,34 @@ export class GroupsService {
     private userApplictionsModel: typeof UserApplications,
   ) {}
 
-  async getGroupList(get: string, userId: number): Promise<GroupsData[]> {
-    const GET_ALL = 'all';
-    const GET_FILTER = 'filter';
+  async getGroupList(): Promise<GroupsData[]> {
+    // const GET_ALL = 'all';
+    // const GET_FILTER = 'filter';
     try {
-      if (get === GET_ALL) {
-        const groups = await this.groupModel.findAll({ where: { status: 1 } });
+      // if (get === GET_ALL) {
+      const groups = await this.groupModel.findAll({ where: { status: 1 } });
 
-        if (groups && groups.length == 0) {
-          throw new NotFoundException('No groups found');
-        }
-        return groups;
-      } else if (get === GET_FILTER) {
-        const userGroups = await this.groupUsersModel.findAll({
-          where: { userId: userId },
-        });
-
-        if (!userGroups || userGroups.length === 0) {
-          throw new NotFoundException('No groups found for this users');
-        }
-
-        const groupIds = userGroups.map((userGroup) => userGroup.groupId);
-
-        const groups = await this.groupModel.findAll({
-          where: { id: groupIds, status: 1 },
-        });
-
-        return groups;
+      if (groups && groups.length == 0) {
+        throw new NotFoundException('No groups found');
       }
+      return groups;
+      // } else if (get === GET_FILTER) {
+      //   const userGroups = await this.groupUsersModel.findAll({
+      //     where: { userId: userId },
+      //   });
+
+      //   if (!userGroups || userGroups.length === 0) {
+      //     throw new NotFoundException('No groups found for this users');
+      //   }
+
+      //   const groupIds = userGroups.map((userGroup) => userGroup.groupId);
+
+      //   const groups = await this.groupModel.findAll({
+      //     where: { id: groupIds, status: 1 },
+      //   });
+
+      //   return groups;
+      // }
     } catch (error) {
       throw new HttpException(
         'Error getting groups',
@@ -69,13 +69,13 @@ export class GroupsService {
   async create(
     groupsDto: GroupsDto,
     user: { userId: number },
-    isCreate: string | boolean,
-    userId: number,
+    // isCreate: string | boolean,
+    // userId: number,
   ): Promise<GroupCreateSuccessDto> {
-    const isCreateBool =
-      typeof isCreate === 'string'
-        ? JSON.parse(isCreate.toLowerCase())
-        : isCreate;
+    // const isCreateBool =
+    //   typeof isCreate === 'string'
+    //     ? JSON.parse(isCreate.toLowerCase())
+    //     : isCreate;
     const { name } = groupsDto;
     let newGroup;
     try {
@@ -93,33 +93,32 @@ export class GroupsService {
           throw new InternalServerErrorException('Group creation failed');
         }
       }
-      if (isCreateBool) {
-        const groups = await this.groupModel.findAll({
-          where: { status: 1 },
-        });
-        return {
-          message: 'Group created successfully',
-          statusCode: HttpStatus.CREATED,
-          data: groups,
-        };
-      } else if (userId) {
-        await this.groupUsersModel.create({
-          userId: userId,
-          groupId: newGroup.id,
-        });
-      }
-      const groupUsers = await this.groupUsersModel.findAll({
-        where: { userId: userId },
-      });
-      if (!groupUsers || groupUsers.length === 0) {
-        throw new NotFoundException('No groups found for this user');
-      }
+      // if (isCreateBool) {
+      //   const groups = await this.groupModel.findAll({
+      //     where: { status: 1 },
+      //   });
+      //   return {
+      //     message: 'Group created successfully',
+      //     statusCode: HttpStatus.CREATED,
+      //     data: groups,
+      //   };
+      // } else if (userId) {
+      //   await this.groupUsersModel.create({
+      //     userId: userId,
+      //     groupId: newGroup.id,
+      //   });
+      // }
+      // const groupUsers = await this.groupUsersModel.findAll({
+      //   where: { userId: userId },
+      // });
+      // if (!groupUsers || groupUsers.length === 0) {
+      //   throw new NotFoundException('No groups found for this user');
+      // }
 
-      const groupIds = groupUsers.map((userGroup) => userGroup.groupId);
+      // const groupIds = groupUsers.map((userGroup) => userGroup.groupId);
 
       const groups = await this.groupModel.findAll({
         where: {
-          id: groupIds,
           status: 1,
         },
       });

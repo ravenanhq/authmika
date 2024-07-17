@@ -165,6 +165,10 @@ const CustomTab = styled(Tab)(({ theme }) => ({
   textTransform: "none",
 }));
 
+const CustomTabs = styled(Tab)(({ theme }) => ({
+  textTransform: "none",
+}));
+
 function CustomTabPanel(props: TabPanelProps) {
   const { children, value, index, sx, ...other } = props;
 
@@ -224,6 +228,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
   const [openIcon, setOpenIcon] = React.useState(false);
   const handleOpenIcon = () => setOpenIcon(true);
   const [tabValue, setTabValue] = React.useState(0);
+  const [tabsValue, setTabsValue] = React.useState(0);
   const [formErrors, setFormErrors] = useState<Errors>({});
   const [editedData, setEditedData] = useState<RowData>(InitialRowData);
   const [roles, setRoles] = useState<{ id: string; name: string }[]>([]);
@@ -231,9 +236,9 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
   const emailError = invalidEmail || !!formErrors.email;
   const helperText = [invalidEmail, formErrors.email].filter(Boolean).join(" ");
   const [userId, setUserId] = useState<number | undefined>();
-  const [isGroupList, setIsGroupList] = useState(true);
-  const GET_ALL = "all";
-  const GET_FILTER = "filter";
+  // const [isGroupList, setIsGroupList] = useState(true);
+   const GET_ALL = "all";
+  // const GET_FILTER = "filter";
 
   useEffect(() => {
     if (openIcon) {
@@ -277,7 +282,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
 
   useEffect(() => {
     getRoles();
-    getGroups(GET_ALL, userId);
+    getGroups();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -354,9 +359,9 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
     }
   };
 
-  const getGroups = async (get: string, userId: number | undefined) => {
+  const getGroups = async () => {
     try {
-      const response = await GroupsApi.getAllGroupsApi(get, userId);
+      const response = await GroupsApi.getAllGroupsApi();
       if (response) {
         const groupData = response;
         setGroups(groupData);
@@ -553,6 +558,10 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
     setTabValue(newValue);
   };
 
+  const handleTabsChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
   const handleChange = (
     event: React.ChangeEvent<{}>,
     newValue: { id: string; name: string } | null,
@@ -713,8 +722,26 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
         >
           <legend style={{ paddingLeft: "0px" }}>
             User Details
-            <IconButton aria-label="edit" onClick={handleOpenIcon}>
-              <EditNoteIcon sx={{ color: "#1C658C" }} />
+            <IconButton
+              aria-label="edit"
+              onClick={handleOpenIcon}
+              sx={{
+                backgroundColor: "#1C658C",
+                color: "#fff",
+                ":hover": {
+                  color: "#fff",
+                  backgroundColor: "#1C658C",
+                },
+                marginLeft: "10px",
+              }}
+            >
+              <EditNoteIcon
+                sx={{
+                  color: "white",
+                  width: "0.75em",
+                  height: "0.75em",
+                }}
+              />
             </IconButton>
             <Dialog open={openIcon} onClose={handleCloseIcon}>
               <DialogTitle
@@ -1112,37 +1139,51 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
               </DialogContent>
             </Dialog>
           </legend>
+          <Box
+            sx={{
+              border: "none",
+              boxShadow: "none",
+              paddingLeft: "60px",
+              "@media(width: 375px) and (height: 667px),@media(width: 3px) and (height: 667px)":
+                {
+                  margin: "0px",
+                  padding: "0px",
+                },
+            }}
+          >
+            {" "}
+            <PrimaryButton
+              variant="contained"
+              color="primary"
+              style={{ margin: "17px 15px 0 0" }}
+              onClick={handleOpenModal}
+              startIcon={<HowToRegIcon />}
+              disabled={userData.status === 1}
+            >
+              Set Password & Activate
+            </PrimaryButton>
+            <PrimaryButton
+              variant="contained"
+              color="primary"
+              style={{ margin: "15px 15px 0 0" }}
+              onClick={() => resendLink()}
+              startIcon={<LocalPostOfficeIcon />}
+              disabled={userData.status === 1}
+            >
+              Resend Activation Email
+            </PrimaryButton>
+            <PrimaryButton
+              variant="contained"
+              color="primary"
+              style={{ margin: "15px 15px 0 0" }}
+              onClick={() => setDeactivateModalOpen(true)}
+              startIcon={<PersonOffIcon />}
+              disabled={userData.status === 3}
+            >
+              Deactivate User
+            </PrimaryButton>
+          </Box>
 
-          <PrimaryButton
-            variant="contained"
-            color="primary"
-            style={{ margin: "17px 15px 0 0" }}
-            onClick={handleOpenModal}
-            startIcon={<HowToRegIcon />}
-            disabled={userData.status === 1}
-          >
-            Set Password & Activate
-          </PrimaryButton>
-          <PrimaryButton
-            variant="contained"
-            color="primary"
-            style={{ margin: "15px 15px 0 0" }}
-            onClick={() => resendLink()}
-            startIcon={<LocalPostOfficeIcon />}
-            disabled={userData.status === 1}
-          >
-            Resend Activation Email
-          </PrimaryButton>
-          <PrimaryButton
-            variant="contained"
-            color="primary"
-            style={{ margin: "15px 15px 0 0" }}
-            onClick={() => setDeactivateModalOpen(true)}
-            startIcon={<PersonOffIcon />}
-            disabled={userData.status === 3}
-          >
-            Deactivate User
-          </PrimaryButton>
           <Dialog open={openModal} onClose={handleCloseModal}>
             <DialogTitle
               sx={{
@@ -1292,12 +1333,16 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                 container
                 spacing={2}
                 sx={{
-                  paddingX: { xs: 4, md: 50 },
-                  marginTop: 4,
+                  paddingLeft: "60px",
+                  paddingRight: "300px",
                   "@media(width: 1024px) and (height: 768px), (min-width: 430px) and (max-width: 932px)":
                     {
                       paddingLeft: "100px",
                       paddingRight: "100px",
+                    },
+                  "@media(width: 667px) and (height: 375px),@media(width: 640px) and (height: 360px)":
+                    {
+                      paddingLeft: "50px",
                     },
                   "@media (width: 1180px) and (height: 820px),(width: 1024px) and (height: 1366px),(width: 1024px) and (height: 600px)":
                     {
@@ -1306,17 +1351,17 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                     },
                 }}
               >
-                <Grid item xs={12} md={6} container>
+                <Grid item xs={12} sm={4} container>
                   <TableRow>
                     <TableCell sx={{ border: "none" }}>
-                      <strong>First name:</strong>
+                      <strong style={{ marginBottom: 0 }}>First name:</strong>
                     </TableCell>
                     <TableCell style={{ border: "none" }}>
                       {userData.firstName}
                     </TableCell>
                   </TableRow>
                 </Grid>
-                <Grid item xs={12} md={6} container>
+                <Grid item xs={12} sm={4} container>
                   <TableRow>
                     <TableCell sx={{ border: "none" }}>
                       <strong>Last name:</strong>
@@ -1326,7 +1371,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                     </TableCell>
                   </TableRow>
                 </Grid>
-                <Grid item xs={12} md={6} container>
+                <Grid item xs={12} sm={4} container>
                   <TableRow>
                     <TableCell sx={{ border: "none" }}>
                       <strong>Email:</strong>
@@ -1334,7 +1379,6 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                     <TableCell
                       style={{
                         whiteSpace: "unset",
-                        wordBreak: "break-word",
                         border: "none",
                       }}
                     >
@@ -1342,28 +1386,34 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                     </TableCell>
                   </TableRow>
                 </Grid>
-                <Grid item xs={12} md={6} container>
-                  <TableRow>
+                <Grid item xs={12} sm={4} container>
+                  <TableRow sx={{ marginTop: 0 }}>
                     <TableCell sx={{ border: "none" }}>
                       <strong>Mobile:</strong>
                     </TableCell>
-                    <TableCell style={{ border: "none" }}>
+                    <TableCell
+                      style={{
+                        border: "none",
+                        wordBreak: "break-word",
+                        paddingLeft: "40px",
+                      }}
+                    >
                       {userData.mobile}
                     </TableCell>
                   </TableRow>
                 </Grid>
-                <Grid item xs={12} md={6} container>
-                  <TableRow>
+                <Grid item xs={12} sm={4} container>
+                  <TableRow sx={{ marginTop: 0 }}>
                     <TableCell sx={{ border: "none" }}>
                       <strong>Role:</strong>
                     </TableCell>
-                    <TableCell style={{ border: "none" }}>
+                    <TableCell style={{ border: "none", paddingLeft: "58px" }}>
                       {userData.role}
                     </TableCell>
                   </TableRow>
                 </Grid>
-                <Grid item xs={12} md={6} container>
-                  <TableRow>
+                <Grid item xs={12} sm={4} container>
+                  <TableRow sx={{ marginTop: 0 }}>
                     <TableCell sx={{ border: "none" }}>
                       <strong>Group:</strong>
                     </TableCell>
@@ -1373,11 +1423,11 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                   </TableRow>
                 </Grid>
                 <Grid item xs={12} md={6} container>
-                  <TableRow>
+                  <TableRow sx={{ marginTop: 0 }}>
                     <TableCell sx={{ border: "none" }}>
                       <strong>Status:</strong>
                     </TableCell>
-                    <TableCell style={{ border: "none" }}>
+                    <TableCell style={{ border: "none", paddingLeft: "40px" }}>
                       {userStatus[userData.status]}
                     </TableCell>
                   </TableRow>
@@ -1389,18 +1439,18 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
       </Grid>
       <Card sx={{ width: "100%" }}>
         <Tabs
-          value={tabValue}
-          onChange={handleTabChange}
+          value={tabsValue}
+          onChange={handleTabsChange}
           aria-label="basic tabs example"
           sx={{ marginLeft: 2 }}
         >
-          <Tab label="Applications" {...TabProps(2)} />
-          <Tab label="Groups" {...TabProps(3)} />
+          <CustomTabs label="Applications" {...TabProps(0)} />
+          {/* <Tab label="Groups" {...TabProps(3)} /> */}
         </Tabs>
         <CustomTabPanel
-          value={tabValue}
+          value={tabsValue}
           index={0}
-          sx={{ width: "100%", height: "700px" }}
+          sx={{ width: "100%", height: "100%" }}
         >
           <TableContainer>
             <ApplicationList
@@ -1411,10 +1461,10 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
             />
           </TableContainer>
         </CustomTabPanel>
-        <CustomTabPanel
+        {/* <CustomTabPanel
           value={tabValue}
           index={1}
-          sx={{ width: "100%", height: "700px" }}
+          sx={{ width: "100%", height: "100%" }}
         >
           <TableContainer>
             <GroupList
@@ -1424,7 +1474,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
               isCreate={false}
             />
           </TableContainer>
-        </CustomTabPanel>
+        </CustomTabPanel> */}
       </Card>
       <Box display="flex" justifyContent="flex-end">
         <BackButton

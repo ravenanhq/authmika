@@ -82,13 +82,13 @@ export default function AddUserModal({
   const [password, setPassword] = useState("");
   const isViewBool =
     typeof isView === "string" ? JSON.parse(isView.toLowerCase()) : isView;
-  const [get, setGet] = useState("");
-  const [userId, setUserId] = useState<number | undefined>();
-  const GET_ALL = "all";
+  // const [get, setGet] = useState("");
+  // const [userId, setUserId] = useState<number | undefined>();
+  // const GET_ALL = "all";
 
   useEffect(() => {
     getRoles();
-    getGroups(GET_ALL, userId);
+    getGroups();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -179,9 +179,9 @@ export default function AddUserModal({
     }
   };
 
-  const getGroups = async (get: string, userId: number | undefined) => {
+  const getGroups = async () => {
     try {
-      const response = await GroupsApi.getAllGroupsApi(get, userId);
+      const response = await GroupsApi.getAllGroupsApi();
       if (response) {
         setGroups(response);
       }

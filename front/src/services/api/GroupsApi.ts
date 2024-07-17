@@ -2,23 +2,23 @@ import { config } from "../../../config";
 import axios from "@/api/axios";
 
 export class GroupsApi {
-  static async addGroupApi(newGroup: any,isCreate:string | boolean,userId: number | undefined) {
-    const params = {
-      isCreate: isCreate,
-      userId: userId,
-    };
+  static async addGroupApi(newGroup: any) {
+    // const params = {
+    //   isCreate: isCreate,
+    //   userId: userId,
+    // };
 
-    const res = await axios.post(`${config.service}/groups`, newGroup,{params});
+    const res = await axios.post(`${config.service}/groups`, newGroup);
     return res.data;
   }
 
-  static async getAllGroupsApi(get:string,userId:number | undefined) {
-    const params = {
-      get: get,
-      userId: userId,
-    };
+  static async getAllGroupsApi() {
+    // const params = {
+    //   get: get,
+    //   userId: userId,
+    // };
 
-    const res = await axios.get(`${config.service}/groups`,{params});
+    const res = await axios.get(`${config.service}/groups`);
     return res.data;
   }
 
