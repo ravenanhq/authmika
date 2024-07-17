@@ -9,7 +9,6 @@ import {
   Box,
   Button,
   Card,
-  CardContent,
   Checkbox,
   CircularProgress,
   Container,
@@ -55,7 +54,6 @@ import { SxProps, Theme } from "@mui/material";
 import { GroupsApi } from "@/services/api/GroupsApi";
 import ApplicationList from "@/components/Applications/ApplicationList";
 import { ApplicationApi } from "@/services/api/ApplicationApi";
-import GroupList from "@/components/Groups/GroupList";
 export interface GroupData {
   id: number;
   name: string;
@@ -80,16 +78,6 @@ interface Application {
   logoPath: string;
   id: number;
   name: string;
-}
-interface ExtractedDataItem {
-  application: {
-    id: any;
-    name: string;
-    baseUrl: string;
-    logoPath: string;
-  };
-  name: string;
-  baseUrl: string;
 }
 interface UserData {
   created_at: string | number | Date;
@@ -237,7 +225,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
   const helperText = [invalidEmail, formErrors.email].filter(Boolean).join(" ");
   const [userId, setUserId] = useState<number | undefined>();
   // const [isGroupList, setIsGroupList] = useState(true);
-   const GET_ALL = "all";
+  const GET_ALL = "all";
   // const GET_FILTER = "filter";
 
   useEffect(() => {
@@ -708,16 +696,19 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
         </Alert>
       )}
       <Grid item xs={12} md={6}>
-        <Box
+        <Card
           component="fieldset"
           sx={{
+            display: "flex",
+            flexDirection: "column",
             p: 2,
             border: "1px solid #ededed",
             borderRadius: "5px",
-            margin: "5% 0px 3% 0px",
-            overflowX: "auto",
-            paddingLeft: "20px",
+            margin: "auto",
+            marginTop: "5%",
             width: "100%",
+            boxSizing: "border-box",
+            overflowX: "auto",
           }}
         >
           <legend style={{ paddingLeft: "0px" }}>
@@ -1141,17 +1132,20 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
           </legend>
           <Box
             sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "flex-start",
               border: "none",
               boxShadow: "none",
               paddingLeft: "60px",
-              "@media(width: 375px) and (height: 667px),@media(width: 3px) and (height: 667px)":
-                {
-                  margin: "0px",
-                  padding: "0px",
-                },
+              gap: "10px",
+              "@media (max-width: 1024px)": {
+                flexDirection: "column",
+                paddingLeft: "0",
+                alignItems: "flex-start",
+              },
             }}
           >
-            {" "}
             <PrimaryButton
               variant="contained"
               color="primary"
@@ -1329,115 +1323,110 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
           />
           <Table stickyHeader style={{ maxWidth: "100%", height: "120%" }}>
             <TableBody sx={{ height: "100%" }}>
-              <Grid
-                container
-                spacing={2}
-                sx={{
-                  paddingLeft: "60px",
-                  paddingRight: "300px",
-                  "@media(width: 1024px) and (height: 768px), (min-width: 430px) and (max-width: 932px)":
-                    {
-                      paddingLeft: "100px",
-                      paddingRight: "100px",
-                    },
-                  "@media(width: 667px) and (height: 375px),@media(width: 640px) and (height: 360px)":
-                    {
-                      paddingLeft: "50px",
-                    },
-                  "@media (width: 1180px) and (height: 820px),(width: 1024px) and (height: 1366px),(width: 1024px) and (height: 600px)":
-                    {
-                      paddingLeft: "120px",
-                      paddingRight: "120px",
-                    },
-                }}
-              >
-                <Grid item xs={12} sm={4} container>
-                  <TableRow>
-                    <TableCell sx={{ border: "none" }}>
-                      <strong style={{ marginBottom: 0 }}>First name:</strong>
-                    </TableCell>
-                    <TableCell style={{ border: "none" }}>
-                      {userData.firstName}
-                    </TableCell>
-                  </TableRow>
-                </Grid>
-                <Grid item xs={12} sm={4} container>
-                  <TableRow>
-                    <TableCell sx={{ border: "none" }}>
-                      <strong>Last name:</strong>
-                    </TableCell>
-                    <TableCell style={{ border: "none" }}>
-                      {userData.lastName}
-                    </TableCell>
-                  </TableRow>
-                </Grid>
-                <Grid item xs={12} sm={4} container>
-                  <TableRow>
-                    <TableCell sx={{ border: "none" }}>
-                      <strong>Email:</strong>
-                    </TableCell>
-                    <TableCell
-                      style={{
-                        whiteSpace: "unset",
-                        border: "none",
-                      }}
-                    >
-                      {userData.email}
-                    </TableCell>
-                  </TableRow>
-                </Grid>
-                <Grid item xs={12} sm={4} container>
-                  <TableRow sx={{ marginTop: 0 }}>
-                    <TableCell sx={{ border: "none" }}>
-                      <strong>Mobile:</strong>
-                    </TableCell>
-                    <TableCell
-                      style={{
-                        border: "none",
-                        wordBreak: "break-word",
-                        paddingLeft: "40px",
-                      }}
-                    >
-                      {userData.mobile}
-                    </TableCell>
-                  </TableRow>
-                </Grid>
-                <Grid item xs={12} sm={4} container>
-                  <TableRow sx={{ marginTop: 0 }}>
-                    <TableCell sx={{ border: "none" }}>
-                      <strong>Role:</strong>
-                    </TableCell>
-                    <TableCell style={{ border: "none", paddingLeft: "58px" }}>
-                      {userData.role}
-                    </TableCell>
-                  </TableRow>
-                </Grid>
-                <Grid item xs={12} sm={4} container>
-                  <TableRow sx={{ marginTop: 0 }}>
-                    <TableCell sx={{ border: "none" }}>
-                      <strong>Group:</strong>
-                    </TableCell>
-                    <TableCell style={{ border: "none" }}>
-                      {userData.groups ? userData.groups.name : "-"}
-                    </TableCell>
-                  </TableRow>
-                </Grid>
-                <Grid item xs={12} md={6} container>
-                  <TableRow sx={{ marginTop: 0 }}>
-                    <TableCell sx={{ border: "none" }}>
-                      <strong>Status:</strong>
-                    </TableCell>
-                    <TableCell style={{ border: "none", paddingLeft: "40px" }}>
-                      {userStatus[userData.status]}
-                    </TableCell>
-                  </TableRow>
-                </Grid>
-              </Grid>
+              <TableRow>
+                <TableCell colSpan={2} sx={{ padding: 0, border: "none" }}>
+                  <Grid
+                    container
+                    spacing={2}
+                    sx={{
+                      marginTop: 4,
+                      paddingLeft: "60px",
+                      paddingRight: "300px",
+                      "@media (max-width: 1024px)": {
+                        flexDirection: "column",
+                        paddingLeft: "10px",
+                        paddingRight: "10px",
+                        "& > .MuiGrid-item": {
+                          marginBottom: "20px",
+                        },
+                      },
+                    }}
+                  >
+                    <Grid item xs={12} sm={4} sx={{ marginBottom: "20px" }}>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <strong style={{ marginRight: "20px" }}>
+                          First name:
+                        </strong>
+                        <div style={{ marginLeft: "0px", marginTop: "2px" }}>
+                          {userData.firstName}
+                        </div>
+                      </div>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <strong>Last name:</strong>
+                        <div style={{ marginLeft: "23px" }}>
+                          {userData.lastName}
+                        </div>
+                      </div>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <strong>Email:</strong>
+                        <div
+                          style={{ whiteSpace: "unset", marginLeft: "55px" }}
+                        >
+                          {userData.email}
+                        </div>
+                      </div>
+                    </Grid>
+                    <Grid item xs={12} sm={4} sx={{ marginBottom: "20px" }}>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <strong>Mobile:</strong>
+                        <div
+                          style={{
+                            whiteSpace: "unset",
+                            wordBreak: "break-all",
+                            marginLeft: "8px",
+                            paddingLeft: "40px",
+                          }}
+                        >
+                          {userData.mobile}
+                        </div>
+                      </div>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <strong>Role:</strong>
+                        <div style={{ marginLeft: "60px" }}>
+                          {userData.role}
+                        </div>
+                      </div>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <strong>Group:</strong>
+                        <div style={{ marginLeft: "47px" }}>
+                          {userData.groups ? userData.groups.name : "-"}
+                        </div>
+                      </div>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <strong>Status:</strong>
+                        <div style={{ marginLeft: "49px" }}>
+                          {userStatus[userData.status]}
+                        </div>
+                      </div>
+                    </Grid>
+                  </Grid>
+                </TableCell>
+              </TableRow>
             </TableBody>
           </Table>
-        </Box>
+        </Card>
       </Grid>
-      <Card sx={{ width: "100%" }}>
+      <Card
+        sx={{
+          p: 2,
+          margin: "auto",
+          width: "100%",
+          boxSizing: "border-box",
+          overflowX: "auto",
+          marginLeft: "0px",
+          marginTop: "20px",
+        }}
+      >
         <Tabs
           value={tabsValue}
           onChange={handleTabsChange}
