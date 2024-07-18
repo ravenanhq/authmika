@@ -1139,10 +1139,25 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
               boxShadow: "none",
               paddingLeft: "60px",
               gap: "10px",
-              "@media (max-width: 1024px)": {
+              "@media (max-width: 915px)": {
                 flexDirection: "column",
                 paddingLeft: "0",
                 alignItems: "flex-start",
+              },
+              "@media (width:667px) and (height:375px),(width:568px) and (height:320px),(width:540px) and (height:720px),(width:720px) and (height:540px),(width:640px) and (height:360px)":
+                {
+                  paddingLeft: "120px",
+                },
+              "@media (width:740px) and (height:360px),(width:736px) and (height:414px),(width:731px) and (height:411px),(width:853px) and (height:1280px),(width:768px) and (height:1024px),(width:912px) and (height:1368px),(width:820px) and (height:1180px)":
+                {
+                  paddingLeft: "180px",
+                },
+              "@media (width:896px) and (height:414px),(width:812px) and (height:375px),(width:914px) and (height:412px),(width:882px) and (height:344px),(width:844px) and (height:390px),(width:932px) and (height:430px),(width:915px) and (height:412px)":
+                {
+                  paddingLeft: "250px",
+                },
+              "@media (width:932px) and (height:430px)": {
+                paddingLeft: "100px",
               },
             }}
           >
@@ -1332,13 +1347,32 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                       marginTop: 4,
                       paddingLeft: "60px",
                       paddingRight: "300px",
-                      "@media (max-width: 1024px)": {
+                      "@media (max-width: 915px)": {
                         flexDirection: "column",
                         paddingLeft: "10px",
                         paddingRight: "10px",
                         "& > .MuiGrid-item": {
                           marginBottom: "20px",
                         },
+                      },
+                      "@media (width:667px) and (height:375px),(width:540px) and (height:720px),(width:568px) and (height:320px),(width:640px) and (height:360px),(width:896px) and (height:414px),(width:720px) and (height:540px)":
+                        {
+                          paddingLeft: "120px",
+                        },
+                      "@media (width:740px) and (height:360px),(width:736px) and (height:414px),(width:731px) and (height:411px),(width:853px) and (height:1280px),(width:912px) and (height:1368px),(width:768px) and (height:1024px),(width:820px) and (height:1180px)":
+                        {
+                          paddingLeft: "180px",
+                        },
+                      "@media (width:896px) and (height:414px),(width:812px) and (height:375px),(width:914px) and (height:412px),(width:882px) and (height:344px),(width:915px) and (height:412px),(width:844px) and (height:390px),(width:932px) and (height:430px)":
+                        {
+                          paddingLeft: "250px",
+                        },
+                      "@media (width:932px) and (height:430px)": {
+                        paddingLeft: "100px",
+                      },
+                      "@media (width:1024px) and (height:768px)": {
+                        paddingLeft: "60px",
+                        paddingRight: "50px",
                       },
                     }}
                   >
@@ -1401,7 +1435,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                         </div>
                       </div>
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={6} sx={{ marginBottom: 2 }}>
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <strong>Status:</strong>
                         <div style={{ marginLeft: "49px" }}>
