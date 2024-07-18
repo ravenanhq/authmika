@@ -1370,7 +1370,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                       "@media (width:932px) and (height:430px)": {
                         paddingLeft: "100px",
                       },
-                      "@media (width:1024px) and (height:768px)": {
+                      "@media (min-width:1024px) and (max-width:1200px)": {
                         paddingLeft: "60px",
                         paddingRight: "50px",
                       },
