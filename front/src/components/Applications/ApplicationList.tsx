@@ -168,21 +168,21 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
       headerName: "Name",
       headerClassName: "application-header",
       flex: 1,
-      minWidth: 200,
+      minWidth: 100,
     },
     {
       field: "application",
       headerName: "Application",
       headerClassName: "application-header",
       flex: 1,
-      minWidth: 200,
+      minWidth: 100,
     },
     {
       field: "baseUrl",
       headerName: "Base URL",
       headerClassName: "application-header",
       flex: 1,
-      minWidth: 200,
+      minWidth: 100,
     },
     {
       field: "created_at",
@@ -190,7 +190,7 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
       headerClassName: "user-header",
       type: "date",
       flex: 0.5,
-      minWidth: 160,
+      minWidth: 100,
       valueGetter: (params) => {
         return new Date(params.row.created_at);
       },
@@ -200,7 +200,7 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
       headerName: "Actions",
       headerClassName: "application-header",
       flex: 1,
-      minWidth: 200,
+      minWidth: 100,
       disableColumnMenu: true,
       sortable: false,
       renderCell: (params) => (
@@ -337,16 +337,17 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
 
   return (
     <Card
-      sx={{
-        boxShadow: "none",
-        marginTop: title ? "5%" : "0",
-        "& .application-header": {
-          backgroundColor: "#265073",
-          color: "#fff",
-        },
-        gridWidth: "500px",
-      }}
-    >
+    sx={{
+      boxShadow: "none",
+      marginTop: title ? "5%" : "0",
+      "& .application-header": {
+        backgroundColor: "#265073",
+        color: "#fff",
+      },
+      gridWidth: "100%",
+      overflowX: 'auto',
+    }}
+  >
       <Snackbar autoHideDuration={3000} message={message} />
       <CardContent style={{ padding: "0" }}>
         {title && (

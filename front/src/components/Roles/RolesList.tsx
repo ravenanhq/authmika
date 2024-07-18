@@ -294,7 +294,7 @@ const RoleListPage = () => {
                   startIcon={<AddIcon />}
                   onClick={handleAddRoleClick}
                 >
-                  Add New Roles
+                  Add New Role
                 </PrimaryButton>
               </Grid>
             </Grid>

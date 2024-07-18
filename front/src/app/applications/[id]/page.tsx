@@ -16,6 +16,11 @@ import {
   Tab,
   TableContainer,
   CircularProgress,
+  TableRow,
+  TableCell,
+  Table,
+  TableBody,
+  Typography,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditNoteIcon from "@mui/icons-material/EditNote";
@@ -238,11 +243,10 @@ const ApplicationView: React.FC<{ params: IApplicationView }> = ({}) => {
                   borderRadius: "5px",
                   margin: "5% 0px 3% 0px",
                   overflowX: "auto",
-                  paddingLeft: "20px",
                   width: "100%",
                 }}
               >
-                <legend style={{paddingLeft:"0px"}}>
+                <legend>
                   Application Details
                   <EditApplicationModal
                     open={editModalOpen}
@@ -265,77 +269,196 @@ const ApplicationView: React.FC<{ params: IApplicationView }> = ({}) => {
                     />
                   </IconButton>
                 </legend>
-                <Grid container spacing={2} sx={{paddingLeft:"100px",paddingRight:"100px"}}>
-                  <Grid item xs={12} sm={6}>
-                    <Box display="flex" alignItems="center">
-                      <strong>Name:</strong>
-                      <Box sx={{ marginLeft: 11, marginBottom: 2 }}>
-                        {applicationData.name}
-                      </Box>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Box display="flex" alignItems="center">
-                      <strong>Application:</strong>
-                      <Box sx={{ marginLeft: 7, marginBottom: 2 }}>
-                        {applicationData.application}
-                      </Box>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Box display="flex" alignItems="center">
-                      <strong>Base URL:</strong>
-                      <Box sx={{ marginLeft: 7, marginBottom: 2 }}>
-                        {applicationData.baseUrl}
-                      </Box>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Box display="flex" alignItems="center">
-                      <strong>Call Back URL:</strong>
-                      <Box sx={{ marginLeft: 5, marginBottom: 2 }}>
-                        {applicationData.callBackUrl}
-                      </Box>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Box display="flex" alignItems="center">
-                      <strong style={{ marginTop: 5 }}>
-                        Client Secret ID:
-                      </strong>
-                      <Box
+                <Grid
+                  container
+                  spacing={2}
+                  sx={{
+                    marginTop: 4,
+                    paddingLeft: "80px",
+                    paddingRight: "80px",
+                    "@media(width: 1024px) and (height: 768px), (min-width: 430px) and (max-width: 932px)":
+                      {
+                        paddingLeft: "100px",
+                        paddingRight: "100px",
+                      },
+                    "@media (width: 1180px) and (height: 820px),(width: 1024px) and (height: 1366px),(width: 1024px) and (height: 600px)":
+                      {
+                        paddingLeft: "120px",
+                        paddingRight: "120px",
+                      },
+                    "@media(width: 915px) and (height: 412px),(width: 375px) and (height: 667px),(width: 375px) and (height: 812px),(width: 320px) and (height: 568px),(width: 360px) and (height: 640px)":
+                      {
+                        paddingLeft: "0px",
+                        paddingRight: "10px",
+                        width: "100%",
+                      },
+                    "@media(width: 1024px) and (height: 1366px),(width: 344px) and (height: 882px)":
+                      {
+                        width: "100%",
+                      },
+                    "@media(width: 344px) and (height: 882px)": {
+                      width: "200%",
+                    },
+                    "@media(width: 414px) and (height: 896px)": {
+                      paddingLeft: "20px",
+                    },
+                    "@media(width: 390px) and (height: 844px),(width: 414px) and (height: 736px),(width: 411px) and (height: 731px),(width: 412px) and (height: 914px),(width: 344px) and (height: 882px),(width: 360px) and (height: 740px),(width: 412px) and (height: 915px),(width: 375px) and (height: 667px),(width: 430px) and (height: 932px),(width: 414px) and (height: 896px)":
+                      {
+                        paddingLeft: "10px",
+                      },
+                  }}
+                >
+                  <Grid item xs={12} md={6}>
+                    <Box
+                      display="flex"
+                      flexDirection={{ xs: "row", md: "row" }}
+                    >
+                      <Typography
+                        variant="h6"
+                        sx={{ fontSize: "18px", fontWeight: "bold" }}
+                      >
+                        Name:
+                      </Typography>
+                      <Typography
+                        variant="body1"
                         sx={{
-                          marginLeft: 1,
-                          whiteSpace: "unset",
+                          fontSize: "18px",
+                          marginLeft: { xs: 10.5, md: 13 },
+                        }}
+                      >
+                        {applicationData.name}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Box
+                      display="flex"
+                      flexDirection={{ xs: "row", md: "row" }}
+                    >
+                      <Typography
+                        variant="h6"
+                        sx={{ fontSize: "18px", fontWeight: "bold" }}
+                      >
+                        Application:
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ fontSize: "18px", marginLeft: { xs: 4, md: 8 } }}
+                      >
+                        {applicationData.application}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Box
+                      display="flex"
+                      flexDirection={{ xs: "row", md: "row" }}
+                    >
+                      <Typography
+                        variant="h6"
+                        sx={{ fontSize: "18px", fontWeight: "bold" }}
+                      >
+                        Base URL:
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ fontSize: "18px", marginLeft: { xs: 6, md: 8 } }}
+                      >
+                        {applicationData.baseUrl}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Box
+                      display="flex"
+                      flexDirection={{ xs: "row", md: "row" }}
+                    >
+                      <Typography
+                        variant="h6"
+                        sx={{ fontSize: "18px", fontWeight: "bold" }}
+                      >
+                        Call Back URL:
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{ fontSize: "18px", marginLeft: { xs: 1, md: 5 } }}
+                      >
+                        {applicationData.callBackUrl}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Box
+                      display="flex"
+                      flexDirection={{ xs: "column", md: "row" }}
+                    >
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontSize: "18px",
+                          whiteSpace: "nowrap",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Client Secret ID:
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          fontSize: "18px",
                           wordBreak: "break-all",
-                          marginBottom: 0,
+                          marginLeft: { md: 2 },
                         }}
                       >
                         {applicationData.clientSecretId}
-                      </Box>
+                      </Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Box display="flex">
-                      <strong style={{ whiteSpace: "nowrap" }}>
-                        Client Secret Key:
-                      </strong>
-                      <Box
+                  <Grid item xs={12} md={6}>
+                    <Box
+                      display="flex"
+                      flexDirection={{ xs: "column", md: "row" }}
+                    >
+                      <Typography
+                        variant="h6"
                         sx={{
-                          marginLeft: 1,
-                          marginBottom: 2,
-                          whiteSpace: "unset",
-                          wordBreak: "break-all",
+                          fontSize: "18px",
+                          whiteSpace: "nowrap",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Client Secret Key:
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          fontSize: "18px",
+                          wordBreak: "break-word",
+                          marginLeft: { md: 2 },
                         }}
                       >
                         {applicationData.clientSecretKey}
-                      </Box>
+                      </Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Box display="flex" alignItems="center">
-                      <strong>Image:</strong>
-                      <Box sx={{ marginLeft: 10 }}>
+                  <Grid item xs={12} md={6}>
+                    <Box
+                      display="flex"
+                      flexDirection={{ xs: "row", md: "row" }}
+                    >
+                      <Typography
+                        variant="h6"
+                        sx={{ fontSize: "18px", fontWeight: "bold" }}
+                      >
+                        Image:
+                      </Typography>
+                      <Box
+                        sx={{
+                          marginLeft: { xs: 10, md: 12 },
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
                         {applicationData.logoPath ? (
                           <CardMedia
                             component="img"
@@ -358,7 +481,16 @@ const ApplicationView: React.FC<{ params: IApplicationView }> = ({}) => {
                   </Grid>
                 </Grid>
               </Box>
-              <Card sx={{ width: "100%" }}>
+              <Card
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  "@media(width: 1024px) and (height: 1366px),@media(width: 1366px) and (height: 1024px)":
+                    {
+                      width: "200%",
+                    },
+                }}
+              >
                 <Tabs
                   value={tabValue}
                   onChange={handleTabChange}
@@ -371,7 +503,7 @@ const ApplicationView: React.FC<{ params: IApplicationView }> = ({}) => {
                 <CustomTabPanel
                   value={tabValue}
                   index={0}
-                  sx={{ width: "100%", height: "500px" }}
+                  sx={{ width: "100%", height: "100%" }}
                 >
                   <TableContainer>
                     <UserList
@@ -404,13 +536,16 @@ const ApplicationView: React.FC<{ params: IApplicationView }> = ({}) => {
           )}
         </Grid>
       </Box>
-      <BackButton
-        variant="contained"
-        onClick={handleBackButtonClick}
-        startIcon={<ArrowBackIcon />}
-      >
-        Back
-      </BackButton>
+      <Box display="flex" justifyContent="flex-end">
+        <BackButton
+          variant="contained"
+          onClick={handleBackButtonClick}
+          startIcon={<ArrowBackIcon />}
+          sx={{ marginTop: 4 }}
+        >
+          Back
+        </BackButton>
+      </Box>
     </Container>
   );
 };
