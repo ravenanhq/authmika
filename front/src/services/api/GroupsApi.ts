@@ -4,8 +4,8 @@ import axios from "@/api/axios";
 export class GroupsApi {
   static async addGroupApi(newGroup: any) {
     // const params = {
-    //   isView: isView,
-    //   applicationId: applicationId,
+    //   isCreate: isCreate,
+    //   userId: userId,
     // };
 
     const res = await axios.post(`${config.service}/groups`, newGroup);
@@ -14,8 +14,8 @@ export class GroupsApi {
 
   static async getAllGroupsApi() {
     // const params = {
-    //   isListPage: isListPage,
-    //   applicationId: applicationId,
+    //   get: get,
+    //   userId: userId,
     // };
 
     const res = await axios.get(`${config.service}/groups`);

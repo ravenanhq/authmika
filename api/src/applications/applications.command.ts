@@ -20,7 +20,12 @@ export class ApplicationsCommand {
   })
   async listApplications() {
     try {
-      const applicaitons = await this.applicationService.getApplications();
+      let get: string;
+      let userId: number;
+      const applicaitons = await this.applicationService.getApplications(
+        get,
+        userId,
+      );
 
       if (applicaitons.length > 0) {
         const applicationList = [];

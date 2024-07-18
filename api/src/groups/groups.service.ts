@@ -30,40 +30,32 @@ export class GroupsService {
     private userApplictionsModel: typeof UserApplications,
   ) {}
 
-  async getGroupList() // isListPage: boolean,
-  // applicationId?: number,
-  : Promise<GroupsData[]> {
+  async getGroupList(): Promise<GroupsData[]> {
+    // const GET_ALL = 'all';
+    // const GET_FILTER = 'filter';
     try {
-      // if (isListPage === true || applicationId === 0 || applicationId == null) {
+      // if (get === GET_ALL) {
       const groups = await this.groupModel.findAll({ where: { status: 1 } });
 
       if (groups && groups.length == 0) {
         throw new NotFoundException('No groups found');
       }
       return groups;
-      // } else {
-      //   const userApplications = await this.userApplictionsModel.findAll({
-      //     where: { applicationId: applicationId },
+      // } else if (get === GET_FILTER) {
+      //   const userGroups = await this.groupUsersModel.findAll({
+      //     where: { userId: userId },
       //   });
 
-      //   if (!userApplications || userApplications.length === 0) {
-      //     throw new NotFoundException('No users found for this application');
+      //   if (!userGroups || userGroups.length === 0) {
+      //     throw new NotFoundException('No groups found for this users');
       //   }
-      //   const userIds = userApplications.map(
-      //     (userApplication) => userApplication.userId,
-      //   );
 
-      //   const groupIds = await this.groupUsersModel.findAll({
-      //     where: { userId: userIds },
-      //   });
-
-      //   const uniqueGroupIds = Array.from(
-      //     new Set(groupIds.map((item) => item.groupId)),
-      //   );
+      //   const groupIds = userGroups.map((userGroup) => userGroup.groupId);
 
       //   const groups = await this.groupModel.findAll({
-      //     where: { id: uniqueGroupIds, status: 1 },
+      //     where: { id: groupIds, status: 1 },
       //   });
+
       //   return groups;
       // }
     } catch (error) {
@@ -77,9 +69,13 @@ export class GroupsService {
   async create(
     groupsDto: GroupsDto,
     user: { userId: number },
-    // isView: boolean,
-    // applicationId?: number,
+    // isCreate: string | boolean,
+    // userId: number,
   ): Promise<GroupCreateSuccessDto> {
+    // const isCreateBool =
+    //   typeof isCreate === 'string'
+    //     ? JSON.parse(isCreate.toLowerCase())
+    //     : isCreate;
     const { name } = groupsDto;
     let newGroup;
     try {
@@ -97,54 +93,41 @@ export class GroupsService {
           throw new InternalServerErrorException('Group creation failed');
         }
       }
-      // if (isView === true || applicationId === 0 || applicationId == null) {
+      // if (isCreateBool) {
+      //   const groups = await this.groupModel.findAll({
+      //     where: { status: 1 },
+      //   });
+      //   return {
+      //     message: 'Group created successfully',
+      //     statusCode: HttpStatus.CREATED,
+      //     data: groups,
+      //   };
+      // } else if (userId) {
+      //   await this.groupUsersModel.create({
+      //     userId: userId,
+      //     groupId: newGroup.id,
+      //   });
+      // }
+      // const groupUsers = await this.groupUsersModel.findAll({
+      //   where: { userId: userId },
+      // });
+      // if (!groupUsers || groupUsers.length === 0) {
+      //   throw new NotFoundException('No groups found for this user');
+      // }
+
+      // const groupIds = groupUsers.map((userGroup) => userGroup.groupId);
+
       const groups = await this.groupModel.findAll({
-        where: { status: 1 },
+        where: {
+          status: 1,
+        },
       });
+
       return {
         message: 'Group created successfully',
         statusCode: HttpStatus.CREATED,
         data: groups,
       };
-      // } else {
-      //   const userApplications = await this.userApplictionsModel.findAll({
-      //     where: { applicationId: applicationId },
-      //   });
-
-      //   if (!userApplications || userApplications.length === 0) {
-      //     throw new NotFoundException('No users found for this application');
-      //   }
-      //   const userIds = userApplications.map(
-      //     (userApplication) => userApplication.userId,
-      //   );
-
-      //   userIds.forEach(async (item) => {
-      //     await this.groupUsersModel.create({
-      //       groupId: newGroup.id,
-      //       userId: item,
-      //     });
-      //   });
-
-      //   const groupIds = await this.groupUsersModel.findAll({
-      //     where: { userId: userIds },
-      //     attributes: ['groupId'],
-      //   });
-
-      //   const uniqueGroupIds = Array.from(
-      //     new Set(groupIds.map((item) => item.groupId)),
-      //   );
-
-      //   const groups = await this.groupModel.findAll({
-      //     where: { id: uniqueGroupIds, status: 1 },
-      //   });
-      //   console.log('aaa', groupIds);
-
-      //   return {
-      //     message: 'Group fetched successfully',
-      //     statusCode: HttpStatus.OK,
-      //     data: groups,
-      //   };
-      // }
     } catch (error) {
       if (error instanceof HttpException) {
         throw new HttpException(

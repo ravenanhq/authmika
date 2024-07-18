@@ -43,15 +43,8 @@ export class UserApplicationService {
               id: applicationId,
             },
           });
-
           if (applicationDetails) {
-            const detailedUserApp = {
-              id: userApp.id,
-              userId: userApp.userId,
-              application: applicationDetails,
-            };
-
-            detailedUserApplications.push(detailedUserApp);
+            detailedUserApplications.push(applicationDetails);
           }
         }
         return detailedUserApplications;

@@ -20,8 +20,10 @@ interface Errors {
 interface AddGroupModalProps {
   open: boolean;
   onClose: () => void;
-  onAddGroup: (name: any) => void;
+  onAddGroup: (name: any ) => void;
   uniqueNameValidation: string;
+  // isCreate: string | boolean;
+  // userId: number | undefined;
   // isView: boolean;
   // isListPage: boolean;
   // applicationId:number;
@@ -32,6 +34,8 @@ export default function AddGroupModal({
   onClose,
   onAddGroup,
   uniqueNameValidation,
+  // isCreate,
+  // userId,
   // isView,
   // applicationId,
   // isListPage,
@@ -127,7 +131,7 @@ export default function AddGroupModal({
           alignItems: "center",
         }}
       >
-        Add New Groups
+        Add New Group
         <IconButton
           onClick={handleClose}
           sx={{

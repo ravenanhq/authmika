@@ -40,14 +40,41 @@ export class ApplicationsService {
     private groupModel: typeof Groups,
   ) {}
 
-  async getApplications() {
-    const applications = await this.applicationsModel.findAll({
-      where: { isActive: true },
-    });
-    if (applications && applications.length == 0) {
-      throw new NotFoundException('No applications found');
+  async getApplications(get: string, userId?: number) {
+    const GET_ALL = 'all';
+    const GET_FILTER = 'filter';
+    if (get === GET_ALL) {
+      const applications = await this.applicationsModel.findAll({
+        where: { isActive: true },
+      });
+      if (applications && applications.length == 0) {
+        throw new NotFoundException('No applications found');
+      }
+      return applications;
+    } else if (get === GET_FILTER) {
+      const whereCondition: any = {};
+      if (userId) {
+        if (userId !== undefined) {
+          whereCondition.userId = userId;
+        }
+        const userApplications = await this.userApplictionsModel.findAll({
+          where: whereCondition,
+        });
+        const applications: any = [];
+        for (const userApp of userApplications) {
+          const applicationId = userApp.applicationId;
+          const applicationDetails = await this.applicationsModel.findOne({
+            where: {
+              id: applicationId,
+            },
+          });
+          if (applicationDetails) {
+            applications.push(applicationDetails);
+          }
+        }
+        return applications;
+      }
     }
-    return applications;
   }
 
   async createNewApplication(
@@ -91,9 +118,15 @@ export class ApplicationsService {
   async create(
     applicationDto: ApplicationCreateDataDto,
     user: { id: any },
+    isAdd: string | boolean,
+    userId: number,
   ): Promise<{ message: string; statusCode: number; data: object }> {
+    const isAddBool =
+      typeof isAdd === 'string' ? JSON.parse(isAdd.toLowerCase()) : isAdd;
+
     const { name, application, base_url, call_back_url, logo_path, file } =
       applicationDto;
+    let newApplication;
     try {
       let fileName = null;
       if (file) {
@@ -129,7 +162,7 @@ export class ApplicationsService {
           HttpStatus.CONFLICT,
         );
       } else {
-        const newApplication = await this.applicationsModel.create({
+        newApplication = await this.applicationsModel.create({
           name: name,
           application: application,
           baseUrl: base_url,
@@ -146,13 +179,44 @@ export class ApplicationsService {
           );
         }
       }
+      if (isAddBool) {
+        const applications = await this.applicationsModel.findAll({
+          where: { isActive: true },
+        });
+
+        return {
+          message: 'Application created successfully.',
+          statusCode: HttpStatus.OK,
+          data: applications,
+        };
+      } else if (userId) {
+        await this.userApplictionsModel.create({
+          userId: userId,
+          applicationId: newApplication.id,
+        });
+      }
+      const userApplications = await this.userApplictionsModel.findAll({
+        where: { userId: userId },
+      });
+      if (!userApplications || userApplications.length === 0) {
+        throw new NotFoundException(
+          'No applications found for this application',
+        );
+      }
+
+      const applicationIds = userApplications.map(
+        (userApplication) => userApplication.applicationId,
+      );
 
       const applications = await this.applicationsModel.findAll({
-        where: { isActive: true },
+        where: {
+          id: applicationIds,
+          isActive: true,
+        },
       });
 
       return {
-        message: 'Application created successfully.',
+        message: 'Application created successfully',
         statusCode: HttpStatus.OK,
         data: applications,
       };

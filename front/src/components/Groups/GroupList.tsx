@@ -36,11 +36,11 @@ interface AlertState {
 
 // interface GroupListProps {
 // title: boolean;
-// isListPage: boolean;
-// applicationId: number;
-// isView: boolean;
+// get: string,
+// userId: number | undefined,
+// isCreate: string | boolean,
 // }
-const GroupList = () => {
+const GroupList= () => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [selectedRow, setSelectedRow] = useState(null);
@@ -51,11 +51,19 @@ const GroupList = () => {
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
   const [deleteGroupModalOpen, setDeleteGroupModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  // const GET_FILTER = 'filter';
 
   useEffect(() => {
     getGroupsList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // useEffect(() => {
+  //   if (userId !== undefined) {
+  //     getGroupsList(GET_FILTER, userId);
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [userId]);
 
   const handleAddGroupClick = () => {
     setAddGroupModalOpen(true);
@@ -272,7 +280,7 @@ const GroupList = () => {
     <Card
       sx={{
         boxShadow: "none",
-        marginTop: "5%",
+        marginTop:  "5%",
         "& .group-header": {
           backgroundColor: "#265073",
           color: "#fff",
@@ -379,6 +387,8 @@ const GroupList = () => {
         onClose={handleCloseAddGroupModal}
         onAddGroup={handleAddGroup}
         uniqueNameValidation={uniqueAlert}
+        // isCreate={isCreate}
+        // userId={userId}
         // isView={isView}
         // applicationId={applicationId}
         // isListPage={isListPage}

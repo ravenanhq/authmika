@@ -82,6 +82,9 @@ export default function AddUserModal({
   const [password, setPassword] = useState("");
   const isViewBool =
     typeof isView === "string" ? JSON.parse(isView.toLowerCase()) : isView;
+  // const [get, setGet] = useState("");
+  // const [userId, setUserId] = useState<number | undefined>();
+  // const GET_ALL = "all";
 
   useEffect(() => {
     getRoles();
