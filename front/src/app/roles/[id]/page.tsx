@@ -293,8 +293,8 @@ const RoleView = ({ params }: { params: IRoleView }) => {
       )}
       {!loading && (
         <>
-               <Box sx={{ marginTop: 0.5 }}>
-                     {saveAlert && (
+          <Box sx={{ p: 2, margin: "auto" }}>
+            {saveAlert && (
               <Alert
                 severity={saveAlert.severity}
                 onClose={() => {
@@ -325,145 +325,146 @@ const RoleView = ({ params }: { params: IRoleView }) => {
               </Alert>
             )}
             <Snackbar autoHideDuration={12000} />
-              <Box
-                component="fieldset"
-                sx={{
-                  border: "1px solid #ededed",
-                  borderRadius: "5px",
-                  margin: "5% 0px 3% 0px",
-                  overflowX: "auto",
-                  paddingRight: "90px",
-                  paddingLeft: "20px",
-                  width: "100%",
-                }}
-              >
-                <legend> Role</legend>
-                <Table>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell
-                        sx={{ fontSize: 30, border: "none", marginLeft: "30" }}
-                      >
-                        {isEditing ? (
-                          <TextField
-                            value={name}
-                            onChange={handleNameChange}
-                            variant="outlined"
-                            size="small"
-                          />
-                        ) : (
-                          <strong>{name}</strong>
-                        )}
-                        {!(
-                          name == "ADMIN" ||
-                          name == "MANAGER" ||
-                          name == "STAFF"
-                        ) && (
-                          <IconButton
-                            onClick={
-                              isEditing ? handleSaveClick : handleEditClick
-                            }
-                            sx={{
+            <Box
+              component="fieldset"
+              sx={{
+                border: "1px solid #ededed",
+                borderRadius: "5px",
+                margin: { xs: "10px 0", sm: "5% 0 3% 0" },
+                overflowX: "auto",
+                paddingRight: "90px",
+                paddingLeft: "20px",
+                width: "100%",
+                minWidth: "0",
+              }}
+            >
+              <legend> Role</legend>
+              <Table>
+                <TableBody>
+                  <TableRow>
+                    <TableCell
+                      sx={{ fontSize: 30, border: "none", marginLeft: "30" }}
+                    >
+                      {isEditing ? (
+                        <TextField
+                          value={name}
+                          onChange={handleNameChange}
+                          variant="outlined"
+                          size="small"
+                        />
+                      ) : (
+                        <strong>{name}</strong>
+                      )}
+                      {!(
+                        name == "ADMIN" ||
+                        name == "MANAGER" ||
+                        name == "STAFF"
+                      ) && (
+                        <IconButton
+                          onClick={
+                            isEditing ? handleSaveClick : handleEditClick
+                          }
+                          sx={{
+                            backgroundColor: "#1C658C",
+                            color: "#fff",
+                            ":hover": {
+                              color: "#fff",
                               backgroundColor: "#1C658C",
-                              color: "#fff",
-                              ":hover": {
-                                color: "#fff",
-                                backgroundColor: "#1C658C",
-                              },
-                              marginLeft: "10px",
-                            }}
-                          >
-                            {isEditing ? (
-                              <SaveIcon
-                                sx={{
-                                  color: "white",
-                                  width: "0.75em",
-                                  height: "0.75em",
-                                }}
-                              />
-                            ) : (
-                              <EditNoteIcon
-                                sx={{
-                                  color: "white",
-                                  width: "0.75em",
-                                  height: "0.75em",
-                                }}
-                              />
-                            )}
-                          </IconButton>
-                        )}
-
-                        {isEditing && (
-                          <IconButton
-                            onClick={handleCancelClick}
-                            sx={{
-                              backgroundColor: "#FF9843",
-                              color: "#fff",
-                              ":hover": {
-                                color: "#fff",
-                                backgroundColor: "#FE7A36",
-                              },
-                              marginLeft: "5px",
-                            }}
-                          >
-                            <CloseIcon
+                            },
+                            marginLeft: "10px",
+                          }}
+                        >
+                          {isEditing ? (
+                            <SaveIcon
                               sx={{
                                 color: "white",
                                 width: "0.75em",
                                 height: "0.75em",
                               }}
                             />
-                          </IconButton>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </Box>
-              <Card sx={{ width: "100%" }}>
-                <Tabs
-                  value={tabValue}
-                  onChange={handleTabChange}
-                  aria-label="basic tabs example"
-                  sx={{ marginLeft: 2 }}
-                >
-                  <Tab label="Users" {...TabProps(0)} />
-                </Tabs>
-                <CustomTabPanel
-                  value={tabValue}
-                  index={0}
-                  sx={{ width: "100%", height: "500px" }}
-                >
-                  <TableContainer>
-                    <UserList
-                      roleId={id}
-                      title={false}
-                      id={id}
-                      isView={true}
-                      isListPage={false}
-                      showRole={false}
-                      roleView={true}
-                      roleName={roleName}
-                      applicationId={undefined}
-                      groupId={undefined}
-                      groupView={false}
-                      showGroup={true}
-                      groupName={undefined}
-                      isGroup={false}
-                    />
-                  </TableContainer>
-                </CustomTabPanel>
-              </Card>
-              <Box display="flex" justifyContent="flex-end">
-                <BackButton
-                  variant="contained"
-                  onClick={handleBackButtonClick}
-                  startIcon={<ArrowBackIcon />}
-                  sx={{ marginTop: 4 }}
-                >
-                  Back
-                </BackButton>
-              </Box>
+                          ) : (
+                            <EditNoteIcon
+                              sx={{
+                                color: "white",
+                                width: "0.75em",
+                                height: "0.75em",
+                              }}
+                            />
+                          )}
+                        </IconButton>
+                      )}
+
+                      {isEditing && (
+                        <IconButton
+                          onClick={handleCancelClick}
+                          sx={{
+                            backgroundColor: "#FF9843",
+                            color: "#fff",
+                            ":hover": {
+                              color: "#fff",
+                              backgroundColor: "#FE7A36",
+                            },
+                            marginLeft: "10px",
+                          }}
+                        >
+                          <CloseIcon
+                            sx={{
+                              color: "white",
+                              width: "0.75em",
+                              height: "0.75em",
+                            }}
+                          />
+                        </IconButton>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </Box>
+            <Card sx={{ width: "100%" }}>
+              <Tabs
+                value={tabValue}
+                onChange={handleTabChange}
+                aria-label="basic tabs example"
+                sx={{ marginLeft: 2 }}
+              >
+                <Tab label="Users" {...TabProps(0)} />
+              </Tabs>
+              <CustomTabPanel
+                value={tabValue}
+                index={0}
+                sx={{ width: "100%", height: "100%" }}
+              >
+                <TableContainer>
+                  <UserList
+                    roleId={id}
+                    title={false}
+                    id={id}
+                    isView={true}
+                    isListPage={false}
+                    showRole={false}
+                    roleView={true}
+                    roleName={roleName}
+                    applicationId={undefined}
+                    groupId={undefined}
+                    groupView={false}
+                    showGroup={true}
+                    groupName={undefined}
+                    isGroup={false}
+                  />
+                </TableContainer>
+              </CustomTabPanel>
+            </Card>
+            <Box display="flex" justifyContent="flex-end">
+              <BackButton
+                variant="contained"
+                onClick={handleBackButtonClick}
+                startIcon={<ArrowBackIcon />}
+                sx={{ marginTop: 4 }}
+              >
+                Back
+              </BackButton>
+            </Box>
           </Box>
         </>
       )}

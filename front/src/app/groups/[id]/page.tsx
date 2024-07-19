@@ -234,7 +234,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
 
   return (
     <Container maxWidth="xl">
-      <Box sx={{ marginTop: 0.5 }}>
+      <Box sx={{ marginTop:"auto",p:2 }}>
         {saveAlert && (
           <Alert
             severity={saveAlert.severity}
@@ -333,20 +333,19 @@ const GroupView = ({ params }: { params: IGroupView }) => {
             </TableBody>
           </Table>
         </Box>
-      </Box>
       <Card sx={{ width: "100%" }}>
         <Tabs
           value={tabValue}
           onChange={handleTabChange}
           aria-label="basic tabs example"
-          sx={{ marginLeft: 2 }}
+          sx={{ marginLeft: 3 }}
         >
           <Tab label="Users" {...TabProps(0)} />
         </Tabs>
         <CustomTabPanel
           value={tabValue}
           index={0}
-          sx={{ width: "100%", height: "500px" }}
+          sx={{ width: "100%", height: "100%" }}
         >
           <TableContainer>
             <UserList
@@ -376,6 +375,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
         >
           Back
         </BackButton>
+      </Box>
       </Box>
     </Container>
   );
