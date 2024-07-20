@@ -1,6 +1,7 @@
 import { config } from "../../../config";
 import { ApiResponseDto } from "@/models/users.dto";
 import axios from "@/api/axios";
+import { RoleData } from "@/app/roles/[id]/page";
 interface IResetPasswordData {
   key?: string;
   expires?: string;
@@ -21,8 +22,16 @@ interface ResendOtpParams {
   url: string;
 }
 export class UserApi {
-  static async getUsers() {
-    const res = await axios.get(`${config.service}/users`);
+  static async getUsers(isListPage: boolean, applicationId: number | undefined,roleId: number | undefined,id:number | undefined,groupId:number | undefined) {
+    const params = {
+      isListPage: isListPage,
+      applicationId: applicationId,
+      roleId: roleId,
+      id:id,
+      groupId: groupId,
+    };
+
+    const res = await axios.get(`${config.service}/users`, { params });
     return res.data;
   }
 
@@ -151,6 +160,7 @@ export class UserApi {
     );
     return res.data;
   }
+
   static async getApplicationByKey(data: any) {
     const res = await axios.post(
       `${config.service}/application/get-application`,
@@ -248,18 +258,12 @@ export class UserApi {
     return res.data;
   }
 
-  static async userGroupMapping(
-    groupId: number,
-    userId: Array<string>
-  ) {
+  static async userGroupMapping(groupId: number, userId: Array<string>) {
     try {
-      const res: any = await axios.post(
-        `${config.service}/group-users`,
-        {
-          groupId: groupId,
-          userId: userId,
-        }
-      );
+      const res: any = await axios.post(`${config.service}/group-users`, {
+        groupId: groupId,
+        userId: userId,
+      });
       return res.data;
     } catch (error: any) {
       return error.response.data;

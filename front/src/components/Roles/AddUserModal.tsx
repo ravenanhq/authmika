@@ -13,42 +13,20 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
-import { RolesApi } from "@/services/api/RolesApi";
 import { GroupsApi } from "@/services/api/GroupsApi";
-
 interface Errors {
   firstName?: string;
   lastName?: string;
   email?: string;
   mobile?: string;
-  role?: string;
   group?: string;
-  password?: string;
 }
 
 interface AddUserModalProps {
   open: boolean;
   onClose: () => void;
-  onAddUser: (
-    application: any,
-    isView: boolean,
-    applicationId: number | undefined,
-    isGroup: boolean
-  ) => void;
-  isView: string | boolean;
-  isListPage: boolean;
-  applicationId: number | undefined;
+  onAddUser: (application: any) => void;
   uniqueEmail: string;
-  validatePassword: string;
-  showRole: boolean;
-  roleView: boolean;
-  roleName: string | undefined;
-  groupView: boolean;
-  showGroup: boolean;
-  groupName: string | undefined;
-  groupId: number | undefined;
-  isGroup: boolean;
-  validateMobile: string;
 }
 
 export default function AddUserModal({
@@ -56,41 +34,17 @@ export default function AddUserModal({
   onClose,
   onAddUser,
   uniqueEmail,
-  isView,
-  applicationId,
-  validatePassword,
-  showRole,
-  roleView,
-  roleName,
-  groupView,
-  groupName,
-  showGroup,
-  groupId,
-  isGroup,
-  validateMobile,
 }: AddUserModalProps) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
-  const [role, setRole] = useState<{ label: string; name: string } | null>(
-    null
-  );
-  const [roles, setRoles] = useState<{ name: string; label: string }[]>([]);
-  const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
   const [errors, setErrors] = useState<Errors>({});
+  const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
   const [group, setGroup] = useState<{ id: string; name: string } | null>(null);
-  const [password, setPassword] = useState("");
-  const isViewBool =
-    typeof isView === "string" ? JSON.parse(isView.toLowerCase()) : isView;
-  // const [get, setGet] = useState("");
-  // const [userId, setUserId] = useState<number | undefined>();
-  // const GET_ALL = "all";
 
   useEffect(() => {
-    getRoles();
     getGroups();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -103,22 +57,12 @@ export default function AddUserModal({
     }
   }, [open]);
 
-  useEffect(() => {
-    setErrors((prevErrors) => ({ ...prevErrors, password: validatePassword }));
-  }, [validatePassword]);
-
-  useEffect(() => {
-    setErrors((prevErrors) => ({ ...prevErrors, mobile: validateMobile }));
-  }, [validateMobile]);
-
   const clearForm = () => {
     setFirstName("");
     setLastName("");
     setEmail("");
     setMobile("");
-    setRole(null);
     setGroup(null);
-    setPassword("");
     setErrors({});
   };
 
@@ -141,11 +85,7 @@ export default function AddUserModal({
       newErrors.mobile = "Mobile is required";
     }
 
-    if (showRole && !role && !roleView) {
-      newErrors.role = "Role is required";
-    }
-
-    if (showGroup && !group && !groupView) {
+    if (!group) {
       newErrors.group = "Group is required";
     }
 
@@ -157,27 +97,19 @@ export default function AddUserModal({
   const handleAddUser = async () => {
     if (validateForm()) {
       const newUser = {
-        firstName,
-        lastName,
-        email,
-        mobile,
-        password,
-        role: roleView ? roleName : role?.name,
-        groupId: groupView ? groupId : group?.id,
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        mobile: mobile,
+        groupId: group?.id,
       };
-      onAddUser(newUser, isViewBool, applicationId, isGroup);
+      onAddUser(newUser);
     }
   };
 
-  const getRoles = async () => {
-    try {
-      const response = await RolesApi.getAllRoleApi();
-      if (response) {
-        setRoles(response);
-      }
-    } catch (error) {
-      console.log(error);
-    }
+  const handleClose = () => {
+    clearForm();
+    onClose();
   };
 
   const getGroups = async () => {
@@ -191,23 +123,11 @@ export default function AddUserModal({
     }
   };
 
-  const handleClose = () => {
-    clearForm();
-    onClose();
-  };
-
   const handleGroupChange = (
-    event: React.SyntheticEvent<Element, Event>,
+    event: React.ChangeEvent<{}>,
     newValue: { id: string; name: string } | null
   ) => {
     setGroup(newValue);
-  };
-
-  const handleRoleChange = (
-    event: React.ChangeEvent<{}>,
-    newValue: { label: string; name: string } | null
-  ) => {
-    setRole(newValue);
   };
 
   const PrimaryButton = styled(Button)(() => ({
@@ -266,6 +186,7 @@ export default function AddUserModal({
         <TextField
           label="First name"
           fullWidth
+          margin="normal"
           required
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
@@ -276,88 +197,55 @@ export default function AddUserModal({
         <TextField
           label="Last name"
           fullWidth
+          margin="normal"
           required
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           error={!!errors.lastName}
           helperText={errors.lastName}
           size="small"
-          sx={{ marginTop: 2 }}
         />
         <TextField
           label="Email"
           fullWidth
+          margin="normal"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           error={!!errors.email}
-          helperText={errors.email}
+          helperText={errors.email ? errors.email : " "}
           size="small"
-          sx={{ marginTop: 2 }}
-        />
-        <TextField
-          label="Password"
-          fullWidth
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          error={!!errors.password}
-          helperText={errors.password}
-          size="small"
-          sx={{ marginTop: 2 }}
+          sx={{ marginBottom: 1 }}
         />
         <TextField
           label="Mobile"
           fullWidth
+          margin="normal"
           required
           value={mobile}
           onChange={(e) => setMobile(e.target.value)}
           error={!!errors.mobile}
           helperText={errors.mobile}
           size="small"
-          sx={{ marginTop: 2 }}
+          sx={{ marginTop: 0 }}
         />
-        {showRole && (
-          <div>
-            <Autocomplete
-              value={role}
-              onChange={handleRoleChange}
-              options={roles}
-              getOptionLabel={(option) => option.name}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Role"
-                  required
-                  error={!!errors.role}
-                  size="small"
-                  helperText={errors.role}
-                  sx={{ marginTop: 2 }}
-                />
-              )}
+        <Autocomplete
+          value={group}
+          onChange={handleGroupChange}
+          options={groups}
+          getOptionLabel={(option) => option.name}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Group"
+              required
+              error={!!errors.group}
+              size="small"
+              helperText={errors.group}
+              sx={{ marginTop: 2 }}
             />
-          </div>
-        )}
-        {showGroup && (
-          <div>
-            <Autocomplete
-              value={group}
-              onChange={handleGroupChange}
-              options={groups}
-              getOptionLabel={(option) => option.name}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Group"
-                  required
-                  error={!!errors.group}
-                  size="small"
-                  helperText={errors.group}
-                  sx={{ marginTop: 2 }}
-                />
-              )}
-            />
-          </div>
-        )}
+          )}
+        />
       </DialogContent>
       <Divider
         color="#265073"

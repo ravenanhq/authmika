@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Matches } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumberString,
+  IsString,
+  Matches,
+  ValidateIf,
+} from 'class-validator';
 import { UserDataDto } from 'src/auth/dto/login.dto';
 import { Match } from 'src/common/validators/match.validator';
 import { Users } from 'src/db/model/users.model';
@@ -29,6 +35,9 @@ export class UsersDto {
 
   @IsNotEmpty({ message: 'role cannot be blank' })
   role: string;
+
+  @IsNotEmpty({ message: 'group cannot be blank' })
+  groupId: number;
 
   currentPassword: string;
 
@@ -65,11 +74,28 @@ export class AddUsersDto {
   @IsNotEmpty({ message: 'email cannot be blank' })
   email: string;
 
+  @ValidateIf(
+    (o) => o.password !== undefined && o.password !== null && o.password !== '',
+  )
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+    {
+      message:
+        'Must contain: 8 or more characters, 1 uppercase, 1 lowercase, 1 number, 1 special character.',
+    },
+  )
+  password: string;
+
   @ApiProperty({
-    type: 'number',
-    example: 9092454545,
+    type: 'string',
+    example: '9092454545',
+    description: 'Mobile number should only contain numeric values',
   })
   @IsNotEmpty({ message: 'mobile cannot be blank' })
+  @IsNumberString(
+    { no_symbols: true },
+    { message: 'mobile must contain only numeric characters' },
+  )
   mobile: string;
 
   @ApiProperty({
@@ -78,6 +104,14 @@ export class AddUsersDto {
   })
   @IsNotEmpty({ message: 'role cannot be blank' })
   role: string;
+
+  @ApiProperty({
+    type: 'number',
+    example: 1,
+  })
+  @IsNotEmpty({ message: 'groupId cannot be blank' })
+  groupId: string;
+  id: number;
 }
 
 export class AddUserSuccessDto {

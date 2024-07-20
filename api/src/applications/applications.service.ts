@@ -21,6 +21,9 @@ import { UserApplications } from 'src/db/model/user-applications.model';
 import { AuthClients } from 'src/db/model/auth-clients.model';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Users } from 'src/db/model/users.model';
+import { GroupUsers } from 'src/db/model/group-users.model';
+import { Groups } from 'src/db/model/groups.model';
 
 @Injectable()
 export class ApplicationsService {
@@ -29,16 +32,49 @@ export class ApplicationsService {
     private userApplictionsModel: typeof UserApplications,
     @InjectModel(Applications)
     private applicationsModel: typeof Applications,
+    @InjectModel(Users)
+    private usersModel: typeof Users,
+    @InjectModel(GroupUsers)
+    private groupUsersModel: typeof GroupUsers,
+    @InjectModel(Groups)
+    private groupModel: typeof Groups,
   ) {}
 
-  async getApplications() {
-    const applications = await this.applicationsModel.findAll({
-      where: { isActive: true },
-    });
-    if (applications && applications.length == 0) {
-      throw new NotFoundException('No applications found');
+  async getApplications(get: string, userId?: number) {
+    const GET_ALL = 'all';
+    const GET_FILTER = 'filter';
+    if (get === GET_ALL) {
+      const applications = await this.applicationsModel.findAll({
+        where: { isActive: true },
+      });
+      if (applications && applications.length == 0) {
+        throw new NotFoundException('No applications found');
+      }
+      return applications;
+    } else if (get === GET_FILTER) {
+      const whereCondition: any = {};
+      if (userId) {
+        if (userId !== undefined) {
+          whereCondition.userId = userId;
+        }
+        const userApplications = await this.userApplictionsModel.findAll({
+          where: whereCondition,
+        });
+        const applications: any = [];
+        for (const userApp of userApplications) {
+          const applicationId = userApp.applicationId;
+          const applicationDetails = await this.applicationsModel.findOne({
+            where: {
+              id: applicationId,
+            },
+          });
+          if (applicationDetails) {
+            applications.push(applicationDetails);
+          }
+        }
+        return applications;
+      }
     }
-    return applications;
   }
 
   async createNewApplication(
@@ -82,9 +118,15 @@ export class ApplicationsService {
   async create(
     applicationDto: ApplicationCreateDataDto,
     user: { id: any },
+    isAdd: string | boolean,
+    userId: number,
   ): Promise<{ message: string; statusCode: number; data: object }> {
+    const isAddBool =
+      typeof isAdd === 'string' ? JSON.parse(isAdd.toLowerCase()) : isAdd;
+
     const { name, application, base_url, call_back_url, logo_path, file } =
       applicationDto;
+    let newApplication;
     try {
       let fileName = null;
       if (file) {
@@ -111,9 +153,16 @@ export class ApplicationsService {
         where: { application: application },
       });
       if (existingApplication) {
-        throw new UnprocessableEntityException('application already exists.');
+        throw new HttpException(
+          {
+            message: 'aplication already exists',
+            statusCode: HttpStatus.CONFLICT,
+            data: null,
+          },
+          HttpStatus.CONFLICT,
+        );
       } else {
-        const newApplication = await this.applicationsModel.create({
+        newApplication = await this.applicationsModel.create({
           name: name,
           application: application,
           baseUrl: base_url,
@@ -130,13 +179,44 @@ export class ApplicationsService {
           );
         }
       }
+      if (isAddBool) {
+        const applications = await this.applicationsModel.findAll({
+          where: { isActive: true },
+        });
+
+        return {
+          message: 'Application created successfully.',
+          statusCode: HttpStatus.OK,
+          data: applications,
+        };
+      } else if (userId) {
+        await this.userApplictionsModel.create({
+          userId: userId,
+          applicationId: newApplication.id,
+        });
+      }
+      const userApplications = await this.userApplictionsModel.findAll({
+        where: { userId: userId },
+      });
+      if (!userApplications || userApplications.length === 0) {
+        throw new NotFoundException(
+          'No applications found for this application',
+        );
+      }
+
+      const applicationIds = userApplications.map(
+        (userApplication) => userApplication.applicationId,
+      );
 
       const applications = await this.applicationsModel.findAll({
-        where: { isActive: true },
+        where: {
+          id: applicationIds,
+          isActive: true,
+        },
       });
 
       return {
-        message: 'Application created successfully.',
+        message: 'Application created successfully',
         statusCode: HttpStatus.OK,
         data: applications,
       };
@@ -272,14 +352,7 @@ export class ApplicationsService {
       }
     } catch (error) {
       if (error instanceof HttpException) {
-        throw new HttpException(
-          {
-            data: null,
-            message: error.message,
-            statusCode: HttpStatus.CONFLICT,
-          },
-          HttpStatus.CONFLICT,
-        );
+        throw error;
       } else {
         throw new HttpException(
           {
@@ -310,14 +383,11 @@ export class ApplicationsService {
         });
 
         if (userApplication) {
-          throw new HttpException(
-            {
-              data: [],
-              message: 'The application cannot be deleted as a mapping exists.',
-              statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            },
-            HttpStatus.UNPROCESSABLE_ENTITY,
-          );
+          return {
+            message: 'The application cannot be deleted as a mapping exists.',
+            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+            data: [],
+          };
         } else {
           application.isActive = false;
           await application.save();
@@ -343,14 +413,18 @@ export class ApplicationsService {
         );
       }
     } catch (error) {
-      throw new HttpException(
-        {
-          data: null,
-          message: error.message,
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      } else {
+        throw new HttpException(
+          {
+            message: error.message,
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            data: null,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
     }
   }
 
@@ -398,5 +472,47 @@ export class ApplicationsService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async getUsersAndGroupsByApplicationId(id: number) {
+    const application = await this.applicationsModel.findOne({
+      where: { id: id },
+    });
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
+
+    const userApplications = await this.userApplictionsModel.findAll({
+      where: { applicationId: id },
+    });
+
+    if (!userApplications || userApplications.length === 0) {
+      throw new NotFoundException('No users found for this application');
+    }
+
+    const userIds = userApplications.map(
+      (userApplication) => userApplication.userId,
+    );
+
+    const users = await this.usersModel.findAll({
+      where: {
+        id: userIds,
+      },
+      attributes: ['id', 'firstName', 'lastName'],
+    });
+
+    const groupIds = await this.groupUsersModel.findAll({
+      where: { userId: userIds },
+      attributes: ['groupId'],
+    });
+    const uniqueGroupIds = Array.from(
+      new Set(groupIds.map((item) => item.groupId)),
+    );
+
+    const groups = await this.groupModel.findAll({
+      where: { id: uniqueGroupIds },
+    });
+
+    return { users, groups };
   }
 }

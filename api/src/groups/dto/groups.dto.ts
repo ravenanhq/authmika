@@ -1,11 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, Matches } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 
 export class GroupsDto {
   @ApiProperty({
     example: 'Group Name',
   })
-  @Matches(/^[^\s]+$/, { message: 'Spaces are not allowed in the group' })
   @IsNotEmpty({ message: 'name cannot be blank' })
   name: string;
 }

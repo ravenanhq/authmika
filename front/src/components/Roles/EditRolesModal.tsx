@@ -60,9 +60,9 @@ export default function EditRolesModal({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const filteredInput = value
+      .toUpperCase()
       .split("")
-      .filter((char) => /^[a-zA-Z]$/.test(char))
-      .map((char) => char.toUpperCase())
+      .filter((char) => /^[A-Z ]$/.test(char))
       .join("");
 
     setEditedData((prevData) => ({ ...prevData, [name]: filteredInput }));

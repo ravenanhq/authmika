@@ -9,12 +9,16 @@ import { UserApplicationsController } from '../user-applications/user-applicatio
 import { Applications } from 'src/db/model/applications.model';
 import { PasswordResetTokens } from 'src/db/model/password-reset-tokens.model';
 import { MailService } from 'src/mail/mail.service';
+import { Roles } from 'src/db/model/roles.model';
+import { GroupUsers } from 'src/db/model/group-users.model';
 
 @Module({
   imports: [
     SequelizeModule.forFeature([Users]),
     SequelizeModule.forFeature([UserApplications]),
     SequelizeModule.forFeature([Applications]),
+    SequelizeModule.forFeature([Roles]),
+    SequelizeModule.forFeature([GroupUsers]),
     SequelizeModule.forFeature([PasswordResetTokens]),
   ],
   providers: [UsersService, UserApplicationService, MailService],

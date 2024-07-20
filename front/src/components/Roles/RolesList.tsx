@@ -21,11 +21,12 @@ import { RolesApi } from "@/services/api/RolesApi";
 import AddRolesModal from "./AddRolesModal";
 import DeleteRolesModal from "./DeleteRolesModal";
 import EditRolesModal from "./EditRolesModal";
-import EditIcon from "@mui/icons-material/Edit";
+import { Visibility } from "@mui/icons-material";
 
 export interface RowData {
   id?: number;
   name?: string;
+  currentRoleName?: string;
   created_at: string | number | Date;
 }
 
@@ -44,7 +45,6 @@ const RoleListPage = () => {
   const [alertShow, setAlertShow] = useState("");
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
   const [deleteRoleModalOpen, setDeleteRoleModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
 
   useEffect(() => {
     getRoleList();
@@ -72,19 +72,11 @@ const RoleListPage = () => {
     setSelectedRow(null);
   };
 
-  const handleEditModalClose = () => {
-    setEditModalOpen(false);
-    setSelectedRow(null);
-    setUniqueAlert("");
-  };
-
-  const handleEdit = (rowData: SetStateAction<null>) => {
-    setSelectedRow(rowData);
-    setEditModalOpen(true);
-  };
-
-  const handleEditSave = (editedData: RowData) => {
-    editRole(editedData.id, editedData);
+  const handleView = (rowData: RowData) => {
+    const data = JSON.stringify(rowData);
+    localStorage.setItem("role-data", data);
+    const url = `/roles/${rowData.id}`;
+    window.location.href = url;
   };
 
   const columns: GridColDef[] = [
@@ -116,9 +108,10 @@ const RoleListPage = () => {
       sortable: false,
       renderCell: (params) => (
         <>
-          <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
-            <EditIcon />
+          <IconButton aria-label="view" onClick={() => handleView(params.row)}>
+            <Visibility />
           </IconButton>
+
           <IconButton
             aria-label="delete"
             onClick={() => handleDelete(params.row)}
@@ -135,9 +128,7 @@ const RoleListPage = () => {
       const response = await RolesApi.addRoleApi(newRole);
       setUniqueAlert("");
       if (response) {
-        if (response.statusCode == 409) {
-          setUniqueAlert(response.message);
-        } else if (response.statusCode == 201) {
+        if (response.statusCode == 201) {
           setRows(response.data);
           const sortedRoles = [...response.data].sort((a, b) => {
             return (
@@ -155,6 +146,8 @@ const RoleListPage = () => {
       var response = error.response.data;
       if (response.statusCode == 422 && response.message.name) {
         setUniqueAlert(response.message.name);
+      } else if (response.statusCode == 409) {
+        setUniqueAlert(response.message);
       }
       console.log(error);
     }
@@ -208,31 +201,6 @@ const RoleListPage = () => {
     }
   };
 
-  const editRole = async (id: any, updatedData: any) => {
-    try {
-      const response = await RolesApi.updateRoleApi(id, updatedData);
-      setUniqueAlert("");
-      if (response) {
-        if (response.statusCode === 409) {
-          setUniqueAlert(response.message);
-        } else if (response.statusCode === 200) {
-          const updatedRows = rows.map((row) =>
-            row.id === id ? { ...row, ...updatedData } : row
-          );
-          setRows(updatedRows);
-          handleEditModalClose();
-          setAlertShow(response.message);
-        }
-      }
-    } catch (error: any) {
-      console.error(error);
-      var response = error.response.data;
-      if (response.statusCode === 422 && response.message.application) {
-        setUniqueAlert(response.message.application);
-      }
-    }
-  };
-
   const PrimaryButton = styled(Button)(() => ({
     textTransform: "none",
     paddingLeft: "10px",
@@ -274,7 +242,7 @@ const RoleListPage = () => {
         "@media (max-width: 1366px) and (max-height: 768px)": {
           ".MuiDataGrid-virtualScroller": {
             overflowY: "hidden",
-          }
+          },
         },
       }}
     >
@@ -326,7 +294,7 @@ const RoleListPage = () => {
                   startIcon={<AddIcon />}
                   onClick={handleAddRoleClick}
                 >
-                  Add New Roles
+                  Add New Role
                 </PrimaryButton>
               </Grid>
             </Grid>
@@ -372,14 +340,6 @@ const RoleListPage = () => {
         onClose={handleCloseAddRoleModal}
         onAddRole={handleAddRole}
         uniqueNameValidation={uniqueAlert}
-      />
-
-      <EditRolesModal
-        open={editModalOpen}
-        onClose={handleEditModalClose}
-        rowData={selectedRow}
-        onEdit={handleEditSave}
-        uniqueValidation={uniqueAlert}
       />
 
       <DeleteRolesModal

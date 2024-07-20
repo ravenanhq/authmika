@@ -13,7 +13,9 @@ import {
   RolesDataDto,
   RolesDeleteSuccessDto,
   RolesDto,
+  RolesInUserUpdateSuccessDto,
   RolesUpdateSuccessDto,
+  UsersDataDto,
 } from './dto/roles.dto';
 import { Op } from 'sequelize';
 import { Users } from 'src/db/model/users.model';
@@ -106,30 +108,8 @@ export class RolesService {
       const existingRole = await this.rolesModel.findOne({
         where: { id: id },
       });
-      if (existingRole) {
-        const existingUserRole = await this.rolesModel.findOne({
-          where: { name: name },
-        });
-        if (
-          existingUserRole &&
-          existingUserRole.id.toString() !== id.toString()
-        ) {
-          throw new UnprocessableEntityException('Name already exists.');
-        }
-        existingRole.name = name;
-        existingRole.updatedBy = user.userId;
-        await existingRole.save();
 
-        const roles = await this.rolesModel.findAll({
-          where: { status: { [Op.or]: [1, 2] } },
-        });
-
-        return {
-          message: 'Role updated successfully.',
-          statusCode: HttpStatus.OK,
-          data: roles,
-        };
-      } else {
+      if (!existingRole) {
         throw new HttpException(
           {
             message: 'Role not found.',
@@ -139,6 +119,40 @@ export class RolesService {
           HttpStatus.NOT_FOUND,
         );
       }
+
+      const existingUserRole = await this.rolesModel.findOne({
+        where: { name: name },
+      });
+
+      if (
+        existingUserRole &&
+        existingUserRole.id.toString() !== id.toString()
+      ) {
+        throw new UnprocessableEntityException('Name already exists.');
+      }
+
+      const oldRoleName = existingRole.name;
+
+      existingRole.name = name;
+      existingRole.updatedBy = user.userId;
+      await existingRole.save();
+
+      await this.userModel.update(
+        { role: name },
+        {
+          where: { role: oldRoleName, status: { [Op.not]: [0] } },
+        },
+      );
+
+      const responseData = await this.fetchUsersWithRole(name);
+
+      return {
+        message: 'Role updated successfully.',
+        statusCode: HttpStatus.OK,
+        data: {
+          users: responseData,
+        },
+      };
     } catch (error) {
       if (error instanceof HttpException) {
         throw new HttpException(
@@ -162,6 +176,23 @@ export class RolesService {
     }
   }
 
+  private async fetchUsersWithRole(roleName: string): Promise<UsersDataDto[]> {
+    const usersWithRole = await this.userModel.findAll({
+      where: { role: roleName, status: { [Op.not]: [0] } },
+    });
+
+    return usersWithRole.map((user) => ({
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      mobile: user.mobile,
+      role: user.role,
+      status: user.status,
+      createdAt: user.created_at,
+    }));
+  }
+
   async delete(id: number): Promise<RolesDeleteSuccessDto> {
     try {
       const role = await this.rolesModel.findOne({
@@ -169,7 +200,20 @@ export class RolesService {
           id: id,
         },
       });
+
       if (role) {
+        if (
+          role.name == 'ADMIN' ||
+          role.name == 'MANAGER' ||
+          role.name == 'STAFF'
+        ) {
+          return {
+            message: 'The role cannot be deleted.',
+            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+            data: [],
+          };
+        }
+
         const userRole = await this.userModel.findOne({
           where: {
             role: role.name,
@@ -214,6 +258,49 @@ export class RolesService {
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+  async getUserList(id: number): Promise<RolesInUserUpdateSuccessDto> {
+    try {
+      const existingRole = await this.rolesModel.findOne({
+        where: { id },
+      });
+
+      if (!existingRole) {
+        throw new HttpException('Role not found.', HttpStatus.NOT_FOUND);
+      }
+
+      const usersWithRole = await this.userModel.findAll({
+        where: { role: existingRole.name, status: { [Op.not]: [0] } },
+      });
+
+      const responseData: UsersDataDto[] = usersWithRole.map((user) => ({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role,
+        status: user.status,
+        createdAt: user.created_at,
+      }));
+
+      return {
+        message: 'Users fetched successfully.',
+        statusCode: HttpStatus.OK,
+        data: {
+          users: responseData,
+        },
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      } else {
+        throw new HttpException(
+          'Internal server error.',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
     }
   }
 }

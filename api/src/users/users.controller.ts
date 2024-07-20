@@ -110,9 +110,21 @@ export class UsersController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard('jwt'))
-  async getUsers() {
+  async getUsers(
+    @Query('isListPage') isListPage: boolean,
+    @Query('applicationId') applicationId: number,
+    @Query('roleId') roleId: number,
+    @Query('id') id: number,
+    @Query('groupId') groupId: number,
+  ) {
     try {
-      const activeUsers = await this.userService.getUsers();
+      const activeUsers = await this.userService.getUsers(
+        isListPage,
+        applicationId,
+        roleId,
+        id,
+        groupId,
+      );
       return activeUsers;
     } catch (error) {
       console.error('Error fetching active users:', error);
@@ -142,8 +154,13 @@ export class UsersController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(AuthGuard('jwt'))
-  async create(@Body() usersDto: AddUsersDto): Promise<AddUserSuccessDto> {
-    return this.userService.create(usersDto);
+  async create(
+    @Body() usersDto: AddUsersDto,
+    @Query('isView') isView: string | boolean,
+    @Query('applicationId') applicationId?: number,
+    @Query('isGroup') isGroup?: boolean,
+  ): Promise<AddUserSuccessDto> {
+    return this.userService.create(usersDto, isView, applicationId, isGroup);
   }
 
   // @Post('get-otp/:id')

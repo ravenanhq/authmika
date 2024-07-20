@@ -5,7 +5,10 @@ import {
   DataType,
   AutoIncrement,
   PrimaryKey,
+  ForeignKey,
+  BelongsTo,
 } from 'sequelize-typescript';
+import { Groups } from './groups.model';
 
 @Table({
   tableName: 'users',
@@ -40,6 +43,10 @@ export class Users extends Model {
   @Column({ field: 'role', type: DataType.STRING })
   role: string;
 
+  @ForeignKey(() => Groups)
+  @Column({ field: 'group_id', type: DataType.INTEGER })
+  groupId: number;
+
   @Column({ defaultValue: false })
   isTwoFactorEnabled: boolean;
 
@@ -69,4 +76,10 @@ export class Users extends Model {
 
   @Column({ type: DataType.BIGINT })
   otp_expiration: number;
+
+  isSelected: boolean;
+  created_at: any;
+
+  @BelongsTo(() => Groups)
+  groups: Groups;
 }

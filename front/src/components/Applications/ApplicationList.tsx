@@ -18,10 +18,8 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { SetStateAction, useEffect, useState } from "react";
 import { ApplicationApi } from "@/services/api/ApplicationApi";
 import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddApplicationModal from "./AddApplicationModal";
-import EditApplicationModal from "./EditApplicationModal";
 import DeleteApplicationModal from "./DeleteApplicationModal";
 import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
@@ -30,16 +28,20 @@ import { config } from "../../../config";
 export interface RowData {
   created_at: string | number | Date;
   id: number;
-  name?: string;
-  application?: string;
-  baseUrl?: string;
-  base_url?: string;
-  callBackUrl?: string;
-  call_back_url?: string;
-  file?: string;
+  name: string;
+  application: string;
+  baseUrl: string;
+  base_url: string;
+  callBackUrl: string;
+  call_back_url: string;
+  file: string;
   logoPath: string;
   logo_path: string;
-  formData?: FormData;
+  formData: FormData;
+  clientSecretId: string;
+  clientSecretKey: string;
+  client: string;
+  deleting: boolean;
 }
 
 interface AlertState {
@@ -47,11 +49,22 @@ interface AlertState {
   message: string;
 }
 
-const ApplicationList = () => {
+interface ApplicationListProps {
+  title: boolean;
+  get: string;
+  userId: number | undefined;
+  isAdd:string | boolean,
+}
+
+const ApplicationList: React.FC<ApplicationListProps> = ({
+  title,
+  get,
+  userId,
+  isAdd
+}) => {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<RowData[]>([]);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedRow, setSelectedRow] = useState(null);
+  const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [message, setMessage] = useState("");
   const [isAddApplicationModalOpen, setAddApplicationModalOpen] =
     useState(false);
@@ -60,12 +73,20 @@ const ApplicationList = () => {
   const [uniqueAlert, setUniqueAlert] = useState("");
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
   const filteredRows = rows.filter((row) => row.id);
+  const GET_FILTER = 'filter';
 
   useEffect(() => {
     restrictMenuAccess();
-    getApplications();
+    getApplications(get, userId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (userId !== undefined) {
+      getApplications(GET_FILTER, userId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   const restrictMenuAccess = async () => {
     const session = await getSession();
@@ -89,31 +110,14 @@ const ApplicationList = () => {
     }
   };
 
-  const handleEdit = (rowData: SetStateAction<null>) => {
-    setSelectedRow(rowData);
-    setEditModalOpen(true);
-  };
-
-  const handleAddApplication = (newApplication: RowData) => {
-    addApplication(newApplication);
-  };
-
-  const handleEditModalClose = () => {
-    setEditModalOpen(false);
-    setSelectedRow(null);
-    setUniqueAlert("");
-  };
-
-  const handleEditSave = (editedData: RowData) => {
-    editedData["logo_path"] = editedData["logoPath"];
-    editedData["base_url"] = editedData["baseUrl"];
-    editedData["call_back_url"] = editedData["callBackUrl"];
-    editApplication(editedData.id, editedData);
-  };
-
-  const handleDelete = (rowData: SetStateAction<null>) => {
-    setSelectedRow(rowData);
+  const handleDelete = (rowData: RowData | null) => {
     setDeleteModalOpen(true);
+    setSelectedRow((prevRowData) => {
+      if (rowData !== null) {
+        return rowData;
+      }
+      return prevRowData;
+    });
   };
 
   const handleDeleteModalClose = () => {
@@ -169,21 +173,21 @@ const ApplicationList = () => {
       headerName: "Name",
       headerClassName: "application-header",
       flex: 1,
-      minWidth: 200,
+      minWidth: 100,
     },
     {
       field: "application",
       headerName: "Application",
       headerClassName: "application-header",
       flex: 1,
-      minWidth: 200,
+      minWidth: 100,
     },
     {
       field: "baseUrl",
       headerName: "Base URL",
       headerClassName: "application-header",
       flex: 1,
-      minWidth: 200,
+      minWidth: 100,
     },
     {
       field: "created_at",
@@ -191,7 +195,7 @@ const ApplicationList = () => {
       headerClassName: "user-header",
       type: "date",
       flex: 0.5,
-      minWidth: 160,
+      minWidth: 100,
       valueGetter: (params) => {
         return new Date(params.row.created_at);
       },
@@ -201,16 +205,13 @@ const ApplicationList = () => {
       headerName: "Actions",
       headerClassName: "application-header",
       flex: 1,
-      minWidth: 200,
+      minWidth: 100,
       disableColumnMenu: true,
       sortable: false,
       renderCell: (params) => (
         <>
           <IconButton aria-label="view" onClick={() => handleView(params.row)}>
             <Visibility />
-          </IconButton>
-          <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
-            <EditIcon />
           </IconButton>
           <IconButton
             aria-label="delete"
@@ -223,9 +224,9 @@ const ApplicationList = () => {
     },
   ];
 
-  const addApplication = async (newApplication: RowData) => {
+  const handleAddApplication = async (newApplication: RowData, isAdd:string | boolean,userId: number | undefined): Promise<void> => {
     try {
-      const response = await ApplicationApi.addApplication(newApplication);
+      const response = await ApplicationApi.addApplication(newApplication,isAdd,userId);
       setUniqueAlert("");
       if (response) {
         if (response.statusCode == 409) {
@@ -249,34 +250,6 @@ const ApplicationList = () => {
         setUniqueAlert(response.message.application);
       }
       console.log(error);
-    }
-  };
-
-  const editApplication = async (applicationId: any, updatedData: any) => {
-    try {
-      const response = await ApplicationApi.updateApplication(
-        applicationId,
-        updatedData
-      );
-      setUniqueAlert("");
-      if (response) {
-        if (response.statusCode === 409) {
-          setUniqueAlert(response.message);
-        } else if (response.statusCode === 200) {
-          const updatedRows = rows.map((row) =>
-            row.id === applicationId ? { ...row, ...response.data } : row
-          );
-          setRows(updatedRows);
-          handleEditModalClose();
-          setAlertShow(response.message);
-        }
-      }
-    } catch (error: any) {
-      console.error(error);
-      var response = error.response.data;
-      if (response.statusCode === 422 && response.message.application) {
-        setUniqueAlert(response.message.application);
-      }
     }
   };
 
@@ -313,12 +286,19 @@ const ApplicationList = () => {
           message: "An error occurred while deleting.",
         });
       }
+      setDeleteModalOpen(false);
     }
   };
 
-  const getApplications = async () => {
+  const getApplications = async (
+    get: string,
+    userId: number | undefined,
+  ) => {
     try {
-      const response = await ApplicationApi.getApplications();
+      const response = await ApplicationApi.getApplications(
+        get,
+        userId
+      );
       if (response) {
         const sortedRows = response.sort((a: RowData, b: RowData) => {
           return (
@@ -329,7 +309,6 @@ const ApplicationList = () => {
         setLoading(false);
       }
     } catch (error: any) {
-      setLoading(false);
       console.log(error);
     }
   };
@@ -364,28 +343,37 @@ const ApplicationList = () => {
 
   return (
     <Card
-      sx={{
-        boxShadow: "none",
-        marginTop: "5%",
-        "& .application-header": {
-          backgroundColor: "#265073",
-          color: "#fff",
+    sx={{
+      boxShadow: "none",
+      marginTop: title ? "5%" : "0",
+      "& .application-header": {
+        backgroundColor: "#265073",
+        color: "#fff",
+      },
+      "@media (max-width: 1024px) and (max-height: 1366px)": {
+        ".MuiDataGrid-virtualScroller": {
+          overflowY: "hidden",
         },
-        gridWidth: "500px",
-        "@media (max-width: 1366px) and (max-height: 768px)": {
-          ".MuiDataGrid-virtualScroller": {
-            overflowY: "hidden",
-          }
+      },
+      "@media (max-width: 1366px) and (max-height: 1024px)": {
+        ".MuiDataGrid-virtualScroller": {
+          overflowY: "hidden",
         },
-      }}
-    >
+      },
+      gridWidth: "100%",
+    }}
+  >
       <Snackbar autoHideDuration={3000} message={message} />
       <CardContent style={{ padding: "0" }}>
-        <Typography variant="h4">Applications</Typography>
-        <Divider
-          color="#265073"
-          sx={{ marginTop: "5px", marginBottom: "3%" }}
-        ></Divider>
+        {title && (
+          <>
+            <Typography variant="h4">Applications</Typography>
+            <Divider
+              color="#265073"
+              sx={{ marginTop: "5px", marginBottom: "3%" }}
+            ></Divider>
+          </>
+        )}
         {loading && (
           <div style={{ textAlign: "center", marginTop: "5%" }}>
             <CircularProgress />
@@ -467,19 +455,13 @@ const ApplicationList = () => {
         )}
       </CardContent>
 
-      <EditApplicationModal
-        open={editModalOpen}
-        onClose={handleEditModalClose}
-        rowData={selectedRow}
-        onEdit={handleEditSave}
-        uniqueValidation={uniqueAlert}
-      />
-
       <AddApplicationModal
         open={isAddApplicationModalOpen}
         onClose={handleCloseAddApplicationModal}
         onAddApplication={handleAddApplication}
         uniqueValidation={uniqueAlert}
+        isAdd={isAdd}
+        userId={userId}
       />
 
       <DeleteApplicationModal

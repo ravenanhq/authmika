@@ -22,7 +22,6 @@ import React from "react";
 import { GroupsApi } from "@/services/api/GroupsApi";
 import DeleteGroupModal from "./DeleteGroupModal";
 import EditGroupModal from "./EditGroupModal";
-import EditIcon from "@mui/icons-material/Edit";
 
 export interface RowData {
   id?: number;
@@ -35,7 +34,13 @@ interface AlertState {
   message: string;
 }
 
-const GroupListPage = () => {
+// interface GroupListProps {
+// title: boolean;
+// get: string,
+// userId: number | undefined,
+// isCreate: string | boolean,
+// }
+const GroupList= () => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [selectedRow, setSelectedRow] = useState(null);
@@ -46,11 +51,19 @@ const GroupListPage = () => {
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
   const [deleteGroupModalOpen, setDeleteGroupModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  // const GET_FILTER = 'filter';
 
   useEffect(() => {
     getGroupsList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // useEffect(() => {
+  //   if (userId !== undefined) {
+  //     getGroupsList(GET_FILTER, userId);
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [userId]);
 
   const handleAddGroupClick = () => {
     setAddGroupModalOpen(true);
@@ -60,9 +73,6 @@ const GroupListPage = () => {
     setAddGroupModalOpen(false);
   };
 
-  const handleAddGroup = (newGroup: RowData) => {
-    addGroup(newGroup);
-  };
   const handleDelete = (rowData: SetStateAction<null>) => {
     setSelectedRow(rowData);
     setDeleteGroupModalOpen(true);
@@ -112,9 +122,6 @@ const GroupListPage = () => {
           <IconButton aria-label="view" onClick={() => handleView(params.row)}>
             <Visibility />
           </IconButton>
-          <IconButton aria-label="edit" onClick={() => handleEdit(params.row)}>
-            <EditIcon />
-          </IconButton>
           <IconButton
             aria-label="delete"
             onClick={() => handleDelete(params.row)}
@@ -126,14 +133,12 @@ const GroupListPage = () => {
     },
   ];
 
-  const addGroup = async (newGroup: RowData) => {
+  const handleAddGroup = async (newGroup: RowData) => {
     try {
       const response = await GroupsApi.addGroupApi(newGroup);
       setUniqueAlert("");
       if (response) {
-        if (response.statusCode == 409) {
-          setUniqueAlert(response.message);
-        } else if (response.statusCode == 201) {
+        if (response.statusCode == 201) {
           setRows(response.data);
           const sortedGroups = [...response.data].sort((a, b) => {
             return (
@@ -150,6 +155,8 @@ const GroupListPage = () => {
       var response = error.response.data;
       if (response.statusCode == 422 && response.message.name) {
         setUniqueAlert(response.message.name);
+      } else if (response.statusCode == 409) {
+        setUniqueAlert(response.message);
       }
       console.log(error);
     }
@@ -210,11 +217,6 @@ const GroupListPage = () => {
     setEditModalOpen(false);
     setSelectedRow(null);
     setUniqueAlert("");
-  };
-
-  const handleEdit = (rowData: SetStateAction<null>) => {
-    setSelectedRow(rowData);
-    setEditModalOpen(true);
   };
 
   const handleEditSave = (editedData: RowData) => {
@@ -278,7 +280,7 @@ const GroupListPage = () => {
     <Card
       sx={{
         boxShadow: "none",
-        marginTop: "5%",
+        marginTop:  "5%",
         "& .group-header": {
           backgroundColor: "#265073",
           color: "#fff",
@@ -293,11 +295,13 @@ const GroupListPage = () => {
     >
       <Snackbar autoHideDuration={3000} message={message} />
       <CardContent style={{ padding: "0" }}>
-        <Typography variant="h4">Groups</Typography>
-        <Divider
-          color="#265073"
-          sx={{ marginTop: "5px", marginBottom: "3%" }}
-        ></Divider>
+        <>
+          <Typography variant="h4">Groups</Typography>
+          <Divider
+            color="#265073"
+            sx={{ marginTop: "5px", marginBottom: "3%" }}
+          ></Divider>
+        </>
         {loading && (
           <div style={{ textAlign: "center", marginTop: "5%" }}>
             <CircularProgress />
@@ -383,6 +387,11 @@ const GroupListPage = () => {
         onClose={handleCloseAddGroupModal}
         onAddGroup={handleAddGroup}
         uniqueNameValidation={uniqueAlert}
+        // isCreate={isCreate}
+        // userId={userId}
+        // isView={isView}
+        // applicationId={applicationId}
+        // isListPage={isListPage}
       />
 
       <EditGroupModal
@@ -402,4 +411,4 @@ const GroupListPage = () => {
     </Card>
   );
 };
-export default GroupListPage;
+export default GroupList;

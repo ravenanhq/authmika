@@ -111,17 +111,19 @@ export default function EditGroupModal({
 
   return (
     <Dialog
-    open={open}
-    onClose={handleClose}
-    maxWidth="sm"
-    fullWidth={true}
-    PaperProps={{
-      style: {
-        minHeight: '300px',
-        maxHeight: '600px',
-      },
-    }}
-  >      <DialogTitle
+      open={open}
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth={true}
+      PaperProps={{
+        style: {
+          minHeight: "300px",
+          maxHeight: "600px",
+        },
+      }}
+    >
+      {" "}
+      <DialogTitle
         sx={{
           backgroundColor: "#265073",
           color: "#fff",
@@ -146,7 +148,7 @@ export default function EditGroupModal({
         </IconButton>
       </DialogTitle>
       <Divider color="#265073"></Divider>
-      <DialogContent sx={{marginTop:2}}>
+      <DialogContent sx={{ marginTop: 2 }}>
         <TextField
           required
           label="Name"
@@ -166,10 +168,7 @@ export default function EditGroupModal({
         sx={{ marginBottom: "2%", marginTop: "0%" }}
       ></Divider>
       <DialogActions style={{ margin: "0 16px 10px 0" }}>
-        <PrimaryButton
-          startIcon={<SaveIcon />}
-          onClick={handleUpdateGroup}
-        >
+        <PrimaryButton startIcon={<SaveIcon />} onClick={handleUpdateGroup}>
           Update
         </PrimaryButton>
         <SecondaryButton startIcon={<CloseIcon />} onClick={handleClose}>

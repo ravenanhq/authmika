@@ -12,20 +12,28 @@ import {
   CircularProgress,
   Alert,
   Stack,
-  Container,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridColDef,
+  GridRenderCellParams,
+  GridValueGetterParams,
+} from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DeleteModal from "./DeleteUserModal";
 import AddUserModal from "./AddUserModal";
-import { UserApi } from "@/services/api/UserApi";
 import { UserServiceApi } from "@/services/api/UserServiceApi";
 import { Visibility } from "@mui/icons-material";
 import { getSession } from "next-auth/react";
+import { UserApi } from "@/services/api/UserApi";
+import { GroupData } from "@/app/users/[id]/page";
+
 
 export interface RowData {
+  groupId: string;
+  groups: GroupData;
   created_at: string | number | Date;
   firstName: string;
   lastName: string;
@@ -47,7 +55,53 @@ const userStatus: { [key: number]: string } = {
   3: "Inactive",
 };
 
-const UserList = () => {
+interface UserListProps {
+  title: boolean;
+  isListPage: boolean;
+  applicationId: number | undefined;
+  isView: string | boolean;
+  roleId: number | undefined;
+  id: number | undefined;
+  showRole: boolean;
+  roleView: boolean;
+  roleName: string | undefined;
+  groupId: number | undefined;
+  groupView: boolean;
+  showGroup: boolean;
+  isGroup: boolean;
+  groupName: string | undefined;
+}
+const TruncatedCell = styled('div')({
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+});
+
+const StyledDataGrid = styled(DataGrid)(({ theme }) => ({
+  '& .truncatedCell': {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+}));
+
+
+const UserList: React.FC<UserListProps> = ({
+  title,
+  isListPage,
+  applicationId,
+  isView,
+  roleId,
+  id,
+  showRole,
+  roleView,
+  roleName,
+  groupId,
+  groupView,
+  showGroup,
+  isGroup,
+  groupName,
+}) => {
   const [alertShow, setAlertShow] = useState("");
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<RowData[]>([]);
@@ -56,10 +110,12 @@ const UserList = () => {
   const [isAddUserModalOpen, setAddUserModalOpen] = useState(false);
   const [invalidEmail, setInvalidEmail] = useState("");
   const [deleteAlert, setDeleteAlert] = useState<AlertState | null>(null);
+  const [invalidPassword, setInvalidPassword] = useState("");
+  const [invalidMobile, setInvalidMobile] = useState("");
 
   useEffect(() => {
     restrictMenuAccess();
-    getUsers();
+    getUsers(isListPage, applicationId, roleId, id, groupId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -92,10 +148,6 @@ const UserList = () => {
     window.location.href = url;
   };
 
-  const handleAddUser = (newUser: RowData) => {
-    addUser(newUser);
-  };
-
   const handleDelete = (rowData: RowData | null) => {
     setDeleteModalOpen(true);
     setSelectedRow((prevRowData) => {
@@ -126,6 +178,7 @@ const UserList = () => {
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 140,
+      cellClassName: 'truncatedCell',
     },
     {
       field: "lastName",
@@ -133,6 +186,7 @@ const UserList = () => {
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 160,
+      cellClassName: 'truncatedCell',
     },
     {
       field: "email",
@@ -140,6 +194,7 @@ const UserList = () => {
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 180,
+      cellClassName: 'truncatedCell',
     },
     {
       field: "mobile",
@@ -147,28 +202,52 @@ const UserList = () => {
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 120,
+      cellClassName: 'truncatedCell',
     },
-    {
-      field: "role",
-      headerName: "Role",
-      headerClassName: "user-header",
-      flex: 0.5,
-      minWidth: 100,
-    },
-    {
-      field: "status",
-      headerName: "Status",
-      headerClassName: "user-header",
-      flex: 0.5,
-      minWidth: 100,
-      renderCell: (params) => <>{userStatus[params.value]}</>,
-    },
+    ...(title
+      ? [
+          {
+            field: "role",
+            headerName: "Role",
+            headerClassName: "user-header",
+            flex: 0.5,
+            minWidth: 100,
+            cellClassName: 'truncatedCell',
+          },
+          {
+            field: "groups",
+            headerName: "Group",
+            headerClassName: "user-header",
+            flex: 0.5,
+            minWidth: 100,
+            cellClassName: 'truncatedCell',
+            valueGetter: (params: GridValueGetterParams) => {
+              let paramsName = params.row.groups;
+
+              return paramsName ? paramsName.name : "-";
+            },
+          },
+
+          {
+            field: "status",
+            headerName: "Status",
+            headerClassName: "user-header",
+            flex: 0.5,
+            minWidth: 100,
+            cellClassName: 'truncatedCell',
+            renderCell: (params: GridRenderCellParams) => (
+              <>{userStatus[params.value]}</>
+            ),
+          },
+        ]
+      : []),
     {
       field: "created_at",
       headerName: "Created At",
       type: "date",
       flex: 0.5,
       minWidth: 160,
+      cellClassName: 'truncatedCell',
       valueGetter: (params) => {
         return new Date(params.row.created_at);
       },
@@ -181,6 +260,7 @@ const UserList = () => {
       minWidth: 140,
       disableColumnMenu: true,
       sortable: false,
+      cellClassName: 'truncatedCell',
       renderCell: (params) => (
         <>
           <IconButton aria-label="view" onClick={() => handleView(params.row)}>
@@ -197,9 +277,21 @@ const UserList = () => {
     },
   ];
 
-  const getUsers = async () => {
+  const getUsers = async (
+    isListPage: boolean,
+    applicationId: number | undefined,
+    roleId: number | undefined,
+    id: number | undefined,
+    groupId: number | undefined
+  ) => {
     try {
-      const response = await UserApi.getUsers();
+      const response = await UserApi.getUsers(
+        isListPage,
+        applicationId,
+        roleId,
+        id,
+        groupId
+      );
       if (response) {
         const sortedRows = response.sort((a: RowData, b: RowData) => {
           return (
@@ -215,31 +307,36 @@ const UserList = () => {
     }
   };
 
-  const addUser = async (newUser: RowData) => {
+  const handleAddUser = async (
+    newUser: RowData,
+    isView: string | boolean,
+    applicationId: number | undefined,
+    isGroup: boolean
+  ) => {
     try {
-      const response = await UserServiceApi.create(newUser);
+      const response = await UserServiceApi.create(
+        newUser,
+        isView,
+        applicationId,
+        isGroup
+      );
+
       setInvalidEmail("");
+      setInvalidPassword("");
+      setInvalidMobile("");
       if (response) {
-        if (response.statusCode == 409) {
-          setInvalidEmail(response.message);
-        } else if (response.statusCode == 201) {
-          setRows(response.data);
-          const newUserId = Math.floor(Math.random() * 1000);
-          const newUserData = {
-            ...newUser,
-            firstName: newUser.firstName,
-            lastName: newUser.lastName,
-            status: 2,
-            id: newUserId,
-          };
-          const currentUsers = [...rows];
-          currentUsers.unshift(newUserData);
-          const sortedUsers = currentUsers.sort((a, b) => {
-            return (
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime()
-            );
-          });
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          const sortedUsers = response.data.sort(
+            (
+              a: { created_at: string | number | Date },
+              b: { created_at: string | number | Date }
+            ) => {
+              return (
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime()
+              );
+            }
+          );
           setRows(sortedUsers);
           handleCloseAddUserModal();
           setAlertShow(response.message);
@@ -249,6 +346,12 @@ const UserList = () => {
       var response = error.response.data;
       if (response.statusCode == 422 && response.message.email) {
         setInvalidEmail(response.message.email);
+      } else if (response.statusCode == 422 && response.message.password) {
+        setInvalidPassword(response.message.password);
+      } else if (response.statusCode == 409) {
+        setInvalidEmail(response.message);
+      } else if (response.statusCode == 422 && response.message.mobile) {
+        setInvalidMobile(response.message.mobile);
       }
       console.log(error);
     }
@@ -310,120 +413,161 @@ const UserList = () => {
   }));
 
   return (
-    <Container maxWidth="xl">
-      <Card
-        sx={{
-          boxShadow: "none",
-          marginTop: "5vh",
-          "& .user-header": {
-            backgroundColor: "#265073",
-            color: "#fff",
+    <Card
+      sx={{
+        boxShadow: "none",
+        marginTop: title ? "5%" : "0",
+        "& .user-header": {
+          backgroundColor: "#265073",
+          color: "#fff",
+        },
+        gridWidth: "500px",
+        "@media(width: 1024px) and (height: 1366px)": {
+          gridWidth: "100%",
+          overflowX: "auto",
+        },
+        "@media (max-width: 1024px) and (max-height: 1366px)": {
+          ".MuiDataGrid-virtualScroller": {
+            overflowY: "hidden",
           },
-          gridWidth: "500px",
-        }}
-      >
-        <Snackbar autoHideDuration={12000} />
-        <CardContent style={{ padding: "0" }}>
-          <Typography variant="h4">Users</Typography>
-          <Divider
-            color="#265073"
-            sx={{ marginTop: "5px", marginBottom: "3%" }}
-          ></Divider>
-          {loading && (
-            <div style={{ textAlign: "center", marginTop: "5%" }}>
-              <CircularProgress />
-            </div>
-          )}
-          {!loading && (
-            <>
-              <Stack sx={{ width: "100%", paddingBottom: "20px" }} spacing={4}>
-                {alertShow && (
-                  <Alert
-                    severity="success"
-                    onClose={() => {
-                      setAlertShow("");
-                    }}
-                  >
-                    {alertShow}
-                  </Alert>
-                )}
-                {deleteAlert && (
-                  <Alert
-                    severity={deleteAlert.severity}
-                    onClose={() => {
-                      setDeleteAlert(null);
-                    }}
-                  >
-                    {deleteAlert.message}
-                  </Alert>
-                )}
-              </Stack>
-              <Grid
-                container
-                justifyContent="flex-end"
-                alignItems="center"
-                style={{ marginBottom: "5px" }}
-              >
-                <Grid item>
-                  <PrimaryButton
-                    startIcon={<AddIcon />}
-                    onClick={handleAddUserClick}
-                  >
-                    Add New User
-                  </PrimaryButton>
-                </Grid>
+        },
+        "@media (max-width: 1366px) and (max-height: 1024px)": {
+          ".MuiDataGrid-virtualScroller": {
+            overflowY: "hidden",
+          },
+        },
+        "@media (max-width: 1180px) and (max-height: 820px)": {
+          ".MuiDataGrid-virtualScroller": {
+            overflow: "hidden",
+          },
+        },
+      }}
+    >
+      <Snackbar autoHideDuration={12000} />
+      <CardContent style={{ padding: "0" }}>
+        {title && (
+          <>
+            {" "}
+            <Typography variant="h4">Users</Typography>
+            <Divider
+              color="#265073"
+              sx={{ marginTop: "5px", marginBottom: "3%" }}
+            ></Divider>
+          </>
+        )}
+        {loading && (
+          <div style={{ textAlign: "center", marginTop: "5%" }}>
+            <CircularProgress />
+          </div>
+        )}
+        {!loading && (
+          <>
+            <Stack sx={{ width: "100%", paddingBottom: "20px" }} spacing={4}>
+              {alertShow && (
+                <Alert
+                  severity="success"
+                  onClose={() => {
+                    setAlertShow("");
+                  }}
+                >
+                  {alertShow}
+                </Alert>
+              )}
+              {deleteAlert && (
+                <Alert
+                  severity={deleteAlert.severity}
+                  onClose={() => {
+                    setDeleteAlert(null);
+                  }}
+                >
+                  {deleteAlert.message}
+                </Alert>
+              )}
+            </Stack>
+            <Grid
+              container
+              justifyContent="flex-end"
+              alignItems="center"
+              style={{ marginBottom: "5px" }}
+            >
+              <Grid item>
+                <PrimaryButton
+                  startIcon={<AddIcon />}
+                  onClick={handleAddUserClick}
+                >
+                  Add New User
+                </PrimaryButton>
               </Grid>
-              <StyledDataGrid
-                rows={rows}
-                columns={columns.filter(
-                  (column) => column.field !== "created_at"
-                )}
-                getRowId={(row) => row.id}
-                autoHeight
-                initialState={{
-                  pagination: {
-                    paginationModel: { page: 0, pageSize: 5 },
-                  },
-                }}
-                slots={{
-                  noResultsOverlay: () => {
-                    return (
-                      <Typography
-                        variant="body1"
-                        align="center"
-                        sx={{ marginTop: 10, justifyContent: "center" }}
-                      >
-                        No results found.
-                      </Typography>
-                    );
-                  },
-                }}
-                pageSizeOptions={[5, 10, 15, 20]}
-                style={{
-                  backgroundColor: "white",
-                  marginTop: "2%",
-                  width: "100%",
-                }}
-              />
-            </>
-          )}
-        </CardContent>
+            </Grid>
+            {/* <div className="block" style={{maxWidth:'100%'}}> */}
+            <div className="flex flex-col h-screen overflow-hidden" style={{maxWidth:'100%'}}>
 
-        <DeleteModal
-          open={deleteModalOpen}
-          onClose={handleDeleteModalClose}
-          onDeleteConfirm={() => handleDeleteConfirm(selectedRow)}
-          rowData={selectedRow}
-        />
+            <StyledDataGrid
+              rows={rows}
+              columns={columns.filter(
+                (column) => column.field !== "created_at"
+              )}
+              getRowId={(row) => row.id}
+              autoHeight
+              initialState={{
+                pagination: {
+                  paginationModel: { page: 0, pageSize: 5 },
+                },
+              }}
+              disableVirtualization
+              slots={{
+                noResultsOverlay: () => {
+                  return (
+                    <Typography
+                      variant="body1"
+                      align="center"
+                      sx={{ marginTop: 10, justifyContent: "center" }}
+                    >
+                      No results found.
+                    </Typography>
+                  );
+                },
+              }}
+              pageSizeOptions={[5, 10, 15, 20]}
+              style={{
+                backgroundColor: "white",
+                marginTop: "2%",
+                width: "100%",
+                }}
 
-        <AddUserModal
-          open={isAddUserModalOpen}
-          onClose={handleCloseAddUserModal}
-          onAddUser={handleAddUser}
-          uniqueEmail={invalidEmail}
-        />
-      </Card>
-    </Container>
+            />
+            </div>
+          </>
+        )}
+      </CardContent>
+
+      <DeleteModal
+        open={deleteModalOpen}
+        onClose={handleDeleteModalClose}
+        onDeleteConfirm={() => handleDeleteConfirm(selectedRow)}
+        rowData={selectedRow}
+      />
+
+      <AddUserModal
+        open={isAddUserModalOpen}
+        onClose={handleCloseAddUserModal}
+        onAddUser={handleAddUser}
+        uniqueEmail={invalidEmail}
+        isView={isView}
+        applicationId={applicationId}
+        isListPage={isListPage}
+        validatePassword={invalidPassword}
+        showRole={showRole}
+        roleView={roleView}
+        roleName={roleName}
+        groupView={groupView}
+        showGroup={showGroup}
+        groupName={groupName}
+        groupId={groupId}
+        isGroup={isGroup}
+        validateMobile={invalidMobile}
+      />
+    </Card>
   );
 };
 

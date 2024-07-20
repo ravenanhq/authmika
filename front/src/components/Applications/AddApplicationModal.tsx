@@ -24,8 +24,10 @@ interface Errors {
 interface AddApplicationModalProps {
   open: boolean;
   onClose: () => void;
-  onAddApplication: (application: any) => void;
+  onAddApplication: (application: any,isAdd:string | boolean,userId:number | undefined) => void;
   uniqueValidation: string;
+  isAdd:string | boolean;
+  userId: number | undefined;
 }
 
 export default function AddApplicationModal({
@@ -33,6 +35,8 @@ export default function AddApplicationModal({
   onClose,
   onAddApplication,
   uniqueValidation,
+  isAdd,
+  userId,
 }: AddApplicationModalProps) {
   const [application, setApplication] = useState("");
   const [name, setName] = useState("");
@@ -106,7 +110,7 @@ export default function AddApplicationModal({
         logo_path: logo_path,
         file: file,
       };
-      onAddApplication(newApplication);
+      onAddApplication(newApplication,isAdd,userId);
     }
   };
 

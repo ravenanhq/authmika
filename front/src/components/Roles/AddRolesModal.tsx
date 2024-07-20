@@ -75,11 +75,13 @@ export default function AddRolesModal({
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target.value;
+    let input = e.target.value;
+
+    input = input.toUpperCase();
+
     const filteredInput = input
       .split("")
-      .filter((char) => /^[a-zA-Z]$/.test(char))
-      .map((char) => char.toUpperCase())
+      .filter((char) => /^[A-Z ]$/.test(char))
       .join("");
 
     setName(filteredInput);

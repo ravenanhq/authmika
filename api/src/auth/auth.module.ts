@@ -22,6 +22,8 @@ import { ApplicationsService } from 'src/applications/applications.service';
 import { UserApplicationService } from 'src/user-applications/user-applications.service';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy';
+import { GroupUsers } from 'src/db/model/group-users.model';
+import { Groups } from 'src/db/model/groups.model';
 
 dotenv.config();
 
@@ -40,6 +42,8 @@ dotenv.config();
       Users,
       Applications,
       UserApplications,
+      GroupUsers,
+      Groups,
       AuthClients,
     ]),
   ],
