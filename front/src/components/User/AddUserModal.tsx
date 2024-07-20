@@ -63,6 +63,7 @@ export default function AddUserModal({
   roleView,
   roleName,
   groupView,
+  groupName,
   showGroup,
   groupId,
   isGroup,

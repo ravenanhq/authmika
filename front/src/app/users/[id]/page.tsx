@@ -224,6 +224,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
   const emailError = invalidEmail || !!formErrors.email;
   const helperText = [invalidEmail, formErrors.email].filter(Boolean).join(" ");
   const [userId, setUserId] = useState<number | undefined>();
+  const [groupName, setGroupName] = useState("");
   // const [isGroupList, setIsGroupList] = useState(true);
   const GET_ALL = "all";
   // const GET_FILTER = "filter";
@@ -562,9 +563,10 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
       }));
     } else if (field === "group" && newValue) {
       const groupId = parseInt(newValue.id);
+      setGroupName(newValue.name);
       setEditedData((prevData) => ({
         ...prevData,
-        groupIds: groupId,
+        groupId: newValue ? newValue.id : "",
       }));
     }
   };
@@ -602,6 +604,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
       try {
         const response = await UserApi.update(id, updatedData);
         setInvalidEmail("");
+        const data = { groups: { id: updatedData.groupId, name: groupName } };
         if (response) {
           if (response && response.statusCode === 200) {
             const updatedRows = response.data.map((row: any) => {
@@ -1146,18 +1149,18 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
               },
               "@media (width:667px) and (height:375px),(width:568px) and (height:320px),(width:540px) and (height:720px),(width:720px) and (height:540px),(width:640px) and (height:360px)":
                 {
-                  paddingLeft: "120px",
+                  paddingLeft: "70px",
                 },
               "@media (width:740px) and (height:360px),(width:736px) and (height:414px),(width:731px) and (height:411px),(width:853px) and (height:1280px),(width:768px) and (height:1024px),(width:912px) and (height:1368px),(width:820px) and (height:1180px)":
                 {
-                  paddingLeft: "180px",
+                  paddingLeft: "70px",
                 },
               "@media (width:896px) and (height:414px),(width:812px) and (height:375px),(width:914px) and (height:412px),(width:882px) and (height:344px),(width:844px) and (height:390px),(width:932px) and (height:430px),(width:915px) and (height:412px)":
                 {
-                  paddingLeft: "250px",
+                  paddingLeft: "70px",
                 },
               "@media (width:932px) and (height:430px)": {
-                paddingLeft: "100px",
+                paddingLeft: "50px",
               },
             }}
           >
@@ -1357,20 +1360,25 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                       },
                       "@media (width:667px) and (height:375px),(width:540px) and (height:720px),(width:568px) and (height:320px),(width:640px) and (height:360px),(width:896px) and (height:414px),(width:720px) and (height:540px)":
                         {
-                          paddingLeft: "120px",
+                          paddingLeft: "70px",
                         },
                       "@media (width:740px) and (height:360px),(width:736px) and (height:414px),(width:731px) and (height:411px),(width:853px) and (height:1280px),(width:912px) and (height:1368px),(width:768px) and (height:1024px),(width:820px) and (height:1180px)":
                         {
-                          paddingLeft: "180px",
+                          paddingLeft: "70px",
                         },
                       "@media (width:896px) and (height:414px),(width:812px) and (height:375px),(width:914px) and (height:412px),(width:882px) and (height:344px),(width:915px) and (height:412px),(width:844px) and (height:390px),(width:932px) and (height:430px)":
                         {
-                          paddingLeft: "250px",
+                          paddingLeft: "70px",
                         },
                       "@media (width:932px) and (height:430px)": {
-                        paddingLeft: "100px",
+                        paddingLeft: "50px",
+                        paddingRight:"30px"
                       },
                       "@media (min-width:1024px) and (max-width:1200px)": {
+                        paddingLeft: "60px",
+                        paddingRight: "50px",
+                      },
+                      "@media (min-width:768px) and (max-width:1024px)": {
                         paddingLeft: "60px",
                         paddingRight: "50px",
                       },
@@ -1410,7 +1418,6 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                         <div
                           style={{
                             whiteSpace: "unset",
-                            wordBreak: "break-all",
                             marginLeft: "8px",
                             paddingLeft: "40px",
                           }}
@@ -1431,7 +1438,11 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <strong>Group:</strong>
                         <div style={{ marginLeft: "47px" }}>
-                          {userData.groups ? userData.groups.name : "-"}
+                          {groupName
+                            ? groupName
+                            : userData.groups
+                            ? userData.groups.name
+                            : "-"}
                         </div>
                       </div>
                     </Grid>

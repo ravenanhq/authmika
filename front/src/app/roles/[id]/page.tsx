@@ -421,8 +421,16 @@ const RoleView = ({ params }: { params: IRoleView }) => {
                 </TableBody>
               </Table>
             </Box>
-            <Card sx={{ width: "100%" }}>
-              <Tabs
+            <Card
+        sx={{
+          p: 2,
+          margin: "auto",
+          width: "100%",
+          boxSizing: "border-box",
+          overflowX: "auto",
+          marginTop: "20px",
+        }}
+      >              <Tabs
                 value={tabValue}
                 onChange={handleTabChange}
                 aria-label="basic tabs example"
@@ -435,8 +443,12 @@ const RoleView = ({ params }: { params: IRoleView }) => {
                 index={0}
                 sx={{ width: "100%", height: "100%" }}
               >
-                <TableContainer>
-                  <UserList
+<TableContainer sx={{marginBottom:"11px ! important",margin:"auto",maxWidth:"98%","@media (max-width: 1024px) and (max-height: 1366px)": {
+                ".MuiDataGrid-virtualScroller": {
+      overflow:'hidden' ,
+    maxWidth:"70vw"         },
+              },
+            }}>                  <UserList
                     roleId={id}
                     title={false}
                     id={id}

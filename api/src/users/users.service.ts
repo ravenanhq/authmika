@@ -35,6 +35,7 @@ import { MailService } from 'src/mail/mail.service';
 import { ResetPasswordDto } from 'src/auth/dto/reset-password.dto';
 import { Roles } from 'src/db/model/roles.model';
 import { GroupUsers } from 'src/db/model/group-users.model';
+import { Groups } from 'src/db/model/groups.model';
 
 @Injectable()
 export class UsersService {
@@ -146,6 +147,7 @@ export class UsersService {
       if (String(isListPage) == 'true') {
         users = await this.userModel.findAll({
           where: { status: { [Op.not]: [0] } },
+          include: Groups,
         });
         return users;
       } else if (applicationId) {
@@ -163,6 +165,7 @@ export class UsersService {
 
         users = await this.userModel.findAll({
           where: { id: userIds, status: { [Op.not]: [0] } },
+          include: Groups,
         });
 
         return users;
@@ -177,6 +180,7 @@ export class UsersService {
 
         users = await this.userModel.findAll({
           where: { role: existingRole.name, status: { [Op.not]: [0] } },
+          include: Groups,
         });
 
         return users;
@@ -193,6 +197,7 @@ export class UsersService {
 
         users = await this.userModel.findAll({
           where: { id: userIds, status: { [Op.not]: [0] } },
+          include: Groups,
         });
 
         return users;
@@ -280,7 +285,6 @@ export class UsersService {
         status: status,
         createdBy: null,
       });
-
       if (!newUser) {
         throw new InternalServerErrorException('User creation failed');
       }
@@ -319,7 +323,8 @@ export class UsersService {
 
       if (isViewBool) {
         const users = await this.userModel.findAll({
-          where: { status: 1 },
+          where: { status: 2 },
+          include: Groups,
         });
         return {
           message: 'User created successfully',
@@ -349,6 +354,7 @@ export class UsersService {
             id: userIds,
             status: { [Op.not]: [0] },
           },
+          include: Groups,
         });
 
         return {
@@ -715,6 +721,7 @@ export class UsersService {
 
         const users = await this.userModel.findAll({
           where: { status: { [Op.or]: [1, 2] } },
+          include: Groups,
         });
 
         return {
