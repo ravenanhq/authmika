@@ -64,7 +64,7 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
 }) => {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState<RowData[]>([]);
-  const [selectedRow, setSelectedRow] = useState(null);
+  const [selectedRow, setSelectedRow] = useState<RowData | null>(null);
   const [message, setMessage] = useState("");
   const [isAddApplicationModalOpen, setAddApplicationModalOpen] =
     useState(false);
@@ -110,9 +110,14 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
     }
   };
 
-  const handleDelete = (rowData: SetStateAction<null>) => {
-    setSelectedRow(rowData);
+  const handleDelete = (rowData: RowData | null) => {
     setDeleteModalOpen(true);
+    setSelectedRow((prevRowData) => {
+      if (rowData !== null) {
+        return rowData;
+      }
+      return prevRowData;
+    });
   };
 
   const handleDeleteModalClose = () => {
@@ -281,6 +286,7 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
           message: "An error occurred while deleting.",
         });
       }
+      setDeleteModalOpen(false);
     }
   };
 
@@ -344,8 +350,17 @@ const ApplicationList: React.FC<ApplicationListProps> = ({
         backgroundColor: "#265073",
         color: "#fff",
       },
+      "@media (max-width: 1024px) and (max-height: 1366px)": {
+        ".MuiDataGrid-virtualScroller": {
+          overflowY: "hidden",
+        },
+      },
+      "@media (max-width: 1366px) and (max-height: 1024px)": {
+        ".MuiDataGrid-virtualScroller": {
+          overflowY: "hidden",
+        },
+      },
       gridWidth: "100%",
-      overflowX: 'auto',
     }}
   >
       <Snackbar autoHideDuration={3000} message={message} />

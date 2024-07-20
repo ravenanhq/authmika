@@ -30,6 +30,7 @@ import { getSession } from "next-auth/react";
 import { UserApi } from "@/services/api/UserApi";
 import { GroupData } from "@/app/users/[id]/page";
 
+
 export interface RowData {
   groupId: string;
   groups: GroupData;
@@ -70,6 +71,20 @@ interface UserListProps {
   isGroup: boolean;
   groupName: string | undefined;
 }
+const TruncatedCell = styled('div')({
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+});
+
+const StyledDataGrid = styled(DataGrid)(({ theme }) => ({
+  '& .truncatedCell': {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+}));
+
 
 const UserList: React.FC<UserListProps> = ({
   title,
@@ -163,6 +178,7 @@ const UserList: React.FC<UserListProps> = ({
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 140,
+      cellClassName: 'truncatedCell',
     },
     {
       field: "lastName",
@@ -170,6 +186,7 @@ const UserList: React.FC<UserListProps> = ({
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 160,
+      cellClassName: 'truncatedCell',
     },
     {
       field: "email",
@@ -177,6 +194,7 @@ const UserList: React.FC<UserListProps> = ({
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 180,
+      cellClassName: 'truncatedCell',
     },
     {
       field: "mobile",
@@ -184,6 +202,7 @@ const UserList: React.FC<UserListProps> = ({
       headerClassName: "user-header",
       flex: 0.5,
       minWidth: 120,
+      cellClassName: 'truncatedCell',
     },
     ...(title
       ? [
@@ -193,6 +212,7 @@ const UserList: React.FC<UserListProps> = ({
             headerClassName: "user-header",
             flex: 0.5,
             minWidth: 100,
+            cellClassName: 'truncatedCell',
           },
           {
             field: "groups",
@@ -200,8 +220,11 @@ const UserList: React.FC<UserListProps> = ({
             headerClassName: "user-header",
             flex: 0.5,
             minWidth: 100,
+            cellClassName: 'truncatedCell',
             valueGetter: (params: GridValueGetterParams) => {
-              return params.row.groups ? params.row.groups.name : "-";
+              let paramsName = params.row.groups;
+
+              return paramsName ? paramsName.name : "-";
             },
           },
 
@@ -211,6 +234,7 @@ const UserList: React.FC<UserListProps> = ({
             headerClassName: "user-header",
             flex: 0.5,
             minWidth: 100,
+            cellClassName: 'truncatedCell',
             renderCell: (params: GridRenderCellParams) => (
               <>{userStatus[params.value]}</>
             ),
@@ -223,6 +247,7 @@ const UserList: React.FC<UserListProps> = ({
       type: "date",
       flex: 0.5,
       minWidth: 160,
+      cellClassName: 'truncatedCell',
       valueGetter: (params) => {
         return new Date(params.row.created_at);
       },
@@ -235,6 +260,7 @@ const UserList: React.FC<UserListProps> = ({
       minWidth: 140,
       disableColumnMenu: true,
       sortable: false,
+      cellClassName: 'truncatedCell',
       renderCell: (params) => (
         <>
           <IconButton aria-label="view" onClick={() => handleView(params.row)}>
@@ -294,28 +320,23 @@ const UserList: React.FC<UserListProps> = ({
         applicationId,
         isGroup
       );
+
       setInvalidEmail("");
       setInvalidPassword("");
       setInvalidMobile("");
       if (response) {
         if (response.statusCode == 201 || response.statusCode == 200) {
-          setRows(response.data);
-          const newUserId = Math.floor(Math.random() * 1000);
-          const newUserData = {
-            ...newUser,
-            firstName: newUser.firstName,
-            lastName: newUser.lastName,
-            status: 2,
-            id: newUserId,
-          };
-          const currentUsers = [...rows];
-          currentUsers.unshift(newUserData);
-          const sortedUsers = currentUsers.sort((a, b) => {
-            return (
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime()
-            );
-          });
+          const sortedUsers = response.data.sort(
+            (
+              a: { created_at: string | number | Date },
+              b: { created_at: string | number | Date }
+            ) => {
+              return (
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime()
+              );
+            }
+          );
           setRows(sortedUsers);
           handleCloseAddUserModal();
           setAlertShow(response.message);
@@ -401,6 +422,25 @@ const UserList: React.FC<UserListProps> = ({
           color: "#fff",
         },
         gridWidth: "500px",
+        "@media(width: 1024px) and (height: 1366px)": {
+          gridWidth: "100%",
+          overflowX: "auto",
+        },
+        "@media (max-width: 1024px) and (max-height: 1366px)": {
+          ".MuiDataGrid-virtualScroller": {
+            overflowY: "hidden",
+          },
+        },
+        "@media (max-width: 1366px) and (max-height: 1024px)": {
+          ".MuiDataGrid-virtualScroller": {
+            overflowY: "hidden",
+          },
+        },
+        "@media (max-width: 1180px) and (max-height: 820px)": {
+          ".MuiDataGrid-virtualScroller": {
+            overflow: "hidden",
+          },
+        },
       }}
     >
       <Snackbar autoHideDuration={12000} />
@@ -459,6 +499,9 @@ const UserList: React.FC<UserListProps> = ({
                 </PrimaryButton>
               </Grid>
             </Grid>
+            {/* <div className="block" style={{maxWidth:'100%'}}> */}
+            <div className="flex flex-col h-screen overflow-hidden" style={{maxWidth:'100%'}}>
+
             <StyledDataGrid
               rows={rows}
               columns={columns.filter(
@@ -471,6 +514,7 @@ const UserList: React.FC<UserListProps> = ({
                   paginationModel: { page: 0, pageSize: 5 },
                 },
               }}
+              disableVirtualization
               slots={{
                 noResultsOverlay: () => {
                   return (
@@ -489,8 +533,10 @@ const UserList: React.FC<UserListProps> = ({
                 backgroundColor: "white",
                 marginTop: "2%",
                 width: "100%",
-              }}
+                }}
+
             />
+            </div>
           </>
         )}
       </CardContent>

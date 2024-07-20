@@ -383,14 +383,11 @@ export class ApplicationsService {
         });
 
         if (userApplication) {
-          throw new HttpException(
-            {
-              data: [],
-              message: 'The application cannot be deleted as a mapping exists.',
-              statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-            },
-            HttpStatus.UNPROCESSABLE_ENTITY,
-          );
+          return {
+            message: 'The application cannot be deleted as a mapping exists.',
+            statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+            data: [],
+          };
         } else {
           application.isActive = false;
           await application.save();
@@ -416,14 +413,18 @@ export class ApplicationsService {
         );
       }
     } catch (error) {
-      throw new HttpException(
-        {
-          data: null,
-          message: error.message,
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      if (error instanceof HttpException) {
+        throw error;
+      } else {
+        throw new HttpException(
+          {
+            message: error.message,
+            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+            data: null,
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
     }
   }
 

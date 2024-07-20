@@ -233,7 +233,7 @@ const GroupView = ({ params }: { params: IGroupView }) => {
   }));
 
   return (
-    <Container maxWidth="xl">
+    <Container component="div" maxWidth="xl">
       <Box sx={{ marginTop:"auto",p:2 }}>
         {saveAlert && (
           <Alert
@@ -333,12 +333,20 @@ const GroupView = ({ params }: { params: IGroupView }) => {
             </TableBody>
           </Table>
         </Box>
-      <Card sx={{ width: "100%" }}>
-        <Tabs
+        <Card
+        sx={{
+          p: 2,
+          margin: "auto",
+          width: "100%",
+          boxSizing: "border-box",
+          overflowX: "auto",
+          marginTop: "20px",
+        }}
+      >        <Tabs
           value={tabValue}
           onChange={handleTabChange}
           aria-label="basic tabs example"
-          sx={{ marginLeft: 3 }}
+          sx={{ marginLeft: 2 }}
         >
           <Tab label="Users" {...TabProps(0)} />
         </Tabs>
@@ -347,8 +355,9 @@ const GroupView = ({ params }: { params: IGroupView }) => {
           index={0}
           sx={{ width: "100%", height: "100%" }}
         >
-          <TableContainer>
-            <UserList
+                <TableContainer sx={{marginBottom:"11px ! important",maxWidth:"98%",margin:"auto"
+              }}>
+                <UserList
               roleId={undefined}
               title={false}
               id={id}
