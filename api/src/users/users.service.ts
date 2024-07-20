@@ -285,6 +285,10 @@ export class UsersService {
         status: status,
         createdBy: null,
       });
+      await this.groupUsersModel.create({
+        userId: newUser.id,
+        groupId: newUser.groupId,
+      });
       if (!newUser) {
         throw new InternalServerErrorException('User creation failed');
       }
@@ -363,11 +367,6 @@ export class UsersService {
           data: users,
         };
       } else if (isGroup) {
-        await this.groupUsersModel.create({
-          userId: newUser.id,
-          groupId: newUser.groupId,
-        });
-
         const userGroups = await this.groupUsersModel.findAll({
           where: { groupId: groupId },
         });
