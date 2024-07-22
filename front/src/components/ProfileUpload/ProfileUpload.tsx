@@ -1,20 +1,17 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
-import {
-  Button,
-  Box,
-  CardMedia,
-  Typography,
-  Card,
-} from "@mui/material";
+import { Button, Box, CardMedia, Typography, Card } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { config } from "../../../config";
 
-interface FileUploadProps {
-  onFileUpload: (file: File) => void;
+interface ProfileUploadProps {
+  onProfileUpload: (file: File) => void;
   imageFile: string;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, imageFile }) => {
+const ProfileUpload: React.FC<ProfileUploadProps> = ({
+  onProfileUpload,
+  imageFile,
+}) => {
   const [errorMessage, setErrorMessage] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
@@ -40,7 +37,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, imageFile }) => {
       } else if (files[0].size > MAX_FILE_SIZE_KB * 1024) {
         setErrorMessage(`File size exceeds ${MAX_FILE_SIZE_KB} KB.`);
       } else {
-        onFileUpload(files[0]);
+        onProfileUpload(files[0]);
 
         if (files[0]) {
           const reader = new FileReader();
@@ -73,7 +70,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, imageFile }) => {
             variant="body1"
             sx={{ fontWeight: "bold", marginRight: "15px" }}
           >
-            Logo
+            Profile
           </Typography>
 
           <label htmlFor="contained-button-file">
@@ -96,7 +93,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, imageFile }) => {
           {imageUrl && (
             <CardMedia
               component="img"
-              alt="logo"
+              alt="profile"
               height="auto"
               image={imageUrl}
               style={{ width: "50px", marginLeft: "20px" }}
@@ -109,4 +106,4 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, imageFile }) => {
   );
 };
 
-export default FileUpload;
+export default ProfileUpload;

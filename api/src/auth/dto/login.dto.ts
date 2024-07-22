@@ -18,6 +18,11 @@ export class UserDataDto {
     example: '$2b$10$p1rhV1jaaKfI/swj8lLfNOjlsjl4CaoUZnGIyyX1vpRALDkn0v0Bm',
   })
   password: string;
+  @ApiProperty({
+    type: 'string',
+    example: null,
+  })
+  profile: string | null;
   @ApiProperty({ type: 'number', example: 4525856854 })
   mobile: number;
   @ApiProperty({ type: 'string', example: 'CLIENT' })

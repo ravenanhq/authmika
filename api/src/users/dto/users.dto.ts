@@ -42,6 +42,8 @@ export class UsersDto {
   currentPassword: string;
 
   confirmPassword: string;
+  profile: string;
+  file: string;
 }
 
 export class AddUsersDto {
@@ -112,6 +114,8 @@ export class AddUsersDto {
   @IsNotEmpty({ message: 'groupId cannot be blank' })
   groupId: string;
   id: number;
+  profile: string;
+  file: string;
 }
 
 export class AddUserSuccessDto {
@@ -273,7 +277,7 @@ export class UpdateUserSuccessDto {
     type: UserDataDto,
     isArray: true,
   })
-  data: Users[];
+  data: Users;
 }
 
 export class DeleteUserSuccessDto {

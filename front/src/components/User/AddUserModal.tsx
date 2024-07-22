@@ -15,6 +15,7 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import { RolesApi } from "@/services/api/RolesApi";
 import { GroupsApi } from "@/services/api/GroupsApi";
+import ProfileUpload from "../ProfileUpload/ProfileUpload";
 
 interface Errors {
   firstName?: string;
@@ -83,6 +84,8 @@ export default function AddUserModal({
   const [password, setPassword] = useState("");
   const isViewBool =
     typeof isView === "string" ? JSON.parse(isView.toLowerCase()) : isView;
+    const [profile, setProfile] = useState("");
+    const [file, setFile] = useState("");
   // const [get, setGet] = useState("");
   // const [userId, setUserId] = useState<number | undefined>();
   // const GET_ALL = "all";
@@ -162,6 +165,8 @@ export default function AddUserModal({
         email,
         mobile,
         password,
+        profile,
+        file,
         role: roleView ? roleName : role?.name,
         groupId: groupView ? groupId : group?.id,
       };
@@ -208,6 +213,18 @@ export default function AddUserModal({
     newValue: { label: string; name: string } | null
   ) => {
     setRole(newValue);
+  };
+
+  const handleFileUpload = (file: File) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const base64String = reader.result as string;
+      setFile(base64String);
+    };
+
+    reader.readAsDataURL(file);
+    setProfile(file.name);
   };
 
   const PrimaryButton = styled(Button)(() => ({
@@ -358,6 +375,7 @@ export default function AddUserModal({
             />
           </div>
         )}
+                <ProfileUpload onProfileUpload={handleFileUpload} imageFile={""} />
       </DialogContent>
       <Divider
         color="#265073"

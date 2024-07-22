@@ -51,7 +51,7 @@ interface Errors {
 interface Error {
   verifyCurrentPassword?: string;
 }
-interface RowData {
+export interface RowData {
   id: number;
   email: string;
   mobile: string;

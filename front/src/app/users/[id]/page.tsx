@@ -35,12 +35,13 @@ import {
   Typography,
   styled,
   useTheme,
+  CardMedia,
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import SaveIcon from "@mui/icons-material/Save";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Update, Visibility, VisibilityOff } from "@mui/icons-material";
 import { useForm } from "react-hook-form";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import LocalPostOfficeIcon from "@mui/icons-material/LocalPostOffice";
@@ -54,6 +55,8 @@ import { SxProps, Theme } from "@mui/material";
 import { GroupsApi } from "@/services/api/GroupsApi";
 import ApplicationList from "@/components/Applications/ApplicationList";
 import { ApplicationApi } from "@/services/api/ApplicationApi";
+import ProfileUpload from "@/components/ProfileUpload/ProfileUpload";
+import { config } from "../../../../config";
 export interface GroupData {
   id: number;
   name: string;
@@ -79,7 +82,7 @@ interface Application {
   id: number;
   name: string;
 }
-interface UserData {
+export interface UserData {
   created_at: string | number | Date;
   firstName: string;
   lastName: string;
@@ -90,6 +93,8 @@ interface UserData {
   status: number;
   mobile: string;
   id: number;
+  file: string;
+  profile: string;
 }
 interface ICreatePasswordProps {
   password?: string | undefined;
@@ -138,6 +143,8 @@ const InitialRowData = {
   email: "",
   mobile: "",
   role: "",
+  profile: "",
+  file: "",
   groups: {
     id: 0,
     name: "",
@@ -225,6 +232,8 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
   const helperText = [invalidEmail, formErrors.email].filter(Boolean).join(" ");
   const [userId, setUserId] = useState<number | undefined>();
   const [groupName, setGroupName] = useState("");
+  const [image, setImage] = useState("");
+  const [profile, setProfile] = useState("");
   // const [isGroupList, setIsGroupList] = useState(true);
   const GET_ALL = "all";
   // const GET_FILTER = "filter";
@@ -603,17 +612,11 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
     if (validateForm()) {
       try {
         const response = await UserApi.update(id, updatedData);
+
         setInvalidEmail("");
-        const data = { groups: { id: updatedData.groupId, name: groupName } };
         if (response) {
           if (response && response.statusCode === 200) {
-            const updatedRows = response.data.map((row: any) => {
-              if (row.id === id) {
-                return { ...row, ...updatedData };
-              }
-              return row;
-            });
-            setUserData(updatedData);
+            setUserData(response.data);
             setAlertShow(response.message);
           }
         }
@@ -632,12 +635,26 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
   const handleEditSave = async (editedData: UserData) => {
     if ("id" in editedData) {
       const updatedData = { ...editedData };
+      editedData.file = "";
       try {
         await editUser(updatedData.id, updatedData);
       } catch (error) {
         console.error("Error editing user:", error);
       }
     }
+  };
+
+  const handleFileUpload = (file: File) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const base64String = reader.result as string;
+      editedData.file = base64String;
+    };
+
+    reader.readAsDataURL(file);
+    editedData.profile = file.name;
+    setProfile(file.name);
   };
 
   const PrimaryButton = styled(Button)(() => ({
@@ -932,10 +949,16 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                       )}
                     />
 
+                    <ProfileUpload
+                      onProfileUpload={handleFileUpload}
+                      imageFile={editedData.profile || ""}
+                    />
+
                     <Box display="flex" justifyContent="flex-end">
                       <PrimaryButton
                         startIcon={<SaveIcon />}
                         onClick={() => handleEditSave(editedData)}
+                        sx={{ marginTop: "10px", marginBottom: "10px" }}
                       >
                         Update
                       </PrimaryButton>
@@ -1372,7 +1395,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                         },
                       "@media (width:932px) and (height:430px)": {
                         paddingLeft: "50px",
-                        paddingRight:"30px"
+                        paddingRight: "30px",
                       },
                       "@media (min-width:1024px) and (max-width:1200px)": {
                         paddingLeft: "60px",
@@ -1446,11 +1469,58 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                         </div>
                       </div>
                     </Grid>
-                    <Grid item xs={12} md={6} sx={{ marginBottom: 2 }}>
+                    <Grid
+                      item
+                      xs={12}
+                      sm={4}
+                      sx={{
+                        marginBottom: 0,
+                        marginTop: { lg: 5, sm: 0 },
+                        "@media (width:1024px) and (height:1366px),(width:1024px) and (height:768px),(width:1024px) and (height:600px),(width:1180px) and (height:820px),(width:932px) and (height:430px)":
+                          {
+                            marginTop: "auto",
+                            marginBottom: "auto",
+                          },
+                      }}
+                    >
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <strong>Status:</strong>
                         <div style={{ marginLeft: "49px" }}>
                           {userStatus[userData.status]}
+                        </div>
+                      </div>
+                    </Grid>
+                    <Grid
+                      item
+                      xs={12}
+                      sm={4}
+                      sx={{
+                        "@media (width:1024px) and (height:1366px)": {
+                          marginTop: "0px",
+                          marginBottom: "auto",
+                        },
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <strong>Avatar:</strong>
+                        <div style={{ marginLeft: "47px" }}>
+                          {userData.profile ? (
+                            <CardMedia
+                              component="img"
+                              src={`${config.service}/assets/images/${userData.profile}`}
+                              alt="profile"
+                              height="100"
+                              style={{ width: "80px" }}
+                            />
+                          ) : (
+                            <CardMedia
+                              component="img"
+                              src={`${config.service}/assets/images/no_image.jpg`}
+                              alt="profile"
+                              height="100"
+                              style={{ width: "80px" }}
+                            />
+                          )}
                         </div>
                       </div>
                     </Grid>

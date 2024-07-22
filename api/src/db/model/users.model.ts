@@ -77,6 +77,9 @@ export class Users extends Model {
   @Column({ type: DataType.BIGINT })
   otp_expiration: number;
 
+  @Column({ field: 'profile', type: DataType.STRING })
+  profile: string;
+
   isSelected: boolean;
   created_at: any;
 

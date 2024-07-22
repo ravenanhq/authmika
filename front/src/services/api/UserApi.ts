@@ -22,12 +22,18 @@ interface ResendOtpParams {
   url: string;
 }
 export class UserApi {
-  static async getUsers(isListPage: boolean, applicationId: number | undefined,roleId: number | undefined,id:number | undefined,groupId:number | undefined) {
+  static async getUsers(
+    isListPage: boolean,
+    applicationId: number | undefined,
+    roleId: number | undefined,
+    id: number | undefined,
+    groupId: number | undefined
+  ) {
     const params = {
       isListPage: isListPage,
       applicationId: applicationId,
       roleId: roleId,
-      id:id,
+      id: id,
       groupId: groupId,
     };
 
