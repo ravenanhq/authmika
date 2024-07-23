@@ -44,7 +44,7 @@ export interface RowData {
   mobile: string;
   id: number;
   file: string;
-  profile: string;
+  avatar: string;
 }
 
 interface AlertState {
@@ -175,7 +175,7 @@ const UserList: React.FC<UserListProps> = ({
 
   const columns: GridColDef[] = [
     {
-      field: "profile",
+      field: "avatar",
       headerName: "Avatar",
       headerClassName: "user-header",
       flex: 1,
@@ -185,7 +185,7 @@ const UserList: React.FC<UserListProps> = ({
       renderCell: (params) => (
         <CardMedia
           component="img"
-          alt="logo"
+          alt="avatar"
           height="auto"
           image={`${config.service}/assets/images/${
             params.value ? params.value : "no_image.jpg"

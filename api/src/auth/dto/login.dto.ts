@@ -22,7 +22,7 @@ export class UserDataDto {
     type: 'string',
     example: null,
   })
-  profile: string | null;
+  avatar: string | null;
   @ApiProperty({ type: 'number', example: 4525856854 })
   mobile: number;
   @ApiProperty({ type: 'string', example: 'CLIENT' })

@@ -41,7 +41,7 @@ import React, { useState, useEffect } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import SaveIcon from "@mui/icons-material/Save";
-import { Update, Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useForm } from "react-hook-form";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import LocalPostOfficeIcon from "@mui/icons-material/LocalPostOffice";
@@ -55,7 +55,7 @@ import { SxProps, Theme } from "@mui/material";
 import { GroupsApi } from "@/services/api/GroupsApi";
 import ApplicationList from "@/components/Applications/ApplicationList";
 import { ApplicationApi } from "@/services/api/ApplicationApi";
-import ProfileUpload from "@/components/ProfileUpload/ProfileUpload";
+import AvatarUpload from "@/components/AvatarUpload/AvatarUpload";
 import { config } from "../../../../config";
 export interface GroupData {
   id: number;
@@ -94,7 +94,7 @@ export interface UserData {
   mobile: string;
   id: number;
   file: string;
-  profile: string;
+  avatar: string;
 }
 interface ICreatePasswordProps {
   password?: string | undefined;
@@ -143,7 +143,7 @@ const InitialRowData = {
   email: "",
   mobile: "",
   role: "",
-  profile: "",
+  avatar: "",
   file: "",
   groups: {
     id: 0,
@@ -233,9 +233,9 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
   const [userId, setUserId] = useState<number | undefined>();
   const [groupName, setGroupName] = useState("");
   const [image, setImage] = useState("");
-  const [profile, setProfile] = useState("");
-  // const [isGroupList, setIsGroupList] = useState(true);
+  const [avatar, setAvatar] = useState("");
   const GET_ALL = "all";
+  // const [isGroupList, setIsGroupList] = useState(true);
   // const GET_FILTER = "filter";
 
   useEffect(() => {
@@ -653,8 +653,8 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
     };
 
     reader.readAsDataURL(file);
-    editedData.profile = file.name;
-    setProfile(file.name);
+    editedData.avatar = file.name;
+    setAvatar(file.name);
   };
 
   const PrimaryButton = styled(Button)(() => ({
@@ -949,11 +949,10 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                       )}
                     />
 
-                    <ProfileUpload
-                      onProfileUpload={handleFileUpload}
-                      imageFile={editedData.profile || ""}
+                    <AvatarUpload
+                      onAvatarUpload={handleFileUpload}
+                      imageFile={editedData.avatar || ""}
                     />
-
                     <Box display="flex" justifyContent="flex-end">
                       <PrimaryButton
                         startIcon={<SaveIcon />}
@@ -1504,11 +1503,11 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <strong>Avatar:</strong>
                         <div style={{ marginLeft: "47px" }}>
-                          {userData.profile ? (
+                          {userData.avatar ? (
                             <CardMedia
                               component="img"
-                              src={`${config.service}/assets/images/${userData.profile}`}
-                              alt="profile"
+                              src={`${config.service}/assets/images/${userData.avatar}`}
+                              alt="avatar"
                               height="100"
                               style={{ width: "80px" }}
                             />
@@ -1516,7 +1515,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                             <CardMedia
                               component="img"
                               src={`${config.service}/assets/images/no_image.jpg`}
-                              alt="profile"
+                              alt="avatar"
                               height="100"
                               style={{ width: "80px" }}
                             />

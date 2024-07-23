@@ -255,14 +255,14 @@ export class UsersService {
     let password: string;
     let status: string;
     let id: number;
-    const { firstName, lastName, email, mobile, role, groupId, profile, file } =
+    const { firstName, lastName, email, mobile, role, groupId, avatar, file } =
       userDto;
     let newUser;
 
     try {
       let fileName = null;
       if (file) {
-        fileName = `${Date.now()}_` + profile;
+        fileName = `${Date.now()}_` + avatar;
         const targetPath = path.join(
           __dirname,
           '../../..',
@@ -303,7 +303,7 @@ export class UsersService {
         mobile: mobile,
         role: role,
         groupId: groupId,
-        profile: fileName,
+        avatar: fileName,
         status: status,
         createdBy: null,
       });
@@ -721,7 +721,7 @@ export class UsersService {
       mobile,
       role,
       groupId,
-      profile,
+      avatar,
       file,
     } = userDto;
     try {
@@ -731,17 +731,17 @@ export class UsersService {
       if (existingUser) {
         let fileName = null;
         if (file) {
-          if (existingUser.profile) {
+          if (existingUser.avatar) {
             const absolutePath = path.resolve(
               __dirname,
               '../../..',
               'api/public/assets/images',
-              existingUser.profile,
+              existingUser.avatar,
             );
 
             await fs.promises.unlink(absolutePath);
           }
-          fileName = `${Date.now()}_` + profile;
+          fileName = `${Date.now()}_` + avatar;
           const targetPath = path.join(
             __dirname,
             '../../..',
@@ -761,7 +761,7 @@ export class UsersService {
             },
           );
         } else {
-          fileName = profile;
+          fileName = avatar;
         }
         const existingUsername = await this.userModel.findOne({
           where: { email: email },
@@ -779,7 +779,7 @@ export class UsersService {
         existingUser.password = password;
         existingUser.role = role;
         existingUser.groupId = groupId;
-        existingUser.profile = fileName;
+        existingUser.avatar = fileName;
         existingUser.updatedBy = user ? user.id : null;
         await existingUser.save();
 

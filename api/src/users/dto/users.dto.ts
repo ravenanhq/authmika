@@ -42,7 +42,7 @@ export class UsersDto {
   currentPassword: string;
 
   confirmPassword: string;
-  profile: string;
+  avatar: string;
   file: string;
 }
 
@@ -114,7 +114,7 @@ export class AddUsersDto {
   @IsNotEmpty({ message: 'groupId cannot be blank' })
   groupId: string;
   id: number;
-  profile: string;
+  avatar: string;
   file: string;
 }
 

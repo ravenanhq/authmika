@@ -33,7 +33,7 @@ const InitialRowData = {
   email: "",
   mobile: "",
   role: "",
-  profile: "",
+  avatar: "",
   file: "",
   groups: {
     id: 0,
@@ -103,7 +103,7 @@ export default function DrawerAppBar() {
         setNavItems([{ label: "Dashboard", route: "/dashboard" }]);
       }
       setUserData({
-        profile: session.user.profile,
+        avatar: session.user.avatar,
         firstName: session.user.firstName,
         lastName: session.user.lastName,
         email: session.user.email,
@@ -256,10 +256,10 @@ export default function DrawerAppBar() {
                       height: "30px",
                     }}
                   >
-                    {userData && userData.profile ? (
+                    {userData && userData.avatar ? (
                       <CardMedia
                         component="img"
-                        src={`${config.service}/assets/images/${userData.profile}`}
+                        src={`${config.service}/assets/images/${userData.avatar}`}
                         alt="profile"
                         width="30"
                         height="30"

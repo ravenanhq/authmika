@@ -3,13 +3,13 @@ import { Button, Box, CardMedia, Typography, Card } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { config } from "../../../config";
 
-interface ProfileUploadProps {
-  onProfileUpload: (file: File) => void;
+interface AvatarUploadProps {
+  onAvatarUpload: (file: File) => void;
   imageFile: string;
 }
 
-const ProfileUpload: React.FC<ProfileUploadProps> = ({
-  onProfileUpload,
+const AvatarUpload: React.FC<AvatarUploadProps> = ({
+  onAvatarUpload,
   imageFile,
 }) => {
   const [errorMessage, setErrorMessage] = useState("");
@@ -37,7 +37,7 @@ const ProfileUpload: React.FC<ProfileUploadProps> = ({
       } else if (files[0].size > MAX_FILE_SIZE_KB * 1024) {
         setErrorMessage(`File size exceeds ${MAX_FILE_SIZE_KB} KB.`);
       } else {
-        onProfileUpload(files[0]);
+        onAvatarUpload(files[0]);
 
         if (files[0]) {
           const reader = new FileReader();
@@ -106,4 +106,4 @@ const ProfileUpload: React.FC<ProfileUploadProps> = ({
   );
 };
 
-export default ProfileUpload;
+export default AvatarUpload;
