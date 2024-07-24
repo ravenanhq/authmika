@@ -70,7 +70,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
             variant="body1"
             sx={{ fontWeight: "bold", marginRight: "15px" }}
           >
-            Profile
+            Avatar
           </Typography>
 
           <label htmlFor="contained-button-file">
@@ -93,7 +93,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           {imageUrl && (
             <CardMedia
               component="img"
-              alt="profile"
+              alt="avatar"
               height="auto"
               image={imageUrl}
               style={{ width: "50px", marginLeft: "20px" }}

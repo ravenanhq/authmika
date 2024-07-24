@@ -17,6 +17,7 @@ import {
   TableContainer,
   CircularProgress,
   Typography,
+  TableCell,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditNoteIcon from "@mui/icons-material/EditNote";
@@ -480,12 +481,12 @@ const ApplicationView: React.FC<{ params: IApplicationView }> = ({}) => {
               <Card
                 sx={{
                   p: 2,
-          margin: "auto",
-          width: "100%",
-          boxSizing: "border-box",
-          overflowX: "auto",
-          marginLeft: "0px",
-          marginTop: "20px",
+                  margin: "auto",
+                  width: "100%",
+                  boxSizing: "border-box",
+                  overflowX: "auto",
+                  marginLeft: "0px",
+                  marginTop: "20px",
                   height: "100%",
                   "@media(width: 1024px) and (height: 1366px),@media(width: 1366px) and (height: 1024px)":
                     {
@@ -507,10 +508,19 @@ const ApplicationView: React.FC<{ params: IApplicationView }> = ({}) => {
                   index={0}
                   sx={{ width: "100%", height: "100%" }}
                 >
-                  <TableContainer sx={{marginBottom:"12px",paddingLeft:"8px",maxWidth:"99.5%","@media (max-width: 1024px) and (max-height: 768px)": {
-                ".MuiDataGrid-virtualScroller": {
-      maxwidth:'100vw'          },
-              },}}>  <UserList
+                  <TableContainer
+                    sx={{
+                      marginBottom: "12px",
+                      paddingLeft: "8px",
+                      maxWidth: "99.5%",
+                      "@media (max-width: 1024px) and (max-height: 768px)": {
+                        ".MuiDataGrid-virtualScroller": {
+                          maxwidth: "100vw",
+                        },
+                      },
+                    }}
+                  >
+                    <UserList
                       title={false}
                       isListPage={false}
                       applicationId={id}

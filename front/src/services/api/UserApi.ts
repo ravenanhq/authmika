@@ -59,6 +59,11 @@ export class UserApi {
     return res.data;
   }
 
+  static async showUser(id: number) {
+    const res = await axios.get(`${config.service}/users/${id}`);
+    return res.data;
+  }
+
   static async createPassword(
     data: IResetPasswordData
   ): Promise<ApiResponseDto> {

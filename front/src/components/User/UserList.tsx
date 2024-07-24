@@ -178,8 +178,8 @@ const UserList: React.FC<UserListProps> = ({
       field: "avatar",
       headerName: "Avatar",
       headerClassName: "user-header",
-      flex: 1,
-      minWidth: 160,
+      flex: 0.5,
+      minWidth: 100,
       disableColumnMenu: true,
       sortable: false,
       renderCell: (params) => (
@@ -191,16 +191,17 @@ const UserList: React.FC<UserListProps> = ({
             params.value ? params.value : "no_image.jpg"
           }`}
           sx={{
-            width: "20%",
-            padding: "10px",
+            width: title ? "40%" : "15%",
+            padding: title ? "10%" : "0%",
             "@media (max-width: 1200px)": {
               padding: "0px",
-              width: "40%",
+              width: title ? "40%" : "10%",
             },
           }}
         />
       ),
     },
+
     {
       field: "firstName",
       headerName: "First name",

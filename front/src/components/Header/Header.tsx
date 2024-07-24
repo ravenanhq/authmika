@@ -18,6 +18,7 @@ import { usePathname } from "next/navigation";
 import { getSession } from "next-auth/react";
 import { UserData } from "@/app/users/[id]/page";
 import { RowData } from "@/components/User/UserList";
+import { UserApi } from "@/services/api/UserApi";
 
 const drawerWidth = 240;
 
@@ -46,7 +47,7 @@ const InitialRowData = {
   status: 0,
 };
 
-export default function DrawerAppBar() {
+const Header = () => {
   const pathName = usePathname() || "";
   const [activePage, setActivePage] = useState<string>(pathName);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -70,6 +71,36 @@ export default function DrawerAppBar() {
 
   useEffect(() => {
     getUserSession();
+  }, []);
+
+  useEffect(() => {
+    const getUser = async (id: number) => {
+      const session = await getSession();
+
+      try {
+        if (session && session.user) {
+          const sessionId = session.user.id;
+
+          const response = await UserApi.showUser(sessionId);
+          setUserData({
+            avatar: response.data.avatar,
+            firstName: response.data.firstName,
+            lastName: response.data.lastName,
+            email: response.data.email,
+            role: response.data.role,
+            groupId: response.data.groupId,
+            status: response.data.status,
+            mobile: response.data.mobile,
+            id: response.data.id,
+            created_at: response.data.created_at,
+            file: response.data.file,
+          });
+        }
+      } catch (error: any) {
+        console.error(error);
+      }
+      getUser(id);
+    };
   }, []);
 
   useEffect(() => {
@@ -102,18 +133,20 @@ export default function DrawerAppBar() {
       if (session.user.role.toLowerCase() == "client") {
         setNavItems([{ label: "Dashboard", route: "/dashboard" }]);
       }
+      const sessionId = session.user.id;
+      const response = await UserApi.showUser(sessionId);
       setUserData({
-        avatar: session.user.avatar,
-        firstName: session.user.firstName,
-        lastName: session.user.lastName,
-        email: session.user.email,
-        role: session.user.role,
-        groupId: session.user.groupId,
-        status: session.user.status,
-        mobile: session.user.mobile,
-        id: session.user.id,
-        created_at: session.user.created_at,
-        file: session.user.file,
+        avatar: response.data.avatar,
+        firstName: response.data.firstName,
+        lastName: response.data.lastName,
+        email: response.data.email,
+        role: response.data.role,
+        groupId: response.data.groupId,
+        status: response.data.status,
+        mobile: response.data.mobile,
+        id: response.data.id,
+        created_at: response.data.created_at,
+        file: response.data.file,
       });
     }
   };
@@ -248,6 +281,35 @@ export default function DrawerAppBar() {
               </Box>
               <Box sx={{ marginLeft: "auto" }}>
                 <IconButton color="inherit" onClick={handleClick}>
+                  {/* <div
+      style={{
+        borderRadius: "50%",
+        overflow: "hidden",
+        width: "35px",
+        height: "35px",
+      }}
+    >
+      {avatar ? (
+        <CardMedia
+          component="img"
+          src={`${config.service}/assets/images/${avatar}`}
+          alt="profile"
+          width="35"
+          height="35"
+        />
+      ) : userData && userData.avatar ? (
+        <CardMedia
+          component="img"
+          src={`${config.service}/assets/images/${userData.avatar}`}
+          alt="profile"
+          width="35"
+          height="35"
+        />
+      ) : (
+        <AccountCircleIcon sx={{ width: "35px", height: "35px" }} />
+      )}
+    </div> */}
+
                   <div
                     style={{
                       borderRadius: "50%",
@@ -346,4 +408,5 @@ export default function DrawerAppBar() {
       </Box>
     )
   );
-}
+};
+export default Header;
