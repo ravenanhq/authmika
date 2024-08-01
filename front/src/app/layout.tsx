@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header/Header";
@@ -21,7 +21,14 @@ export default function RootLayout({
   const pathName = usePathname();
   const showHeader =
     pathName !== null &&
-    !["/login", "/two-factor", "/create-password","/forgot-password","/reset-password","/user-activation"].includes(pathName);
+    ![
+      "/login",
+      "/two-factor",
+      "/create-password",
+      "/forgot-password",
+      "/reset-password",
+      "/user-activation",
+    ].includes(pathName);
   const theme = useTheme();
   const isMobile = useMediaQuery("(max-width:1023px)");
   return (

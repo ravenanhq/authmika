@@ -22,12 +22,18 @@ interface ResendOtpParams {
   url: string;
 }
 export class UserApi {
-  static async getUsers(isListPage: boolean, applicationId: number | undefined,roleId: number | undefined,id:number | undefined,groupId:number | undefined) {
+  static async getUsers(
+    isListPage: boolean,
+    applicationId: number | undefined,
+    roleId: number | undefined,
+    id: number | undefined,
+    groupId: number | undefined
+  ) {
     const params = {
       isListPage: isListPage,
       applicationId: applicationId,
       roleId: roleId,
-      id:id,
+      id: id,
       groupId: groupId,
     };
 
@@ -50,6 +56,11 @@ export class UserApi {
 
   static async deleteUser(id: number) {
     const res = await axios.delete(`${config.service}/users/${id}`);
+    return res.data;
+  }
+
+  static async showUser(id: number) {
+    const res = await axios.get(`${config.service}/users/${id}`);
     return res.data;
   }
 
