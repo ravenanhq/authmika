@@ -31,7 +31,6 @@ import { getSession } from "next-auth/react";
 import { UserApi } from "@/services/api/UserApi";
 import { GroupData } from "@/app/users/[id]/page";
 import { config } from "../../../config";
-
 export interface RowData {
   groupId: string;
   groups: GroupData;
@@ -451,7 +450,8 @@ const UserList: React.FC<UserListProps> = ({
           backgroundColor: "#265073",
           color: "#fff",
         },
-        gridWidth: "500px",
+        gridWidth: "100%",
+        overflowX: "auto",
         "@media(width: 1024px) and (height: 1366px)": {
           gridWidth: "100%",
           overflowX: "auto",
@@ -461,17 +461,17 @@ const UserList: React.FC<UserListProps> = ({
             maxWidth: "90vw",
             overflowX: "auto",
           },
-        "@media (max-width: 1024px) and (max-height: 1366px)": {
+        "@media (width: 1024px) and (height: 1366px)": {
           ".MuiDataGrid-virtualScroller": {
-            overflowY: "hidden",
+            overflow: "hidden",
           },
         },
-        "@media (max-width: 1366px) and (max-height: 1024px)": {
+        "@media (width: 1366px) and (height: 1024px)": {
           ".MuiDataGrid-virtualScroller": {
-            overflowY: "hidden",
+            overflow: "hidden",
           },
         },
-        "@media (max-width: 1180px) and (max-height: 820px)": {
+        "@media (width: 1180px) and (height: 820px)": {
           ".MuiDataGrid-virtualScroller": {
             overflow: "hidden",
           },
@@ -535,7 +535,7 @@ const UserList: React.FC<UserListProps> = ({
               </Grid>
             </Grid>
             <div
-              className="flex flex-col h-screen overflow-hidden"
+              className="flex flex-col h-screen"
               style={{ maxWidth: "100%" }}
             >
               <StyledDataGrid
