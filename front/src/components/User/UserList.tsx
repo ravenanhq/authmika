@@ -31,6 +31,11 @@ import { getSession } from "next-auth/react";
 import { UserApi } from "@/services/api/UserApi";
 import { GroupData } from "@/app/users/[id]/page";
 import { config } from "../../../config";
+interface CustomField {
+  id: string;
+  field_name: string;
+  field_value: string | number | boolean;
+}
 export interface RowData {
   groupId: string;
   groups: GroupData;
@@ -44,6 +49,7 @@ export interface RowData {
   id: number;
   file: string;
   avatar: string;
+  customFields?: CustomField[] | string;
 }
 
 interface AlertState {

@@ -44,6 +44,7 @@ export class UsersDto {
   confirmPassword: string;
   avatar: string;
   file: string;
+  customFields: { [key: string]: any };
 }
 
 export class AddUsersDto {
@@ -116,6 +117,12 @@ export class AddUsersDto {
   id: number;
   avatar: string;
   file: string;
+  @ApiProperty({
+    type: 'object',
+    example: { customField1: 'value1', customField2: 'value2' },
+    description: 'Custom fields for the user',
+  })
+  customFields: { [key: string]: any };
 }
 
 export class AddUserSuccessDto {
