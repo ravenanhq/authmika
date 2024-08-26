@@ -255,8 +255,17 @@ export class UsersService {
     let password: string;
     let status: string;
     let id: number;
-    const { firstName, lastName, email, mobile, role, groupId, avatar, file } =
-      userDto;
+    const {
+      firstName,
+      lastName,
+      email,
+      mobile,
+      role,
+      groupId,
+      avatar,
+      file,
+      customFields,
+    } = userDto;
     let newUser;
 
     try {
@@ -305,6 +314,7 @@ export class UsersService {
         groupId: groupId,
         avatar: fileName,
         status: status,
+        customFields: customFields,
         createdBy: null,
       });
       await this.groupUsersModel.create({
@@ -723,6 +733,7 @@ export class UsersService {
       groupId,
       avatar,
       file,
+      customFields,
     } = userDto;
     try {
       const existingUser = await this.userModel.findOne({
@@ -780,6 +791,7 @@ export class UsersService {
         existingUser.role = role;
         existingUser.groupId = groupId;
         existingUser.avatar = fileName;
+        existingUser.customFields = customFields;
         existingUser.updatedBy = user ? user.id : null;
         await existingUser.save();
 

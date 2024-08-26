@@ -121,8 +121,12 @@ const Header = () => {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const user = localStorage.getItem("user-data");
-      if (user) {
-        setUserData(JSON.parse(user));
+      if (user && typeof user === "string") {
+        try {
+          setUserData(JSON.parse(user));
+        } catch (e) {
+          console.error("Error parsing JSON from localStorage", e);
+        }
       }
     }
   }, []);
@@ -281,35 +285,6 @@ const Header = () => {
               </Box>
               <Box sx={{ marginLeft: "auto" }}>
                 <IconButton color="inherit" onClick={handleClick}>
-                  {/* <div
-      style={{
-        borderRadius: "50%",
-        overflow: "hidden",
-        width: "35px",
-        height: "35px",
-      }}
-    >
-      {avatar ? (
-        <CardMedia
-          component="img"
-          src={`${config.service}/assets/images/${avatar}`}
-          alt="profile"
-          width="35"
-          height="35"
-        />
-      ) : userData && userData.avatar ? (
-        <CardMedia
-          component="img"
-          src={`${config.service}/assets/images/${userData.avatar}`}
-          alt="profile"
-          width="35"
-          height="35"
-        />
-      ) : (
-        <AccountCircleIcon sx={{ width: "35px", height: "35px" }} />
-      )}
-    </div> */}
-
                   <div
                     style={{
                       borderRadius: "50%",
