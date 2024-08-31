@@ -258,7 +258,6 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
     [key: string]: string;
   }>({});
   const [deletePerformed, setDeletePerformed] = useState(false);
-  const [userBackup, setUserBackup] = useState<UserData | null>(null);
   // const [isGroupList, setIsGroupList] = useState(true);
   // const GET_FILTER = "filter";
 
@@ -335,13 +334,18 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
   }, [applications]);
 
   useEffect(() => {
+    const showUser = async (id: any) => {
+      const response = await UserApi.showUser(id);
+      if (response) {
+        setUserData(response.data);
+        setParsedCustomFields(JSON.parse(response.data.customFields));
+      } else {
+        console.error("error");
+      }
+    };
+    showUser(id);
     if (typeof window !== "undefined") {
       const user = localStorage.getItem("user-data");
-      if (user && customFieldsList) {
-        setUserData(JSON.parse(user));
-        const userDataCustom = JSON.parse(user);
-        setParsedCustomFields(JSON.parse(userDataCustom.customFields));
-      }
     }
   }, []);
 
@@ -653,6 +657,8 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
           if (response && response.statusCode === 200) {
             setUserData(response.data);
             setAlertShow(response.message);
+            setDeletePerformed(false);
+            localStorage.removeItem("user-data-backup");
           }
         }
       } catch (error: any) {
@@ -683,6 +689,7 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
 
       const existingCustomFields =
         parsedCustomFields.map((field) => ({
+          id: field.id,
           field_name: field.field_name,
           field_value: field.field_value,
         })) || [];
@@ -718,6 +725,11 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
       { id: `custom-${prevFields.length + 1}`, label: "", value: "" },
       ...prevFields,
     ]);
+
+    setCustomFieldValues((prevValues) => ({
+      ...prevValues,
+      [`custom-${prevValues.length + 1}`]: "",
+    }));
   };
 
   const handleCustomFieldChange = (
@@ -748,15 +760,27 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
       localStorage.setItem("user-data-backup", JSON.stringify(backupData));
     }
 
-    setCustomFieldsList((prevFields) =>
-      prevFields.filter((field) => field.id !== id)
-    );
-
     setParsedCustomFields((prevFields) =>
       prevFields.filter((field) => field.id !== id)
     );
 
-    setDeletePerformed(false);
+    const indexToDelete = customFieldsList.findIndex(
+      (field) => field.id === id
+    );
+
+    if (indexToDelete !== -1) {
+      setCustomFieldsList((prevFields) =>
+        prevFields.filter((_, i) => i !== indexToDelete)
+      );
+    }
+
+    setCustomFieldValues((prevValues) => {
+      const newValues = { ...prevValues };
+      delete newValues[id];
+      return newValues;
+    });
+
+    setDeletePerformed(true);
   };
 
   const handleCloseIcon = () => {
