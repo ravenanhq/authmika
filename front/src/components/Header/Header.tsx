@@ -13,9 +13,12 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import Popover from "@mui/material/Popover";
 import { signOut } from "next-auth/react";
 import { config } from "../../../config";
-import { Container, Divider, Link, Typography } from "@mui/material";
+import { CardMedia, Container, Divider, Link, Typography } from "@mui/material";
 import { usePathname } from "next/navigation";
 import { getSession } from "next-auth/react";
+import { UserData } from "@/app/users/[id]/page";
+import { RowData } from "@/components/User/UserList";
+import { UserApi } from "@/services/api/UserApi";
 
 const drawerWidth = 240;
 
@@ -24,10 +27,32 @@ interface INavItem {
   route: string;
 }
 
-export default function DrawerAppBar() {
+const InitialRowData = {
+  id: 0,
+  firstName: "",
+  lastName: "",
+  email: "",
+  mobile: "",
+  role: "",
+  avatar: "",
+  file: "",
+  groups: {
+    id: 0,
+    name: "",
+    status: 0,
+    created_at: "",
+  },
+  groupId: "",
+  created_at: "",
+  status: 0,
+};
+
+const Header = () => {
   const pathName = usePathname() || "";
   const [activePage, setActivePage] = useState<string>(pathName);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [editedData, setEditedData] = useState<RowData>(InitialRowData);
   const showHeader = ![
     "/login",
     "/two-factor",
@@ -48,12 +73,85 @@ export default function DrawerAppBar() {
     getUserSession();
   }, []);
 
+  useEffect(() => {
+    const getUser = async (id: number) => {
+      const session = await getSession();
+
+      try {
+        if (session && session.user) {
+          const sessionId = session.user.id;
+
+          const response = await UserApi.showUser(sessionId);
+          setUserData({
+            avatar: response.data.avatar,
+            firstName: response.data.firstName,
+            lastName: response.data.lastName,
+            email: response.data.email,
+            role: response.data.role,
+            groupId: response.data.groupId,
+            status: response.data.status,
+            mobile: response.data.mobile,
+            id: response.data.id,
+            created_at: response.data.created_at,
+            file: response.data.file,
+          });
+        }
+      } catch (error: any) {
+        console.error(error);
+      }
+      getUser(id);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (userData) {
+      setEditedData({
+        ...userData,
+        groups: userData.groups ?? {
+          id: 0,
+          name: "-",
+          status: 0,
+          created_at: "",
+        },
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userData]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const user = localStorage.getItem("user-data");
+      if (user && typeof user === "string") {
+        try {
+          setUserData(JSON.parse(user));
+        } catch (e) {
+          console.error("Error parsing JSON from localStorage", e);
+        }
+      }
+    }
+  }, []);
+
   const getUserSession = async () => {
     const session = await getSession();
     if (session && session.user) {
       if (session.user.role.toLowerCase() == "client") {
         setNavItems([{ label: "Dashboard", route: "/dashboard" }]);
       }
+      const sessionId = session.user.id;
+      const response = await UserApi.showUser(sessionId);
+      setUserData({
+        avatar: response.data.avatar,
+        firstName: response.data.firstName,
+        lastName: response.data.lastName,
+        email: response.data.email,
+        role: response.data.role,
+        groupId: response.data.groupId,
+        status: response.data.status,
+        mobile: response.data.mobile,
+        id: response.data.id,
+        created_at: response.data.created_at,
+        file: response.data.file,
+      });
     }
   };
 
@@ -187,7 +285,37 @@ export default function DrawerAppBar() {
               </Box>
               <Box sx={{ marginLeft: "auto" }}>
                 <IconButton color="inherit" onClick={handleClick}>
-                  <AccountCircleIcon />
+                  <div
+                    style={{
+                      borderRadius: "50%",
+                      overflow: "hidden",
+                      width: "30px",
+                      height: "30px",
+                    }}
+                  >
+                    {userData && userData.avatar ? (
+                      <CardMedia
+                        component="img"
+                        src={`${config.service}/assets/images/${userData.avatar}`}
+                        alt="profile"
+                        width="30"
+                        height="30"
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          borderRadius: "50%",
+                          overflow: "hidden",
+                          width: "30px",
+                          height: "30px",
+                        }}
+                      >
+                        <AccountCircleIcon
+                          sx={{ width: "30px", height: "30px" }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </IconButton>
                 <Popover
                   open={open}
@@ -255,4 +383,5 @@ export default function DrawerAppBar() {
       </Box>
     )
   );
-}
+};
+export default Header;

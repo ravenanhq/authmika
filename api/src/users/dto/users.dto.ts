@@ -42,6 +42,9 @@ export class UsersDto {
   currentPassword: string;
 
   confirmPassword: string;
+  avatar: string;
+  file: string;
+  customFields: { [key: string]: any };
 }
 
 export class AddUsersDto {
@@ -112,6 +115,14 @@ export class AddUsersDto {
   @IsNotEmpty({ message: 'groupId cannot be blank' })
   groupId: string;
   id: number;
+  avatar: string;
+  file: string;
+  @ApiProperty({
+    type: 'object',
+    example: { customField1: 'value1', customField2: 'value2' },
+    description: 'Custom fields for the user',
+  })
+  customFields: { [key: string]: any };
 }
 
 export class AddUserSuccessDto {
@@ -273,7 +284,7 @@ export class UpdateUserSuccessDto {
     type: UserDataDto,
     isArray: true,
   })
-  data: Users[];
+  data: Users;
 }
 
 export class DeleteUserSuccessDto {

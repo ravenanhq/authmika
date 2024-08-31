@@ -10,11 +10,15 @@ import {
   styled,
   IconButton,
   Autocomplete,
+  Grid,
+  InputAdornment,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import { RolesApi } from "@/services/api/RolesApi";
 import { GroupsApi } from "@/services/api/GroupsApi";
+import AvatarUpload from "../AvatarUpload/AvatarUpload";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 interface Errors {
   firstName?: string;
@@ -24,6 +28,13 @@ interface Errors {
   role?: string;
   group?: string;
   password?: string;
+  [key: string]: string | undefined;
+}
+
+interface CustomField {
+  id: string;
+  label: string;
+  value: string;
 }
 
 interface AddUserModalProps {
@@ -49,6 +60,7 @@ interface AddUserModalProps {
   groupId: number | undefined;
   isGroup: boolean;
   validateMobile: string;
+  customFields?: CustomField[];
 }
 
 export default function AddUserModal({
@@ -63,11 +75,11 @@ export default function AddUserModal({
   roleView,
   roleName,
   groupView,
-  groupName,
   showGroup,
   groupId,
   isGroup,
   validateMobile,
+  customFields = [],
 }: AddUserModalProps) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -83,6 +95,14 @@ export default function AddUserModal({
   const [password, setPassword] = useState("");
   const isViewBool =
     typeof isView === "string" ? JSON.parse(isView.toLowerCase()) : isView;
+  const [avatar, setAvatar] = useState("");
+  const [file, setFile] = useState("");
+  const [customFieldValues, setCustomFieldValues] = useState<{
+    [key: string]: string;
+  }>({});
+  const [customFieldsList, setCustomFieldsList] =
+    useState<CustomField[]>(customFields);
+  const [showPassword, setShowPassword] = useState<Boolean>(false);
   // const [get, setGet] = useState("");
   // const [userId, setUserId] = useState<number | undefined>();
   // const GET_ALL = "all";
@@ -119,6 +139,8 @@ export default function AddUserModal({
     setRole(null);
     setGroup(null);
     setPassword("");
+    setCustomFieldValues({});
+    setCustomFieldsList([]);
     setErrors({});
   };
 
@@ -149,6 +171,12 @@ export default function AddUserModal({
       newErrors.group = "Group is required";
     }
 
+    customFieldsList.forEach((field) => {
+      if (!customFieldValues[field.id]?.trim()) {
+        newErrors[field.id] = `${field.label} is required`;
+      }
+    });
+
     setErrors(newErrors);
 
     return Object.keys(newErrors).length === 0;
@@ -162,8 +190,15 @@ export default function AddUserModal({
         email,
         mobile,
         password,
+        avatar,
+        file,
         role: roleView ? roleName : role?.name,
         groupId: groupView ? groupId : group?.id,
+        customFields: customFieldsList.map((field, index) => ({
+          id: `customField-${index + 1}`,
+          field_name: field.label,
+          field_value: customFieldValues[field.id] || "",
+        })),
       };
       onAddUser(newUser, isViewBool, applicationId, isGroup);
     }
@@ -208,6 +243,54 @@ export default function AddUserModal({
     newValue: { label: string; name: string } | null
   ) => {
     setRole(newValue);
+  };
+
+  const handleFileUpload = (file: File) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const base64String = reader.result as string;
+      setFile(base64String);
+    };
+
+    reader.readAsDataURL(file);
+    setAvatar(file.name);
+  };
+
+  const handleCustomFieldChange = (
+    id: string,
+    value: string,
+    fieldType: "label" | "value"
+  ) => {
+    setCustomFieldsList((prevFields) =>
+      prevFields.map((field) =>
+        field.id === id ? { ...field, [fieldType]: value } : field
+      )
+    );
+
+    if (fieldType === "value") {
+      setCustomFieldValues((prevValues) => ({
+        ...prevValues,
+        [id]: value,
+      }));
+    }
+  };
+
+  const handleAddCustomField = () => {
+    setCustomFieldsList((prevFields) => [
+      { id: `customField-${prevFields.length + 1}`, label: "", value: "" },
+      ...prevFields,
+    ]);
+  };
+
+  const handlePasswordVisibility = (field: number) => {
+    switch (field) {
+      case 1:
+        setShowPassword((prevShowPassword) => !prevShowPassword);
+        break;
+      default:
+        break;
+    }
   };
 
   const PrimaryButton = styled(Button)(() => ({
@@ -299,10 +382,24 @@ export default function AddUserModal({
           label="Password"
           fullWidth
           value={password}
+          type={showPassword ? "text" : "password"}
           onChange={(e) => setPassword(e.target.value)}
           error={!!errors.password}
           helperText={errors.password}
           size="small"
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => handlePasswordVisibility(1)}
+                  onMouseDown={(e) => e.preventDefault()}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
           sx={{ marginTop: 2 }}
         />
         <TextField
@@ -352,12 +449,57 @@ export default function AddUserModal({
                   error={!!errors.group}
                   size="small"
                   helperText={errors.group}
-                  sx={{ marginTop: 2 }}
+                  sx={{ marginTop: 2, marginBottom: 2 }}
                 />
               )}
             />
           </div>
         )}
+        <AvatarUpload onAvatarUpload={handleFileUpload} imageFile={""} />
+        <Divider sx={{ marginY: 2 }} />
+        <Button
+          onClick={handleAddCustomField}
+          color="primary"
+          variant="outlined"
+        >
+          Add Custom Field
+        </Button>
+        <Grid container spacing={2} sx={{ marginTop: 2 }}>
+          {customFieldsList.map((field, index) => (
+            <React.Fragment key={field.id}>
+              <Grid item xs={6}>
+                <TextField
+                  label="Field Name"
+                  fullWidth
+                  value={field.label}
+                  onChange={(e) =>
+                    setCustomFieldsList((prevFields) =>
+                      prevFields.map((f, i) =>
+                        i === index ? { ...f, label: e.target.value } : f
+                      )
+                    )
+                  }
+                  error={!!errors[field.id]}
+                  helperText={errors[field.id]}
+                  size="small"
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  label="Field Value"
+                  fullWidth
+                  value={customFieldValues[field.id] || ""}
+                  onChange={(e) =>
+                    handleCustomFieldChange(field.id, e.target.value, "value")
+                  }
+                  error={!!errors[field.id]}
+                  helperText={errors[field.id]}
+                  size="small"
+                />
+              </Grid>
+            </React.Fragment>
+          ))}
+        </Grid>
       </DialogContent>
       <Divider
         color="#265073"

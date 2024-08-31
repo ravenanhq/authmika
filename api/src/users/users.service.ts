@@ -36,6 +36,8 @@ import { ResetPasswordDto } from 'src/auth/dto/reset-password.dto';
 import { Roles } from 'src/db/model/roles.model';
 import { GroupUsers } from 'src/db/model/group-users.model';
 import { Groups } from 'src/db/model/groups.model';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class UsersService {
@@ -253,10 +255,38 @@ export class UsersService {
     let password: string;
     let status: string;
     let id: number;
-    const { firstName, lastName, email, mobile, role, groupId } = userDto;
+    const {
+      firstName,
+      lastName,
+      email,
+      mobile,
+      role,
+      groupId,
+      avatar,
+      file,
+      customFields,
+    } = userDto;
     let newUser;
 
     try {
+      let fileName = null;
+      if (file) {
+        fileName = `${Date.now()}_` + avatar;
+        const targetPath = path.join(
+          __dirname,
+          '../../..',
+          'api/public/assets/images',
+          fileName,
+        );
+        const base64Image = file.split(';base64,').pop();
+
+        fs.writeFile(targetPath, base64Image, { encoding: 'base64' }, (err) => {
+          if (err) {
+            console.error('Error saving image:', err);
+          }
+        });
+      }
+
       const existingUser = await this.userModel.findOne({
         where: { email: email },
       });
@@ -282,7 +312,9 @@ export class UsersService {
         mobile: mobile,
         role: role,
         groupId: groupId,
+        avatar: fileName,
         status: status,
+        customFields: customFields,
         createdBy: null,
       });
       await this.groupUsersModel.create({
@@ -658,7 +690,6 @@ export class UsersService {
       const user = await this.userModel.findOne({
         where: { id },
       });
-
       if (user) {
         return {
           data: user,
@@ -692,13 +723,57 @@ export class UsersService {
     user: { id: any },
     id: number,
   ): Promise<UpdateUserSuccessDto> {
-    const { firstName, lastName, email, password, mobile, role, groupId } =
-      userDto;
+    const {
+      firstName,
+      lastName,
+      email,
+      password,
+      mobile,
+      role,
+      groupId,
+      avatar,
+      file,
+      customFields,
+    } = userDto;
     try {
       const existingUser = await this.userModel.findOne({
         where: { id: id },
       });
       if (existingUser) {
+        let fileName = null;
+        if (file) {
+          if (existingUser.avatar) {
+            const absolutePath = path.resolve(
+              __dirname,
+              '../../..',
+              'api/public/assets/images',
+              existingUser.avatar,
+            );
+
+            await fs.promises.unlink(absolutePath);
+          }
+          fileName = `${Date.now()}_` + avatar;
+          const targetPath = path.join(
+            __dirname,
+            '../../..',
+            'api/public/assets/images',
+            fileName,
+          );
+          const base64Image = file.split(';base64,').pop();
+
+          fs.writeFile(
+            targetPath,
+            base64Image,
+            { encoding: 'base64' },
+            (err) => {
+              if (err) {
+                console.error('Error saving image:', err);
+              }
+            },
+          );
+        } else {
+          fileName = avatar;
+        }
         const existingUsername = await this.userModel.findOne({
           where: { email: email },
         });
@@ -715,11 +790,13 @@ export class UsersService {
         existingUser.password = password;
         existingUser.role = role;
         existingUser.groupId = groupId;
+        existingUser.avatar = fileName;
+        existingUser.customFields = customFields;
         existingUser.updatedBy = user ? user.id : null;
         await existingUser.save();
 
-        const users = await this.userModel.findAll({
-          where: { status: { [Op.or]: [1, 2] } },
+        const users = await this.userModel.findOne({
+          where: { email: email },
           include: Groups,
         });
 

@@ -35,6 +35,7 @@ import {
   Typography,
   styled,
   useTheme,
+  CardMedia,
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import CloseIcon from "@mui/icons-material/Close";
@@ -54,6 +55,9 @@ import { SxProps, Theme } from "@mui/material";
 import { GroupsApi } from "@/services/api/GroupsApi";
 import ApplicationList from "@/components/Applications/ApplicationList";
 import { ApplicationApi } from "@/services/api/ApplicationApi";
+import AvatarUpload from "@/components/AvatarUpload/AvatarUpload";
+import { config } from "../../../../config";
+import DeleteIcon from "@mui/icons-material/Delete";
 export interface GroupData {
   id: number;
   name: string;
@@ -79,7 +83,7 @@ interface Application {
   id: number;
   name: string;
 }
-interface UserData {
+export interface UserData {
   created_at: string | number | Date;
   firstName: string;
   lastName: string;
@@ -90,6 +94,9 @@ interface UserData {
   status: number;
   mobile: string;
   id: number;
+  file: string;
+  avatar: string;
+  customFields?: CustomField[] | string;
 }
 interface ICreatePasswordProps {
   password?: string | undefined;
@@ -131,6 +138,12 @@ interface Errors {
   group?: string;
 }
 
+interface AddCustomField {
+  id: string;
+  label: string;
+  value: string;
+}
+
 const InitialRowData = {
   id: 0,
   firstName: "",
@@ -138,6 +151,8 @@ const InitialRowData = {
   email: "",
   mobile: "",
   role: "",
+  avatar: "",
+  file: "",
   groups: {
     id: 0,
     name: "",
@@ -157,6 +172,11 @@ const CustomTabs = styled(Tab)(({ theme }) => ({
   textTransform: "none",
 }));
 
+interface CustomField {
+  id: string;
+  field_name: string;
+  field_value: string | number | boolean;
+}
 function CustomTabPanel(props: TabPanelProps) {
   const { children, value, index, sx, ...other } = props;
 
@@ -225,8 +245,20 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
   const helperText = [invalidEmail, formErrors.email].filter(Boolean).join(" ");
   const [userId, setUserId] = useState<number | undefined>();
   const [groupName, setGroupName] = useState("");
-  // const [isGroupList, setIsGroupList] = useState(true);
+  const [avatar, setAvatar] = useState("");
   const GET_ALL = "all";
+  const [parsedCustomFields, setParsedCustomFields] = useState<CustomField[]>(
+    []
+  );
+  const [addCustomFields, setAddCustomFields] = useState<CustomField[]>([]);
+  const [customFieldsList, setCustomFieldsList] = useState<AddCustomField[]>(
+    []
+  );
+  const [customFieldValues, setCustomFieldValues] = useState<{
+    [key: string]: string;
+  }>({});
+  const [deletePerformed, setDeletePerformed] = useState(false);
+  // const [isGroupList, setIsGroupList] = useState(true);
   // const GET_FILTER = "filter";
 
   useEffect(() => {
@@ -302,13 +334,36 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
   }, [applications]);
 
   useEffect(() => {
+    const showUser = async (id: any) => {
+      const response = await UserApi.showUser(id);
+      if (response) {
+        setUserData(response.data);
+        setParsedCustomFields(JSON.parse(response.data.customFields));
+      } else {
+        console.error("error");
+      }
+    };
+    showUser(id);
     if (typeof window !== "undefined") {
       const user = localStorage.getItem("user-data");
-      if (user) {
-        setUserData(JSON.parse(user));
-      }
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && userData) {
+      try {
+        let totalCustomFields = [...parsedCustomFields, ...addCustomFields];
+        const dataToSave = {
+          ...userData,
+          customFields: JSON.stringify(totalCustomFields),
+        };
+
+        localStorage.setItem("user-data", JSON.stringify(dataToSave));
+      } catch (e) {
+        console.error("Error saving data to localStorage", e);
+      }
+    }
+  }, [userData, parsedCustomFields]);
 
   const handlePasswordChange = (e: string) => {
     setValue("password", e);
@@ -368,13 +423,6 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
     } catch (error: any) {
       console.log(error);
     }
-  };
-
-  const handleCloseIcon = () => {
-    setOpenIcon(false);
-    setInvalidEmail("");
-    setSaveModalAlert(null);
-    setAlertShow("");
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -603,18 +651,14 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
     if (validateForm()) {
       try {
         const response = await UserApi.update(id, updatedData);
+
         setInvalidEmail("");
-        const data = { groups: { id: updatedData.groupId, name: groupName } };
         if (response) {
           if (response && response.statusCode === 200) {
-            const updatedRows = response.data.map((row: any) => {
-              if (row.id === id) {
-                return { ...row, ...updatedData };
-              }
-              return row;
-            });
-            setUserData(updatedData);
+            setUserData(response.data);
             setAlertShow(response.message);
+            setDeletePerformed(false);
+            localStorage.removeItem("user-data-backup");
           }
         }
       } catch (error: any) {
@@ -631,13 +675,164 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
 
   const handleEditSave = async (editedData: UserData) => {
     if ("id" in editedData) {
-      const updatedData = { ...editedData };
+      const addCustomFields = customFieldsList
+        .filter(
+          (field) =>
+            field.label.trim() !== "" &&
+            (customFieldValues[field.id] || "").trim() !== ""
+        )
+        .map((field) => ({
+          id: field.id,
+          field_name: field.label,
+          field_value: customFieldValues[field.id],
+        }));
+
+      const existingCustomFields =
+        parsedCustomFields.map((field) => ({
+          id: field.id,
+          field_name: field.field_name,
+          field_value: field.field_value,
+        })) || [];
+
+      const customFields = [...existingCustomFields, ...addCustomFields];
+      const updatedData = { ...editedData, customFields };
+      editedData.file = "";
+
       try {
         await editUser(updatedData.id, updatedData);
+        if (typeof window !== "undefined") {
+          try {
+            const existingUserData = localStorage.getItem("user-data");
+            let userData = existingUserData ? JSON.parse(existingUserData) : {};
+            userData = {
+              ...userData,
+              customFields: JSON.stringify(addCustomFields),
+            };
+            localStorage.setItem("user-data", JSON.stringify(userData));
+            setAddCustomFields(addCustomFields);
+          } catch (e) {
+            console.error("Error saving updated user data to localStorage", e);
+          }
+        }
       } catch (error) {
         console.error("Error editing user:", error);
       }
     }
+  };
+
+  const handleAddCustomField = () => {
+    setCustomFieldsList((prevFields) => [
+      { id: `custom-${prevFields.length + 1}`, label: "", value: "" },
+      ...prevFields,
+    ]);
+
+    setCustomFieldValues((prevValues) => ({
+      ...prevValues,
+      [`custom-${prevValues.length + 1}`]: "",
+    }));
+  };
+
+  const handleCustomFieldChange = (
+    id: string,
+    value: string,
+    fieldType: "label" | "value"
+  ) => {
+    setCustomFieldsList((prevFields) =>
+      prevFields.map((field) =>
+        field.id === id ? { ...field, [fieldType]: value } : field
+      )
+    );
+
+    if (fieldType === "value") {
+      setCustomFieldValues((prevValues) => ({
+        ...prevValues,
+        [id]: value,
+      }));
+    }
+  };
+
+  const handleDeleteField = (id: string) => {
+    if (!deletePerformed) {
+      const backupData = {
+        customFieldsList,
+        parsedCustomFields,
+      };
+      localStorage.setItem("user-data-backup", JSON.stringify(backupData));
+    }
+
+    setParsedCustomFields((prevFields) =>
+      prevFields.filter((field) => field.id !== id)
+    );
+
+    const indexToDelete = customFieldsList.findIndex(
+      (field) => field.id === id
+    );
+
+    if (indexToDelete !== -1) {
+      setCustomFieldsList((prevFields) =>
+        prevFields.filter((_, i) => i !== indexToDelete)
+      );
+    }
+
+    setCustomFieldValues((prevValues) => {
+      const newValues = { ...prevValues };
+      delete newValues[id];
+      return newValues;
+    });
+
+    setDeletePerformed(true);
+  };
+
+  const handleCloseIcon = () => {
+    if (deletePerformed) {
+      const backup = localStorage.getItem("user-data-backup");
+
+      if (backup) {
+        const {
+          customFieldsList: backupCustomFieldsList,
+          parsedCustomFields: backupParsedCustomFields,
+        } = JSON.parse(backup);
+
+        setCustomFieldsList(backupCustomFieldsList || []);
+        setParsedCustomFields(backupParsedCustomFields || []);
+
+        localStorage.removeItem("user-data-backup");
+      }
+
+      setDeletePerformed(false);
+    }
+
+    setOpenIcon(false);
+    setInvalidEmail("");
+    setSaveModalAlert(null);
+    setAlertShow("");
+
+    setCustomFieldsList((prevFields) =>
+      prevFields.filter((field) => field.label.trim() !== "")
+    );
+
+    setCustomFieldValues((prevValues) => {
+      const updatedValues: { [key: string]: string } = {};
+      Object.keys(prevValues).forEach((key) => {
+        if (prevValues[key].trim() !== "") {
+          updatedValues[key] = prevValues[key];
+        }
+      });
+      return updatedValues;
+    });
+  };
+
+  const handleFileUpload = (file: File) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const base64String = reader.result as string;
+      editedData.file = base64String;
+    };
+
+    reader.readAsDataURL(file);
+    editedData.avatar = file.name;
+    setAvatar(file.name);
   };
 
   const PrimaryButton = styled(Button)(() => ({
@@ -932,10 +1127,126 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                       )}
                     />
 
+                    <AvatarUpload
+                      onAvatarUpload={handleFileUpload}
+                      imageFile={editedData.avatar || ""}
+                    />
+                    <Divider sx={{ marginY: 2 }} />
+                    <Button
+                      onClick={handleAddCustomField}
+                      color="primary"
+                      variant="outlined"
+                    >
+                      Add Custom Field
+                    </Button>
+                    <Grid container spacing={2} sx={{ marginTop: 2 }}>
+                      {customFieldsList.map((field, index) => (
+                        <Grid item xs={12} key={field.id}>
+                          <Grid container spacing={2}>
+                            <Grid item xs={5}>
+                              <TextField
+                                label="Field Name"
+                                fullWidth
+                                value={field.label}
+                                onChange={(e) =>
+                                  setCustomFieldsList((prevFields) =>
+                                    prevFields.map((f, i) =>
+                                      i === index
+                                        ? { ...f, label: e.target.value }
+                                        : f
+                                    )
+                                  )
+                                }
+                                size="small"
+                              />
+                            </Grid>
+                            <Grid item xs={5}>
+                              <TextField
+                                label="Field Value"
+                                fullWidth
+                                value={customFieldValues[field.id] || ""}
+                                onChange={(e) =>
+                                  handleCustomFieldChange(
+                                    field.id,
+                                    e.target.value,
+                                    "value"
+                                  )
+                                }
+                                size="small"
+                              />
+                            </Grid>
+                            <Grid item xs={1}>
+                              <IconButton
+                                aria-label="delete"
+                                onClick={() => handleDeleteField(field.id)}
+                                size="small"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Grid>
+                          </Grid>
+                        </Grid>
+                      ))}
+                    </Grid>
+
+                    {parsedCustomFields.length > 0 &&
+                      parsedCustomFields.map((field, index) => (
+                        <Grid container spacing={2} key={field.id}>
+                          <Grid item xs={5}>
+                            <TextField
+                              label="Field Name"
+                              value={field.field_name}
+                              onChange={(e) => {
+                                const newCustomFields = [...parsedCustomFields];
+                                newCustomFields[index].field_name =
+                                  e.target.value;
+                                setParsedCustomFields(newCustomFields);
+                                setEditedData({
+                                  ...editedData,
+                                  customFields: JSON.stringify(newCustomFields),
+                                });
+                              }}
+                              fullWidth
+                              margin="normal"
+                              size="small"
+                            />
+                          </Grid>
+                          <Grid item xs={5}>
+                            <TextField
+                              label="Field Value"
+                              value={field.field_value}
+                              onChange={(e) => {
+                                const newCustomFields = [...parsedCustomFields];
+                                newCustomFields[index].field_value =
+                                  e.target.value;
+                                setParsedCustomFields(newCustomFields);
+                                setEditedData({
+                                  ...editedData,
+                                  customFields: JSON.stringify(newCustomFields),
+                                });
+                              }}
+                              fullWidth
+                              margin="normal"
+                              size="small"
+                            />
+                          </Grid>
+                          <Grid item xs={2} container alignItems="center">
+                            <IconButton
+                              aria-label="delete"
+                              onClick={() => handleDeleteField(field.id)}
+                              size="small"
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Grid>
+                        </Grid>
+                      ))}
+
                     <Box display="flex" justifyContent="flex-end">
                       <PrimaryButton
                         startIcon={<SaveIcon />}
                         onClick={() => handleEditSave(editedData)}
+                        sx={{ marginTop: "10px", marginBottom: "10px" }}
                       >
                         Update
                       </PrimaryButton>
@@ -1358,27 +1669,11 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                           marginBottom: "20px",
                         },
                       },
-                      "@media (width:667px) and (height:375px),(width:540px) and (height:720px),(width:568px) and (height:320px),(width:640px) and (height:360px),(width:896px) and (height:414px),(width:720px) and (height:540px)":
-                        {
-                          paddingLeft: "70px",
-                        },
-                      "@media (width:740px) and (height:360px),(width:736px) and (height:414px),(width:731px) and (height:411px),(width:853px) and (height:1280px),(width:912px) and (height:1368px),(width:768px) and (height:1024px),(width:820px) and (height:1180px)":
-                        {
-                          paddingLeft: "70px",
-                        },
-                      "@media (width:896px) and (height:414px),(width:812px) and (height:375px),(width:914px) and (height:412px),(width:882px) and (height:344px),(width:915px) and (height:412px),(width:844px) and (height:390px),(width:932px) and (height:430px)":
-                        {
-                          paddingLeft: "70px",
-                        },
-                      "@media (width:932px) and (height:430px)": {
-                        paddingLeft: "50px",
-                        paddingRight:"30px"
-                      },
-                      "@media (min-width:1024px) and (max-width:1200px)": {
+                      "@media (min-width:768px) and (max-width:1024px)": {
                         paddingLeft: "60px",
                         paddingRight: "50px",
                       },
-                      "@media (min-width:768px) and (max-width:1024px)": {
+                      "@media (min-width:1024px) and (max-width:1200px)": {
                         paddingLeft: "60px",
                         paddingRight: "50px",
                       },
@@ -1446,13 +1741,126 @@ const UserView: React.FC<{ params: IUserView }> = ({ params }) => {
                         </div>
                       </div>
                     </Grid>
-                    <Grid item xs={12} md={6} sx={{ marginBottom: 2 }}>
+                    <Grid
+                      item
+                      xs={12}
+                      sm={4}
+                      sx={{
+                        marginBottom: 0,
+                        marginTop: { lg: 5, sm: 0 },
+                        "@media (width:1024px) and (height:1366px),(width:1024px) and (height:768px),(width:1024px) and (height:600px),(width:1180px) and (height:820px),(width:932px) and (height:430px)":
+                          {
+                            marginTop: "auto",
+                            marginBottom: "auto",
+                          },
+                      }}
+                    >
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <strong>Status:</strong>
                         <div style={{ marginLeft: "49px" }}>
                           {userStatus[userData.status]}
                         </div>
                       </div>
+                    </Grid>
+
+                    <Grid
+                      item
+                      xs={12}
+                      sm={4}
+                      sx={{
+                        "@media (width:1024px) and (height:1366px)": {
+                          marginTop: "0px",
+                          marginBottom: "auto",
+                        },
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <strong>Avatar:</strong>
+                        <div style={{ marginLeft: "47px" }}>
+                          {userData.avatar ? (
+                            <CardMedia
+                              component="img"
+                              src={`${config.service}/assets/images/${userData.avatar}`}
+                              alt="avatar"
+                              height="100"
+                              style={{ width: "80px" }}
+                            />
+                          ) : (
+                            <CardMedia
+                              component="img"
+                              src={`${config.service}/assets/images/no_image.jpg`}
+                              alt="avatar"
+                              height="100"
+                              style={{ width: "80px" }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </Grid>
+
+                    <Grid container item xs={12} spacing={2}>
+                      {parsedCustomFields &&
+                        parsedCustomFields.length > 0 &&
+                        parsedCustomFields.map((field, index) => (
+                          <Grid
+                            item
+                            xs={12}
+                            sm={4}
+                            key={index}
+                            sx={{
+                              marginBottom: 0,
+                              marginTop: { lg: 5, sm: 0 },
+                              "@media (width:1024px) and (height:1366px),(width:1024px) and (height:768px),(width:1024px) and (height:600px),(width:1180px) and (height:820px),(width:932px) and (height:430px)":
+                                {
+                                  marginTop: "auto",
+                                  marginBottom: "auto",
+                                },
+                            }}
+                          >
+                            <div
+                              style={{ display: "flex", alignItems: "center" }}
+                            >
+                              <strong>
+                                {field.field_name.charAt(0).toUpperCase() +
+                                  field.field_name.slice(1)}
+                                :
+                              </strong>
+                              <div style={{ marginLeft: "20px" }}>
+                                {field.field_value}
+                              </div>
+                            </div>
+                          </Grid>
+                        ))}
+                      {addCustomFields &&
+                        addCustomFields.length > 0 &&
+                        addCustomFields.map((field, index) => (
+                          <Grid
+                            item
+                            xs={12}
+                            sm={4}
+                            key={index}
+                            sx={{
+                              marginBottom: 0,
+                              marginTop: { lg: 5, sm: 0 },
+                              "@media (width:1024px) and (height:1366px),(width:1024px) and (height:768px),(width:1024px) and (height:600px),(width:1180px) and (height:820px),(width:932px) and (height:430px)":
+                                {
+                                  marginTop: "auto",
+                                  marginBottom: "auto",
+                                },
+                            }}
+                          >
+                            <div
+                              style={{ display: "flex", alignItems: "center" }}
+                            >
+                              <strong style={{ marginRight: "20px" }}>
+                                {field.field_name.charAt(0).toUpperCase() +
+                                  field.field_name.slice(1)}
+                                :
+                              </strong>
+                              <div>{field.field_value}</div>
+                            </div>
+                          </Grid>
+                        ))}
                     </Grid>
                   </Grid>
                 </TableCell>

@@ -77,6 +77,12 @@ export class Users extends Model {
   @Column({ type: DataType.BIGINT })
   otp_expiration: number;
 
+  @Column({ field: 'avatar', type: DataType.STRING })
+  avatar: string;
+
+  @Column({ type: DataType.JSONB })
+  customFields: object;
+
   isSelected: boolean;
   created_at: any;
 

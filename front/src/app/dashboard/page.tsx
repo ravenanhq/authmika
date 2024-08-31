@@ -106,9 +106,9 @@ export default function Home() {
                                           key={index}
                                       >
                                           <CustomCard
-                                              name={result.application.name}
+                                              name={result.name}
                                               logo_path={
-                                                  result.application.logoPath
+                                                  result.logoPath
                                               }
                                               applicationId={
                                                   result.application.id

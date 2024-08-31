@@ -2,9 +2,6 @@ import {
   Alert,
   Box,
   Button,
-  Card,
-  CardContent,
-  Divider,
   Grid,
   IconButton,
   InputAdornment,
@@ -20,8 +17,9 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  CardMedia,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import { UserApi } from "@/services/api/UserApi";
 import SaveIcon from "@mui/icons-material/Save";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
@@ -33,7 +31,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import CheckIcon from "@mui/icons-material/Check";
 import DoneIcon from "@mui/icons-material/Done";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import Header from "@/components/Header/Header";
+import { UserData } from "@/app/users/[id]/page";
+import { GroupData } from "@/app/users/[id]/page";
 interface Errors {
   Email?: string;
   Mobile?: string;
@@ -51,7 +52,10 @@ interface Errors {
 interface Error {
   verifyCurrentPassword?: string;
 }
-interface RowData {
+export interface RowData {
+  groupId: string;
+  groups: GroupData;
+  avatar: string;
   id: number;
   email: string;
   mobile: string;
@@ -59,6 +63,7 @@ interface RowData {
   lastName?: string;
   role: string;
   password?: string;
+  file: string;
 }
 
 const InitialRowData: RowData = {
@@ -69,6 +74,15 @@ const InitialRowData: RowData = {
   lastName: "",
   role: "",
   password: "",
+  file: "",
+  groups: {
+    id: 0,
+    name: "",
+    status: 0,
+    created_at: "",
+  },
+  groupId: "",
+  avatar: "",
 };
 
 interface AlertState {
@@ -121,20 +135,70 @@ const ProfilePage = () => {
     useState<AlertState | null>(null);
   const [enable, setEnable] = useState<boolean>(false);
   const [open, setOpen] = React.useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [avatar, setAvatar] = useState("");
+  const [sessionAvatar, setSessionAvatar] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const MAX_FILE_SIZE_KB = 70;
 
   useEffect(() => {
     fetchUserDetails();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    const fetchAvatarDetails = async () => {
+      const session = await getSession();
+
+      try {
+        if (session && session.user) {
+          const sessionId = session.user.id;
+          const response = await UserApi.showUser(sessionId);
+
+          setUserData({
+            avatar: response.data.avatar,
+            firstName: response.data.firstName,
+            lastName: response.data.lastName,
+            email: response.data.email,
+            role: response.data.role,
+            groupId: response.data.groupId,
+            status: response.data.status,
+            mobile: response.data.mobile,
+            id: response.data.id,
+            created_at: response.data.created_at,
+            file: response.data.file,
+          });
+
+          if (response.data.avatar) {
+            setImageUrl(
+              `${config.service}/assets/images/${response.data.avatar}`
+            );
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchAvatarDetails();
   }, []);
 
   const fetchUserDetails = async () => {
     try {
-      const session: Session | null = await getSession();
-      if (session) {
-        const { email, mobile, id, role, password, is_two_factor_enabled } =
-          session.user;
-        const firstName = session.user.firstName;
-        const lastName = session.user.lastName;
+      const sessionData: Session | null = await getSession();
+      if (sessionData) {
+        const {
+          email,
+          mobile,
+          id,
+          role,
+          password,
+          is_two_factor_enabled,
+          avatar,
+          groupId,
+        } = sessionData.user;
+        const firstName = sessionData.user.firstName;
+        const lastName = sessionData.user.lastName;
         setEnable(is_two_factor_enabled);
         setUserDetails({
           lastName,
@@ -153,8 +217,11 @@ const ProfilePage = () => {
           id,
           role,
           password,
+          avatar,
+          groupId,
         }));
         setUserId(id);
+        setSession(sessionData);
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
@@ -264,6 +331,7 @@ const ProfilePage = () => {
             setErrors({});
           }
         }
+        window.location.reload();
       } catch (error: any) {
         var response = error.response.data;
         if (
@@ -433,6 +501,45 @@ const ProfilePage = () => {
     }
   };
 
+  const handleFileUpload = (file: File) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const base64String = reader.result as string;
+      editedData.file = base64String;
+      editedData.avatar = file.name;
+      setAvatar(file.name);
+
+      setImageUrl(base64String);
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setErrorMessage("");
+
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      if (!files[0].type.startsWith("image/")) {
+        setErrorMessage("Only PNG, JPEG and JPG files are allowed.");
+      } else if (!["image/png", "image/jpeg"].includes(files[0].type)) {
+        setErrorMessage("Only PNG, JPEG and JPG files are allowed.");
+      } else if (files[0].size > MAX_FILE_SIZE_KB * 1024) {
+        setErrorMessage(`File size exceeds ${MAX_FILE_SIZE_KB} KB.`);
+      } else {
+        handleFileUpload(files[0]);
+        if (files[0]) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setImageUrl(reader.result as string);
+          };
+          reader.readAsDataURL(files[0]);
+        }
+      }
+    }
+  };
+
   const PrimaryButton = styled(Button)(() => ({
     textTransform: "none",
     paddingLeft: "10px",
@@ -592,6 +699,55 @@ const ProfilePage = () => {
                   sx={{ marginBottom: 0.5, marginTop: 3 }}
                 ></TextField>
 
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <strong>Avatar:</strong>
+                  <div style={{ marginLeft: "47px" }}>
+                    <CardMedia
+                      component="img"
+                      alt="avatar"
+                      height={imageUrl ? "100" : "100"}
+                      src={
+                        imageUrl
+                          ? imageUrl
+                          : userData && userData.avatar
+                          ? `${config.service}/assets/images/${userData.avatar}`
+                          : `${config.service}/assets/images/no_image.jpg`
+                      }
+                      style={{
+                        width: imageUrl ? "80px" : "80px",
+                        marginLeft: imageUrl ? "0" : "0",
+                      }}
+                    />
+
+                    <input
+                      accept=".png,.jpg,.jpeg"
+                      id="contained-button-file"
+                      type="file"
+                      onChange={handleFileChange}
+                      style={{ display: "none" }}
+                    />
+                    <label htmlFor="contained-button-file">
+                      <Button
+                        variant="contained"
+                        component="span"
+                        startIcon={<CloudUploadIcon />}
+                        style={{
+                          textTransform: "none",
+                          paddingLeft: "10px",
+                          paddingRight: "10px",
+                          marginTop: "10px",
+                          backgroundColor: "#1C658C",
+                          color: "#fff",
+                        }}
+                      >
+                        Change
+                      </Button>
+                      {errorMessage && (
+                        <p style={{ color: "#d32f2f" }}>{errorMessage}</p>
+                      )}
+                    </label>
+                  </div>
+                </div>
                 <Grid container justifyContent="flex-end">
                   <PrimaryButton
                     variant="contained"
