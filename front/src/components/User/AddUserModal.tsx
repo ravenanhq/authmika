@@ -97,8 +97,11 @@ export default function AddUserModal({
     typeof isView === "string" ? JSON.parse(isView.toLowerCase()) : isView;
   const [avatar, setAvatar] = useState("");
   const [file, setFile] = useState("");
-  const [customFieldValues, setCustomFieldValues] = useState<{ [key: string]: string }>({});
-  const [customFieldsList, setCustomFieldsList] = useState<CustomField[]>(customFields);
+  const [customFieldValues, setCustomFieldValues] = useState<{
+    [key: string]: string;
+  }>({});
+  const [customFieldsList, setCustomFieldsList] =
+    useState<CustomField[]>(customFields);
   const [showPassword, setShowPassword] = useState<Boolean>(false);
   // const [get, setGet] = useState("");
   // const [userId, setUserId] = useState<number | undefined>();
@@ -174,7 +177,6 @@ export default function AddUserModal({
       }
     });
 
-
     setErrors(newErrors);
 
     return Object.keys(newErrors).length === 0;
@@ -192,9 +194,10 @@ export default function AddUserModal({
         file,
         role: roleView ? roleName : role?.name,
         groupId: groupView ? groupId : group?.id,
-        customFields: customFieldsList.map(field => ({
+        customFields: customFieldsList.map((field, index) => ({
+          id: `customField-${index + 1}`,
           field_name: field.label,
-          field_value: customFieldValues[field.id],
+          field_value: customFieldValues[field.id] || "",
         })),
       };
       onAddUser(newUser, isViewBool, applicationId, isGroup);
@@ -254,20 +257,31 @@ export default function AddUserModal({
     setAvatar(file.name);
   };
 
-  const handleCustomFieldChange = (id: string, value: string) => {
-    setCustomFieldValues((prevValues) => ({
-      ...prevValues,
-      [id]: value,
-    }));
+  const handleCustomFieldChange = (
+    id: string,
+    value: string,
+    fieldType: "label" | "value"
+  ) => {
+    setCustomFieldsList((prevFields) =>
+      prevFields.map((field) =>
+        field.id === id ? { ...field, [fieldType]: value } : field
+      )
+    );
+
+    if (fieldType === "value") {
+      setCustomFieldValues((prevValues) => ({
+        ...prevValues,
+        [id]: value,
+      }));
+    }
   };
 
   const handleAddCustomField = () => {
     setCustomFieldsList((prevFields) => [
+      { id: `customField-${prevFields.length + 1}`, label: "", value: "" },
       ...prevFields,
-      { id: `custom-${prevFields.length + 1}`, label: "", value: "" },
     ]);
   };
-
 
   const handlePasswordVisibility = (field: number) => {
     switch (field) {
@@ -435,15 +449,19 @@ export default function AddUserModal({
                   error={!!errors.group}
                   size="small"
                   helperText={errors.group}
-                  sx={{ marginTop: 2,marginBottom:2 }}
+                  sx={{ marginTop: 2, marginBottom: 2 }}
                 />
               )}
             />
           </div>
         )}
-                <AvatarUpload onAvatarUpload={handleFileUpload} imageFile={""}  />
-                <Divider sx={{ marginY: 2 }} />
-        <Button onClick={handleAddCustomField} color="primary" variant="outlined">
+        <AvatarUpload onAvatarUpload={handleFileUpload} imageFile={""} />
+        <Divider sx={{ marginY: 2 }} />
+        <Button
+          onClick={handleAddCustomField}
+          color="primary"
+          variant="outlined"
+        >
           Add Custom Field
         </Button>
         <Grid container spacing={2} sx={{ marginTop: 2 }}>
@@ -471,7 +489,9 @@ export default function AddUserModal({
                   label="Field Value"
                   fullWidth
                   value={customFieldValues[field.id] || ""}
-                  onChange={(e) => handleCustomFieldChange(field.id, e.target.value)}
+                  onChange={(e) =>
+                    handleCustomFieldChange(field.id, e.target.value, "value")
+                  }
                   error={!!errors[field.id]}
                   helperText={errors[field.id]}
                   size="small"
